@@ -1,13 +1,32 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Api/MowTrackr.Api.csproj" />
+  <Folder Name="/Aspire/">
     <Project Path="src/AppHost/MowTrackr.AppHost.csproj" />
-    <Project Path="src/Assets/MowTrackr.Assets.csproj" />
+    <Project Path="src/ServiceDefaults/MowTrackr.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/Client/">
     <Project Path="src/Client/MowTrackr.Client.csproj" />
-    <Project Path="src/Core/MowTrackr.Core.csproj" />
-    <Project Path="src/Data/MowTrackr.Data.csproj" />
+  </Folder>
+  <Folder Name="/Api/">
+    <Project Path="src/Api/MowTrackr.Api.csproj" />
+  </Folder>
+  <Folder Name="/Domains/">
+    <Project Path="src/Assets/MowTrackr.Assets.csproj" />
     <Project Path="src/Identity/MowTrackr.Identity.csproj" />
     <Project Path="src/Maintenance/MowTrackr.Maintenance.csproj" />
-    <Project Path="src/ServiceDefaults/MowTrackr.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/Foundation/">
+    <Project Path="src/Core/MowTrackr.Core.csproj" />
+    <Project Path="src/Data/MowTrackr.Data.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/Workflows/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/deploy-api.yml" />
+    <File Path=".github/workflows/deploy-client.yml" />
   </Folder>
 </Solution>
