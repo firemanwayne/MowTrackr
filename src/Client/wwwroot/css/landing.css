@@ -30,7 +30,8 @@
 
 html, body { overflow-x: clip; }
 
-.landing { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; min-height: 100%; }
+/* Radzen pads the body by 1rem; cancel it so the landing page runs edge to edge. */
+.landing { margin: -1rem; min-height: calc(100dvh - 51px); background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; }
 .landing *, .landing *::before, .landing *::after { box-sizing: border-box; }
 .landing h1, .landing h2, .landing h3 { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight); font-synthesis: none; letter-spacing: var(--tracking-display); line-height: 1.05; overflow-wrap: break-word; min-width: 0; text-wrap: balance; color: var(--color-ink); }
 .landing h1 { max-width: 12ch; font-size: var(--text-display); }

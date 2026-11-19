@@ -28,7 +28,7 @@
         <RadzenStack Gap="0.5rem" class="rz-my-4">
             @foreach (var task in _order.Tasks)
             {
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
                     <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen)" Change="@(isChecked => SetTaskAsync(task, isChecked))" Name="@($"task-{task.Id}")" />
                     <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
                 </RadzenStack>
