@@ -1,64 +1,91 @@
-# Azure setup (free tier)
+# Azure setup
 
-MowTrackr deploys as three Azure resources, all on free offers:
+MowTrackr runs in two environments, `dev` and `prod`, each created and updated by Bicep (`infra/`) through GitHub
+Actions. The layout follows the AlertOne repo (per-environment parameter files, `<app>-<resource>-<env>-<instance>` names).
 
-| Piece | Azure resource | Tier |
-| --- | --- | --- |
-| Blazor WebAssembly client | Static Web App | Free |
-| API | App Service (Linux, .NET 10) | F1 Free |
-| Database | Azure SQL Database | [Free offer](https://learn.microsoft.com/azure/azure-sql/database/free-offer) (serverless, auto-pause) |
+| Piece | Azure resource | dev | prod |
+| --- | --- | --- | --- |
+| Client | Static Web App | Free | Free |
+| API | App Service (Linux, .NET 10), system-assigned managed identity | F1 Free | F1 Free |
+| Database | Azure SQL Database, Microsoft Entra-only authentication | [Free offer](https://learn.microsoft.com/azure/azure-sql/database/free-offer) | serverless GP_S_Gen5_1 (paid, auto-pauses) |
+| Secrets | Key Vault (RBAC) | yes | yes |
 
-> The free SQL database auto-pauses when idle, so the first request after a quiet period can take a few
-> seconds. The API retries transient connection failures automatically.
+> Only one database per subscription can use the free SQL offer, so dev takes it and prod runs a small paid
+> serverless database. The databases auto-pause when idle, so the first request after a quiet period can take a few
+> seconds; the API retries transient connection failures automatically. The free App Service plan has no always-on
+> and a daily CPU quota; set `appServicePlanSku = 'B1'` in `infra/parameters/prod.bicepparam` when prod needs more.
 
-## 1. Create the resources
+## How it fits together
 
-```bash
-az group create --name mowtrackr-rg --location eastus2
-
-# SQL server + free-offer database
-az sql server create --name <unique-sql-server> --resource-group mowtrackr-rg --location eastus2 \
-  --admin-user mowtrackradmin --admin-password '<strong-password>'
-az sql db create --resource-group mowtrackr-rg --server <unique-sql-server> --name mowtrackr \
-  --edition GeneralPurpose --family Gen5 --capacity 2 --compute-model Serverless --use-free-limit --free-limit-exhaustion-behavior AutoPause
-az sql server firewall-rule create --resource-group mowtrackr-rg --server <unique-sql-server> \
-  --name AllowAzureServices --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
-
-# API (App Service, free F1)
-az appservice plan create --name mowtrackr-plan --resource-group mowtrackr-rg --sku F1 --is-linux
-az webapp create --name <unique-api-name> --resource-group mowtrackr-rg --plan mowtrackr-plan --runtime "DOTNETCORE:10.0"
-
-# Client (Static Web App, free)
-az staticwebapp create --name <unique-client-name> --resource-group mowtrackr-rg --sku Free --location eastus2
+```
+infra/
+  main.bicep                  One environment: wires the modules, app settings and the Key Vault access
+  modules/sql.bicep           SQL server (Entra-only) and database
+  modules/key-vault.bicep     Key Vault and its secrets
+  modules/api.bicep           Plan and web app with a managed identity
+  modules/staticwebapp.bicep  Static Web App
+  parameters/dev.bicepparam   Per-environment values (names, SKUs, free-offer switch, secrets from env variables)
+  parameters/prod.bicepparam
+  bootstrap.ps1               One-time setup of resource groups, GitHub sign-in and environments
+.github/workflows/
+  ci.yml                      Build and Bicep validation on every push and pull request
+  deploy.yml                  Build, deploy infra/, publish the API and the client
 ```
 
-## 2. Configure the API
+- **No passwords.** The API's managed identity is the SQL Entra administrator, so it runs EF Core migrations and
+  queries with `Authentication=Active Directory Managed Identity`. Nobody else can log in to the database until you
+  change the SQL admin in the portal (there is one Entra admin per server).
+- **Secrets in Key Vault.** The JWT signing key and OAuth client secrets are stored in the vault and read by the API
+  through Key Vault references in its app settings.
+- **No stored Azure credentials.** GitHub signs in with OpenID Connect. The app registration has Contributor and
+  Role Based Access Control Administrator on the two MowTrackr resource groups only.
 
-Set these as App Service application settings (double underscore = `:` in config):
+## One-time setup
 
-| Setting | Value |
-| --- | --- |
-| `ConnectionStrings__mowtrackr` | the Azure SQL connection string |
-| `Jwt__SigningKey` | a long random secret (32+ characters) |
-| `Client__BaseUrl` | `https://<your-static-web-app>.azurestaticapps.net` |
-| `Authentication__Google__ClientId` / `__ClientSecret` | optional - enables Google sign-in |
-| `Authentication__Facebook__ClientId` / `__ClientSecret` | optional - enables Facebook sign-in |
-| `Authentication__LinkedIn__ClientId` / `__ClientSecret` | optional - enables LinkedIn sign-in |
+Prerequisites: the Azure CLI (`az login`) and GitHub CLI (`gh auth login`), signed in, with permission to create app
+registrations and role assignments.
+
+```powershell
+./infra/bootstrap.ps1 -Repository firemanwayne/MowTrackr
+```
+
+It creates `mowtrackr-rg-dev` and `mowtrackr-rg-prod`, the OIDC app registration with a federated credential per
+environment, the GitHub `dev` and `prod` environments, and sets:
+
+| Scope | Kind | Name | Value |
+| --- | --- | --- | --- |
+| Repository | Variable | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | the OIDC app and subscription |
+| Environment | Variable | `AZURE_RESOURCE_GROUP` | `mowtrackr-rg-<env>` |
+| Environment | Secret | `JWT_SIGNING_KEY` | generated (48 characters), never rotated by a re-run |
+
+Add required reviewers to `prod` (Settings > Environments) if you want an approval step.
+
+### External sign-in (optional)
+
+Add any of these as **environment secrets** and the next deploy enables the provider; a provider with no credentials is
+hidden on the sign-in page.
+
+`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET`,
+`LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`
 
 Register each provider's OAuth redirect URI as `https://<your-api>.azurewebsites.net/signin-<provider>`
-(`signin-google`, `signin-facebook`, `signin-linkedin`).
+(`signin-google`, `signin-facebook`, `signin-linkedin`). The API URL is shown in the Deploy run summary.
 
-The API applies EF Core migrations on startup, so the first request creates the schema.
+## Deploying
 
-## 3. Wire up GitHub Actions
+- **Push to `main`** deploys **dev**.
+- **Run Deploy from the Actions tab** to pick `dev` or `prod`. Tick *what-if* to preview the infrastructure changes
+  without deploying anything.
 
-In the repository settings add:
+Each run: builds and validates, deploys `infra/main.bicep` with that environment's parameter file (idempotent), then
+publishes the API to App Service and the client to the Static Web App with the client pointed at the API URL. The API
+applies EF Core migrations on startup, so the first request after a deploy creates or updates the schema.
 
-| Kind | Name | Value |
-| --- | --- | --- |
-| Variable | `AZURE_API_APP_NAME` | the App Service name |
-| Secret | `AZURE_API_PUBLISH_PROFILE` | the App Service publish profile XML |
-| Variable | `AZURE_API_BASE_URL` | `https://<your-api>.azurewebsites.net/` |
-| Secret | `AZURE_STATIC_WEB_APPS_API_TOKEN` | the Static Web App deployment token |
+Until the `AZURE_*` variables exist the deploy jobs skip themselves; CI always runs.
 
-Until those exist the deploy workflows skip themselves; CI (build) always runs.
+## Changing things
+
+- **Name taken?** App Service and Key Vault names are global. Change `instance` in the parameter file (for example `002`).
+- **Different region:** override `location` and `staticWebAppLocation` (the Static Web App supports only a few regions).
+- **Tear down an environment:** delete its resource group. Key Vaults are soft-deleted, so purge `mowtrackr-kv-<env>-001`
+  before redeploying under the same name.

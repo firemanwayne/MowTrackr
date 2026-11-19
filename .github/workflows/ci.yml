@@ -23,4 +23,11 @@ jobs:
       - name: Build
         run: dotnet build MowTrackr.slnx --configuration Release --no-restore
 
+      - name: Validate Bicep
+        run: |
+          az bicep build --file infra/main.bicep --stdout > /dev/null
+          for env in dev prod; do
+            az bicep build-params --file "infra/parameters/$env.bicepparam" --stdout > /dev/null
+          done
+
       # Tests are deferred until the app is further along; add a dotnet test step here once test projects exist.

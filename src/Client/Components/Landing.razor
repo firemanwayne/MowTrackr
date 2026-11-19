@@ -1,0 +1,138 @@
+@inherits PageBase
+
+<div class="landing">
+    <section class="hero">
+        <div class="container cols">
+            <div>
+                <h1>@L["Every mower serviced on time."]</h1>
+                <p class="lead">@L["Track engine hours, see what is due, and assign the work."]</p>
+                <div class="actions">
+                    <a class="btn btn--primary" href="register">@L["Create an account"]</a>
+                    <a class="btn" href="login">@L["Sign in"]</a>
+                </div>
+            </div>
+            <div>
+                <div class="entry">
+                    <div class="entry__head">
+                        <span>@L["Due maintenance"]</span>
+                        <span>@L["Example data"]</span>
+                    </div>
+                    <div class="entry__body">
+                        <div class="entry__row">
+                            <strong>Zero-turn 3</strong>
+                            <span>@L["Oil change"]</span>
+                            <span class="num">@L["12.5 hrs over"]</span>
+                            <span class="chip chip--overdue">@L["Overdue"]</span>
+                        </div>
+                        <div class="entry__row">
+                            <strong>Walk-behind 1</strong>
+                            <span>@L["Blade sharpening"]</span>
+                            <span class="num">@L["9 days left"]</span>
+                            <span class="chip chip--soon">@L["Coming due"]</span>
+                        </div>
+                        <div class="entry__row">
+                            <strong>Zero-turn 1</strong>
+                            <span>@L["Air filter"]</span>
+                            <span class="num">@L["Work order open"]</span>
+                            <span class="chip chip--ok">@L["Scheduled"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="band">
+        <div class="container cols">
+            <h2>@L["Service by hours, days, or both."]</h2>
+            <ul class="ruled">
+                <li>
+                    <strong>@L["Hours interval"]</strong>
+                    <span class="muted">@L["Due after a set number of engine hours."]</span>
+                </li>
+                <li>
+                    <strong>@L["Days interval"]</strong>
+                    <span class="muted">@L["Due after a set number of days."]</span>
+                </li>
+                <li>
+                    <strong>@L["Required tasks"]</strong>
+                    <span class="muted">@L["Mark them in the checklist. A work order cannot be completed without them."]</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="band">
+        <div class="container cols cols--even">
+            <div>
+                <h2>@L["Work orders a technician can finish."]</h2>
+                <p class="lead">@L["Engine hours are recorded when the work starts and when it is done."]</p>
+            </div>
+            <div>
+                <div class="entry">
+                    <div class="entry__head">
+                        <span>@L["Oil change"], Zero-turn 3</span>
+                        <span>@L["Example data"]</span>
+                    </div>
+                    <div class="entry__body">
+                        <div class="tasks">
+                            <div class="task">
+                                <span class="task__box task__box--done"></span>
+                                <span>@L["Drain and refill oil"] *</span>
+                            </div>
+                            <div class="task">
+                                <span class="task__box task__box--done"></span>
+                                <span>@L["Replace oil filter"] *</span>
+                            </div>
+                            <div class="task">
+                                <span class="task__box"></span>
+                                <span>@L["Check blade for wear"]</span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <small>@L["Engine hours when done"]</small>
+                            <span class="num">@L["Enter the hour meter reading"]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="band">
+        <div class="container cols">
+            <h2>@L["Access that fits each role."]</h2>
+            <ul class="ruled">
+                <li>
+                    <strong>@L["Admin"]</strong>
+                    <span class="muted">@L["Everything a manager does, plus users and roles."]</span>
+                </li>
+                <li>
+                    <strong>@L["Manager"]</strong>
+                    <span class="muted">@L["Registers mowers, builds service templates and schedules work."]</span>
+                </li>
+                <li>
+                    <strong>@L["Technician"]</strong>
+                    <span class="muted">@L["Works through open work orders and checks off tasks."]</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="band close">
+        <div class="container cols">
+            <h2>@L["Add your first mower today."]</h2>
+            <div class="actions">
+                <a class="btn btn--primary" href="register">@L["Create an account"]</a>
+                <a class="btn" href="login">@L["Sign in"]</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="foot">
+        <div class="container foot__inner">
+            <span class="wordmark">MowTrackr</span>
+            <span>@L["Available in English and Spanish."]</span>
+        </div>
+    </footer>
+</div>

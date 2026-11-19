@@ -1,0 +1,196 @@
+name: Deploy
+
+# Provisions an environment from infra/ (Bicep), then publishes the API and the client.
+#   push to main      -> dev
+#   manual run        -> dev or prod, optionally as a what-if only
+# Sign-in to Azure uses OpenID Connect (no stored Azure credentials). Run infra/bootstrap.ps1 once to set it up;
+# until the AZURE_* variables exist the deploy jobs are skipped, and CI still runs on every push.
+#
+#   Repository variables  : AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#   Environment variables : AZURE_RESOURCE_GROUP                       (dev, prod)
+#   Environment secrets   : JWT_SIGNING_KEY                            (dev, prod)
+#   Optional secrets      : GOOGLE_CLIENT_ID/SECRET, FACEBOOK_CLIENT_ID/SECRET, LINKEDIN_CLIENT_ID/SECRET
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+        default: dev
+      what_if:
+        description: 'Run a what-if analysis only (no deployment)'
+        required: true
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_VERSION: 10.0.x
+  TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+
+jobs:
+  validate:
+    name: Build and validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build
+        run: dotnet build MowTrackr.slnx --configuration Release
+
+      - name: Validate Bicep
+        run: |
+          az bicep build --file infra/main.bicep --stdout > /dev/null
+          for env in dev prod; do
+            az bicep build-params --file "infra/parameters/$env.bicepparam" --stdout > /dev/null
+          done
+
+  infra:
+    name: Provision ${{ github.event.inputs.environment || 'dev' }}
+    needs: validate
+    if: ${{ vars.AZURE_CLIENT_ID != '' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    outputs:
+      apiName: ${{ steps.deploy.outputs.apiName }}
+      apiUrl: ${{ steps.deploy.outputs.apiUrl }}
+      clientName: ${{ steps.deploy.outputs.clientName }}
+      clientUrl: ${{ steps.deploy.outputs.clientUrl }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: What-if
+        if: ${{ github.event.inputs.what_if == 'true' }}
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+        run: |
+          az deployment group what-if \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --template-file infra/main.bicep \
+            --parameters "infra/parameters/${TARGET_ENV}.bicepparam"
+
+      - name: Deploy Bicep
+        id: deploy
+        if: ${{ github.event.inputs.what_if != 'true' }}
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+          FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+        run: |
+          outputs=$(az deployment group create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "mowtrackr-${TARGET_ENV}-${{ github.run_number }}" \
+            --template-file infra/main.bicep \
+            --parameters "infra/parameters/${TARGET_ENV}.bicepparam" \
+            --query properties.outputs --output json)
+
+          for key in apiName apiUrl clientName clientUrl; do
+            echo "$key=$(echo "$outputs" | jq -r ".$key.value")" >> "$GITHUB_OUTPUT"
+          done
+
+          {
+            echo "### ${TARGET_ENV} deployed"
+            echo "- API: $(echo "$outputs" | jq -r .apiUrl.value)"
+            echo "- Client: $(echo "$outputs" | jq -r .clientUrl.value)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-api:
+    name: Deploy API
+    needs: infra
+    if: ${{ github.event.inputs.what_if != 'true' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish
+        run: dotnet publish src/Api/MowTrackr.Api.csproj --configuration Release --output ./publish/api
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.infra.outputs.apiName }}
+          package: ./publish/api
+
+  deploy-client:
+    name: Deploy client
+    needs: infra
+    if: ${{ github.event.inputs.what_if != 'true' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Point the client at the deployed API
+        run: |
+          echo '{ "ApiBaseUrl": "${{ needs.infra.outputs.apiUrl }}" }' > src/Client/wwwroot/appsettings.json
+
+      - name: Publish
+        run: dotnet publish src/Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get the Static Web App deployment token
+        id: token
+        run: |
+          token=$(az staticwebapp secrets list --name "${{ needs.infra.outputs.clientName }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" --query properties.apiKey --output tsv)
+          echo "::add-mask::$token"
+          echo "value=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.token.outputs.value }}
+          action: upload
+          app_location: ./publish/client/wwwroot
+          skip_app_build: true
+          skip_api_build: true
