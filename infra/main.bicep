@@ -35,6 +35,15 @@ param sqlDatabaseSkuCapacity int = 2
 @description('Use the free SQL database offer. Only one database per subscription can.')
 param sqlUseFreeLimit bool = false
 
+@description('Custom host name for the client, a subdomain of the shared DNS zone (e.g. dev.mowtrackr.com). Empty to use the default azurestaticapps.net name.')
+param clientHostName string = ''
+
+@description('Name of the shared DNS zone (see infra/shared.bicep).')
+param dnsZoneName string = 'mowtrackr.com'
+
+@description('Resource group that holds the shared DNS zone.')
+param dnsZoneResourceGroup string = 'mowtrackr-rg-shared'
+
 @description('Signing key for the API-issued JWTs (32+ random characters).')
 @secure()
 param jwtSigningKey string
@@ -97,12 +106,36 @@ module client 'modules/staticwebapp.bicep' = {
   }
 }
 
+// Custom domain for the client: a CNAME in the shared zone, then the binding on the Static Web App.
+var useCustomDomain = !empty(clientHostName)
+
+module clientDnsRecord 'modules/dns-cname.bicep' = if (useCustomDomain) {
+  name: 'client-dns-record'
+  scope: resourceGroup(dnsZoneResourceGroup)
+  params: {
+    zoneName: dnsZoneName
+    recordName: replace(clientHostName, '.${dnsZoneName}', '')
+    target: client.outputs.defaultHostname
+  }
+}
+
+module clientDomain 'modules/staticwebapp-domain.bicep' = if (useCustomDomain) {
+  name: 'client-domain'
+  params: {
+    staticWebAppName: client.outputs.name
+    domainName: clientHostName
+  }
+  dependsOn: [
+    clientDnsRecord
+  ]
+}
+
 func secretRef(vault string, secretName string) string => '@Microsoft.KeyVault(VaultName=${vault};SecretName=${secretName})'
 
 var baseSettings = {
   ConnectionStrings__mowtrackr: 'Server=tcp:${sqlServerName}${az.environment().suffixes.sqlServerHostname},1433;Initial Catalog=${databaseName};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
   Jwt__SigningKey: secretRef(vaultName, 'jwt-signing-key')
-  Client__BaseUrl: 'https://${client.outputs.defaultHostname}'
+  Client__BaseUrl: 'https://${useCustomDomain ? clientHostName : client.outputs.defaultHostname}'
   ASPNETCORE_ENVIRONMENT: environment == 'dev' ? 'Development' : 'Production'
 }
 var googleSettings = empty(googleClientId) ? {} : {
@@ -177,4 +210,4 @@ output apiUrl string = 'https://${api.outputs.defaultHostname}/'
 output clientName string = client.outputs.name
 
 @description('Base URL of the client.')
-output clientUrl string = 'https://${client.outputs.defaultHostname}'
+output clientUrl string = 'https://${useCustomDomain ? clientHostName : client.outputs.defaultHostname}'

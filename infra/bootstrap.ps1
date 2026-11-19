@@ -122,11 +122,11 @@ foreach ($environment in $Environments) {
     }
 }
 
-# Shared resources (the DNS zone). Environments add their custom-domain records here, so the deploy app gets DNS rights.
+# Shared resources (the DNS zone). Environments add their custom-domain records here (a nested deployment into this group), so the deploy app gets Contributor on it.
 Write-Host '[shared] Resource group and DNS access...'
 az group create --name mowtrackr-rg-shared --location $Location `
     --tags Application=MowTrackr Environment=shared ManagedBy=Bootstrap --output none
-az role assignment create --assignee $appId --role 'DNS Zone Contributor' `
+az role assignment create --assignee $appId --role Contributor `
     --scope "/subscriptions/$subscriptionId/resourceGroups/mowtrackr-rg-shared" --output none
 
 Write-Host ''
