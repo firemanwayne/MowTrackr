@@ -14,6 +14,8 @@ internal sealed class JwtAuthenticationStateProvider(ITokenStore tokens, ISessio
 
     private static readonly TimeSpan MaxTimerDelay = TimeSpan.FromDays(24);
 
+    private static readonly TimeSpan ExpiryGrace = TimeSpan.FromSeconds(1);
+
     private static readonly AuthenticationState Anonymous = new(new ClaimsPrincipal(new ClaimsIdentity()));
 
     private Timer? _expiryTimer;
@@ -91,9 +93,10 @@ internal sealed class JwtAuthenticationStateProvider(ITokenStore tokens, ISessio
             return;
         }
 
-        var remaining = DateTimeOffset.FromUnixTimeSeconds(seconds) - DateTimeOffset.UtcNow;
+        // A moment after the expiry, not on it: a timer can fire a few milliseconds early, and the token only counts as expired once its second has passed.
+        var remaining = DateTimeOffset.FromUnixTimeSeconds(seconds) - DateTimeOffset.UtcNow + ExpiryGrace;
 
-        if (remaining <= TimeSpan.Zero || remaining > MaxTimerDelay)
+        if (remaining <= ExpiryGrace || remaining > MaxTimerDelay)
         {
             return;
         }

@@ -104,16 +104,23 @@ public sealed class JwtAuthenticationStateProviderTests
 
         using var provider = new JwtAuthenticationStateProvider(store, new SessionExpiry());
 
-        var changed = new TaskCompletionSource<Task<AuthenticationState>>();
+        var signedOut = new TaskCompletionSource();
 
-        provider.AuthenticationStateChanged += task => changed.TrySetResult(task);
+        // Every notification re-reads the token; wait for the one that finds the user signed out.
+        provider.AuthenticationStateChanged += async task =>
+        {
+            var state = await task;
+
+            if (!state.User.Identity!.IsAuthenticated)
+            {
+                signedOut.TrySetResult();
+            }
+        };
 
         var first = await provider.GetAuthenticationStateAsync();
 
         Assert.True(first.User.Identity!.IsAuthenticated);
 
-        var state = await (await changed.Task.WaitAsync(TimeSpan.FromSeconds(10)));
-
-        Assert.False(state.User.Identity!.IsAuthenticated);
+        await signedOut.Task.WaitAsync(TimeSpan.FromSeconds(10));
     }
 }
