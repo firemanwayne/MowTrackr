@@ -16,8 +16,17 @@ public abstract class PageBase : ComponentBase, IDisposable
 
     private readonly HashSet<string> _running = [];
 
-    /// <summary>Gets a token that is cancelled when the component is disposed.</summary>
-    protected CancellationToken Cancellation => _cancellation.Token;
+    /// <summary>Initializes the page, taking its cancellation token once so it stays readable after the page is disposed.</summary>
+    protected PageBase()
+    {
+        Cancellation = _cancellation.Token;
+    }
+
+    /// <summary>
+    /// Gets a token that is cancelled when the component is disposed. It is a copy taken up front: reading it from the
+    /// (disposed) source after the page has gone, as a button's cooldown or a late response does, would throw.
+    /// </summary>
+    protected CancellationToken Cancellation { get; }
 
     /// <summary>Gets or sets the string localizer (English text is the key; Spanish comes from the Localization library).</summary>
     [Inject]

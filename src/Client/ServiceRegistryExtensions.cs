@@ -25,6 +25,8 @@ internal static class ServiceRegistryExtensions
 
         services.TryAddSingleton<ITokenStore, LocalStorageTokenStore>();
 
+        services.TryAddSingleton<ISessionExpiry, SessionExpiry>();
+
         services.TryAddScoped<JwtAuthenticationStateProvider>();
 
         services.TryAddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());

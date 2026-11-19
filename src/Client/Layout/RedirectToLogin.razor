@@ -1,9 +1,11 @@
 @inject NavigationManager Navigation
+@inject ISessionExpiry Expiry
 
 @code {
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        Navigation.NavigateTo("login", replace: true);
+        // A session that ended on its own gets an explanation; someone who simply was not signed in does not.
+        Navigation.NavigateTo(Expiry.ConsumeNotice() ? "login?expired=true" : "login", replace: true);
     }
 }

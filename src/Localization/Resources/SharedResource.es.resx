@@ -258,4 +258,5 @@
   <data name="We sent a confirmation link to {0}. Open it to finish creating your account, then sign in." xml:space="preserve"><value>Enviamos un enlace de confirmación a {0}. Ábrelo para terminar de crear tu cuenta y luego inicia sesión.</value></data>
   <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Tu cuenta se creó, pero no se pudo enviar el correo de confirmación. Usa el botón de abajo para intentarlo de nuevo.</value></data>
   <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Demasiados intentos. Espera un momento e inténtalo de nuevo.</value></data>
+  <data name="Your session has expired. Please sign in again." xml:space="preserve"><value>Tu sesión ha vencido. Inicia sesión de nuevo.</value></data>
 </root>
