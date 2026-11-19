@@ -124,4 +124,10 @@
   <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Your account was created but the confirmation email could not be sent. Use the button below to try again.</value></data>
   <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Too many attempts. Wait a moment and try again.</value></data>
   <data name="Your session has expired. Please sign in again." xml:space="preserve"><value>Your session has expired. Please sign in again.</value></data>
+  <data name="Scan label" xml:space="preserve"><value>Scan label</value></data>
+  <data name="Reading the label... {0}%" xml:space="preserve"><value>Reading the label... {0}%</value></data>
+  <data name="We read the label. Check these before saving: {0}" xml:space="preserve"><value>We read the label. Check these before saving: {0}</value></data>
+  <data name="We could not find a manufacturer, model or serial number. Try again with the label flat, well lit and filling the photo." xml:space="preserve"><value>We could not find a manufacturer, model or serial number. Try again with the label flat, well lit and filling the photo.</value></data>
+  <data name="Could not read the label." xml:space="preserve"><value>Could not read the label.</value></data>
+  <data name="What the camera read" xml:space="preserve"><value>What the camera read</value></data>
 </root>

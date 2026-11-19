@@ -8,6 +8,7 @@
         <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
             @_error
         </RadzenAlert>
+        <LabelScanner OnRead="OnLabelReadAsync" />
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Name"]" Component="Name" />
@@ -93,6 +94,20 @@
             OilQuantityQuarts = Existing.OilQuantityQuarts,
             IsActive = Existing.IsActive,
         };
+    }
+
+    /// <summary>Fills in the fields that were read from the label; the technician still reviews them before saving.</summary>
+    /// <param name="reading">What was read.</param>
+    /// <returns>A completed task.</returns>
+    private Task OnLabelReadAsync(LabelReading reading)
+    {
+        _model.Manufacturer = reading.Manufacturer ?? _model.Manufacturer;
+
+        _model.Model = reading.Model ?? _model.Model;
+
+        _model.SerialNumber = reading.SerialNumber ?? _model.SerialNumber;
+
+        return Task.CompletedTask;
     }
 
     /// <summary>Saves the mower and closes the dialog.</summary>

@@ -1,0 +1,105 @@
+using MowTrackr.Client.Services;
+
+namespace MowTrackr.Client.UnitTests.Services;
+
+public sealed class LabelTextParserTests
+{
+    [Fact]
+    public void Parse_SeparateLabelledLines_ReadsAllThree()
+    {
+        var reading = LabelTextParser.Parse("TORO\nMODEL NO. 74591\nSERIAL NO. 408123456\nMade in USA");
+
+        Assert.Equal("Toro", reading.Manufacturer);
+
+        Assert.Equal("74591", reading.Model);
+
+        Assert.Equal("408123456", reading.SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_ModelAndSerialOnOneLine_ReadsBoth()
+    {
+        var reading = LabelTextParser.Parse("HUSQVARNA\nMODEL NO. Z254F SERIAL NO. 0098123");
+
+        Assert.Equal("Husqvarna", reading.Manufacturer);
+
+        Assert.Equal("Z254F", reading.Model);
+
+        Assert.Equal("0098123", reading.SerialNumber);
+    }
+
+    [Theory]
+    [InlineData("S/N: HRX-1234567", "HRX-1234567")]
+    [InlineData("S/N 8827341", "8827341")]
+    [InlineData("SER. NO. A1B2C3D4", "A1B2C3D4")]
+    [InlineData("Serial Number: 30045178", "30045178")]
+    [InlineData("SN#445566778", "445566778")]
+    public void Parse_CommonSerialLabellings_AreRecognized(string line, string expected)
+    {
+        Assert.Equal(expected, LabelTextParser.Parse(line).SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_ValueOnTheLineBelowTheKeyword_IsStillRead()
+    {
+        var reading = LabelTextParser.Parse("MODEL\n22318\nSERIAL NO.\n314159265");
+
+        Assert.Equal("22318", reading.Model);
+
+        Assert.Equal("314159265", reading.SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_MultiWordBrand_IsFound()
+    {
+        Assert.Equal("John Deere", LabelTextParser.Parse("JOHN DEERE\nMODEL: X350\nS/N 1GX350A123456").Manufacturer);
+
+        Assert.Equal("Briggs & Stratton", LabelTextParser.Parse("Briggs & Stratton Corp.\nModel 12V334").Manufacturer);
+    }
+
+    [Fact]
+    public void Parse_BrandInsideAnotherWord_IsNotFound()
+    {
+        Assert.Null(LabelTextParser.Parse("CARGO CAPACITY 500 LBS").Manufacturer);
+
+        Assert.Null(LabelTextParser.Parse("TORONTO ONTARIO").Manufacturer);
+    }
+
+    [Fact]
+    public void Parse_SerialWithoutADigit_IsRejected()
+    {
+        Assert.Null(LabelTextParser.Parse("SERIAL NO. UNKNOWN").SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_KeywordsWithNoValue_GiveNothing()
+    {
+        var reading = LabelTextParser.Parse("MODEL NO.\nSERIAL NO.");
+
+        Assert.Null(reading.Model);
+
+        Assert.Null(reading.SerialNumber);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   \n \n ")]
+    [InlineData("Keep hands and feet away. Read the operator's manual before use.")]
+    public void Parse_NoUsefulText_IsEmpty(string? text)
+    {
+        Assert.True(LabelTextParser.Parse(text).IsEmpty);
+    }
+
+    [Fact]
+    public void Parse_MessyOcrSpacing_IsTolerated()
+    {
+        var reading = LabelTextParser.Parse("  EXMARK   \r\n  MODEL    NO :   LZS740  \r\n  SERIAL   NO :  316 \r\n  S/N  ::  412233445 ");
+
+        Assert.Equal("Exmark", reading.Manufacturer);
+
+        Assert.Equal("LZS740", reading.Model);
+
+        Assert.Equal("412233445", reading.SerialNumber);
+    }
+}

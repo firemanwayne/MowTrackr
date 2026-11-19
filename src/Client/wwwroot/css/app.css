@@ -325,3 +325,22 @@ html, body {
     opacity: 1;
     color: var(--rz-success);
 }
+
+/* Scan label: the result summary and the raw text the camera read (kept visible while the feature is being trialled). */
+.label-scan {
+    margin-bottom: 0.75rem;
+}
+
+.label-scan__raw {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.label-scan__raw pre {
+    margin: 0.25rem 0 0;
+    padding: 0.5rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: 6px;
+}
