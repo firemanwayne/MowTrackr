@@ -81,6 +81,16 @@ var apiName = '${app}-api-${environment}-${instance}'
 var vaultName = '${app}-kv-${environment}-${instance}'
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 
+// Email: Azure Communication Services with an Azure-managed sender domain.
+module communication 'modules/communication.bicep' = {
+  name: 'communication'
+  params: {
+    name: '${app}-acs-${environment}-${instance}'
+    emailServiceName: '${app}-email-${environment}-${instance}'
+    tags: tags
+  }
+}
+
 // Secrets go to Key Vault; the API reads them with Key Vault references.
 module vault 'modules/key-vault.bicep' = {
   name: 'key-vault'
@@ -93,6 +103,7 @@ module vault 'modules/key-vault.bicep' = {
       'google-client-secret': empty(googleClientId) ? '' : googleClientSecret
       'facebook-client-secret': empty(facebookClientId) ? '' : facebookClientSecret
       'linkedin-client-secret': empty(linkedInClientId) ? '' : linkedInClientSecret
+      'communications-connection-string': communication.outputs.connectionString
     }
   }
 }
@@ -137,6 +148,8 @@ var baseSettings = {
   Jwt__SigningKey: secretRef(vaultName, 'jwt-signing-key')
   Client__BaseUrl: 'https://${useCustomDomain ? clientHostName : client.outputs.defaultHostname}'
   ASPNETCORE_ENVIRONMENT: environment == 'dev' ? 'Development' : 'Production'
+  Communications__ConnectionString: secretRef(vaultName, 'communications-connection-string')
+  Communications__SenderAddress: 'DoNotReply@${communication.outputs.senderDomain}'
 }
 var googleSettings = empty(googleClientId) ? {} : {
   Authentication__Google__ClientId: googleClientId

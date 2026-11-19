@@ -10,12 +10,34 @@ namespace MowTrackr.Identity.Services;
 /// </summary>
 /// <param name="userManager">The user manager.</param>
 /// <param name="tokens">The JWT issuer.</param>
+/// <param name="invitations">The invitation store (new external sign-ins need an invitation).</param>
+/// <param name="time">The clock.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITokenService tokens, ILogger<AuthService> logger) : IAuthService
+internal sealed class AuthService(
+    UserManager<ApplicationUser> userManager,
+    ITokenService tokens,
+    IRepository<UserInvitation> invitations,
+    TimeProvider time,
+    ILogger<AuthService> logger) : IAuthService
 {
+    private const string InvitationRequiredMessage = "MowTrackr is invitation only. Ask an administrator to invite you.";
+
+    /// <inheritdoc />
+    public async Task<Result<RegistrationStatusResponse>> GetRegistrationStatusAsync(CancellationToken cancellationToken)
+    {
+        var anyUsers = await userManager.Users.AnyAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result<RegistrationStatusResponse>.Ok(new RegistrationStatusResponse(!anyUsers));
+    }
+
     /// <inheritdoc />
     public async Task<Result<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
+        if (await userManager.Users.AnyAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return Result<AuthResponse>.Forbidden(InvitationRequiredMessage);
+        }
+
         var existing = await userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
 
         if (existing is not null)
@@ -82,7 +104,7 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
 
         if (user is null)
         {
-            var linked = await LinkOrCreateAsync(command).ConfigureAwait(false);
+            var linked = await LinkOrCreateAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (!linked.IsSuccess || linked.Value is null)
             {
@@ -95,10 +117,14 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
         return await CreateSessionAsync(user).ConfigureAwait(false);
     }
 
-    /// <summary>Links the provider login to an existing same-email user, or creates a new user.</summary>
+    /// <summary>
+    /// Links the provider login to an existing same-email user, or creates a new user. A new user needs a pending
+    /// invitation for that email (which also sets their role); only the very first account needs none.
+    /// </summary>
     /// <param name="command">The provider identity.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The user, or an error.</returns>
-    private async Task<Result<ApplicationUser>> LinkOrCreateAsync(ExternalLoginCommand command)
+    private async Task<Result<ApplicationUser>> LinkOrCreateAsync(ExternalLoginCommand command, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.Email))
         {
@@ -109,12 +135,22 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
 
         if (user is null)
         {
+            var firstAccount = !await userManager.Users.AnyAsync(cancellationToken).ConfigureAwait(false);
+
+            var invitation = firstAccount ? null : await FindPendingInvitationAsync(command.Email, cancellationToken).ConfigureAwait(false);
+
+            if (!firstAccount && invitation is null)
+            {
+                return Result<ApplicationUser>.Forbidden(InvitationRequiredMessage);
+            }
+
             user = new ApplicationUser
             {
                 UserName = command.Email,
                 Email = command.Email,
                 EmailConfirmed = true,
                 DisplayName = string.IsNullOrWhiteSpace(command.DisplayName) ? command.Email : command.DisplayName.Trim(),
+                Language = invitation?.Language ?? AppLanguages.Default,
             };
 
             var created = await userManager.CreateAsync(user).ConfigureAwait(false);
@@ -124,7 +160,20 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
                 return Result<ApplicationUser>.Invalid(string.Join(" ", created.Errors.Select(e => e.Description)));
             }
 
-            await AssignInitialRoleAsync(user).ConfigureAwait(false);
+            if (invitation is null)
+            {
+                await AssignInitialRoleAsync(user).ConfigureAwait(false);
+            }
+            else
+            {
+                await userManager.AddToRoleAsync(user, invitation.Role).ConfigureAwait(false);
+
+                invitation.AcceptedAt = time.GetUtcNow();
+
+                invitation.UpdatedAt = invitation.AcceptedAt.Value;
+
+                await invitations.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
         var login = new UserLoginInfo(command.Provider, command.ProviderKey, command.Provider);
@@ -139,6 +188,23 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
         logger.LogInformation("Linked {Provider} login to user {UserId}", command.Provider, user.Id);
 
         return Result<ApplicationUser>.Ok(user);
+    }
+
+    /// <summary>Finds the open invitation for an email address, tracked so it can be marked accepted.</summary>
+    /// <param name="emailAddress">The email address.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The pending invitation, or <see langword="null"/>.</returns>
+    private async Task<UserInvitation?> FindPendingInvitationAsync(string emailAddress, CancellationToken cancellationToken)
+    {
+        var normalized = userManager.NormalizeEmail(emailAddress.Trim()) ?? emailAddress.Trim().ToUpperInvariant();
+
+        var now = time.GetUtcNow();
+
+        var open = await invitations.ListAsync(
+            new QuerySpec<UserInvitation> { Filter = i => i.NormalizedEmail == normalized && i.AcceptedAt == null && i.RevokedAt == null && i.ExpiresAt > now, Track = true },
+            cancellationToken).ConfigureAwait(false);
+
+        return open.OrderByDescending(i => i.InvitedAt).FirstOrDefault();
     }
 
     /// <summary>Makes the first account an Admin; every later account starts as a Technician.</summary>

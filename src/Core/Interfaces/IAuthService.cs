@@ -7,7 +7,12 @@ namespace MowTrackr.Core.Interfaces;
 /// </summary>
 public interface IAuthService
 {
-    /// <summary>Creates a local account. The very first account becomes an Admin.</summary>
+    /// <summary>Reports whether open self-registration is available (only until the first account exists).</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The registration status.</returns>
+    Task<Result<RegistrationStatusResponse>> GetRegistrationStatusAsync(CancellationToken cancellationToken);
+
+    /// <summary>Creates the first account, which becomes an Admin. After that registration is by invitation only.</summary>
     /// <param name="request">The registration details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A signed-in session.</returns>

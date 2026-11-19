@@ -1,0 +1,142 @@
+@page "/invitations"
+@attribute [Authorize(Roles = AppRoles.Admin)]
+@inherits PageBase
+@inject IInvitationApiService InvitationApi
+@inject DialogService Dialogs
+
+<div class="page">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <h1>@L["Invitations"]</h1>
+        <RadzenButton Text="@L["Invite user"]" Icon="mail" Click="InviteAsync" />
+    </RadzenStack>
+    <RadzenText TextStyle="TextStyle.Body2">
+        @L["MowTrackr is invitation only. Invite someone by email and choose their role; they set a password from the link."]
+    </RadzenText>
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_invitations" TItem="InvitationResponse" IsLoading="_loading" AllowSorting="true" AllowPaging="true" PageSize="15">
+        <Columns>
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="Email" Title="@L["Email"]" MinWidth="220px" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="Role" Title="@L["Role"]" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="Status" Title="@L["Status"]">
+                <Template Context="invitation">
+                    <RadzenBadge Text="@InvitationStatusText(invitation.Status)" BadgeStyle="@InvitationStatusStyle(invitation.Status)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedByName" Title="@L["Invited by"]" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedAt" Title="@L["Sent"]" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="ExpiresAt" Title="@L["Expires"]" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Title="" Sortable="false" Filterable="false" Width="130px">
+                <Template Context="invitation">
+                    @if (invitation.Status is InvitationStatus.Pending or InvitationStatus.Expired)
+                    {
+                        <RadzenButton Icon="send" Variant="Variant.Text" Size="ButtonSize.Small" title="@L["Resend"]" aria-label="@L["Resend"]" Click="@(() => ResendAsync(invitation))" />
+                        <RadzenButton Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@L["Revoke"]" aria-label="@L["Revoke"]" Click="@(() => RevokeAsync(invitation))" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private List<InvitationResponse> _invitations = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    /// <summary>Loads the invitations.</summary>
+    /// <returns>A task.</returns>
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        var result = await InvitationApi.ListAsync(Cancellation);
+
+        _invitations = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+
+    /// <summary>Opens the invite dialog and reloads if an invitation was sent.</summary>
+    /// <returns>A task.</returns>
+    private async Task InviteAsync()
+    {
+        var sent = await Dialogs.OpenAsync<InvitationEditor>(L["Invite user"], null, new DialogOptions { Width = "520px" });
+
+        if (sent is true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    /// <summary>Sends a fresh link for an open invitation.</summary>
+    /// <param name="invitation">The invitation.</param>
+    /// <returns>A task.</returns>
+    private async Task ResendAsync(InvitationResponse invitation)
+    {
+        var result = await InvitationApi.ResendAsync(invitation.Id, Cancellation);
+
+        if (!result.IsSuccess || result.Value is null)
+        {
+            NotifyError(result.Error ?? L["Could not resend the invitation."]);
+
+            return;
+        }
+
+        ReportSent(result.Value, invitation.Email);
+
+        await LoadAsync();
+    }
+
+    /// <summary>Revokes an invitation after confirmation.</summary>
+    /// <param name="invitation">The invitation.</param>
+    /// <returns>A task.</returns>
+    private async Task RevokeAsync(InvitationResponse invitation)
+    {
+        var confirmed = await Dialogs.Confirm(L["Revoke the invitation for {0}? Its link will stop working.", invitation.Email], L["Revoke invitation"], new ConfirmOptions { OkButtonText = L["Revoke"], CancelButtonText = L["Cancel"] });
+
+        if (confirmed is not true)
+        {
+            return;
+        }
+
+        var result = await InvitationApi.RevokeAsync(invitation.Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? L["Could not revoke the invitation."]);
+
+            return;
+        }
+
+        NotifySuccess(L["Invitation revoked."]);
+
+        await LoadAsync();
+    }
+
+    /// <summary>Tells the administrator whether the email went out.</summary>
+    /// <param name="sent">The send outcome.</param>
+    /// <param name="email">The recipient address.</param>
+    private void ReportSent(InvitationSentResponse sent, string email)
+    {
+        if (sent.EmailSent)
+        {
+            NotifySuccess(L["Invitation sent to {0}.", email]);
+
+            return;
+        }
+
+        NotifyWarning(L["The invitation was saved but the email could not be sent. Check the email settings, then use Resend."]);
+    }
+}

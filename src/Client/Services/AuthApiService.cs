@@ -22,6 +22,24 @@ internal sealed class AuthApiService(HttpClient http, IStringLocalizer<SharedRes
     }
 
     /// <inheritdoc />
+    public Task<ApiResult<RegistrationStatusResponse>> GetRegistrationStatusAsync(CancellationToken cancellationToken)
+    {
+        return GetAsync<RegistrationStatusResponse>($"{ApiRoutes.Auth}/registration", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<InvitationPreviewResponse>> GetInvitationAsync(string token, CancellationToken cancellationToken)
+    {
+        return GetAsync<InvitationPreviewResponse>($"{ApiRoutes.Auth}/invitation?token={Uri.EscapeDataString(token)}", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<AuthResponse>> AcceptInvitationAsync(AcceptInvitationRequest request, CancellationToken cancellationToken)
+    {
+        return SendAsync<AcceptInvitationRequest, AuthResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/accept-invitation", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<ApiResult<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
         return SendAsync<RegisterRequest, AuthResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/register", request, cancellationToken);

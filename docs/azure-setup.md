@@ -9,6 +9,7 @@ Actions. The layout follows the AlertOne repo (per-environment parameter files, 
 | API | App Service (Linux, .NET 10), system-assigned managed identity | F1 Free | F1 Free |
 | Database | Azure SQL Database, Microsoft Entra-only authentication | [Free offer](https://learn.microsoft.com/azure/azure-sql/database/free-offer) | serverless GP_S_Gen5_1 (paid, auto-pauses) |
 | Secrets | Key Vault (RBAC) | yes | yes |
+| Email (invitations) | Azure Communication Services + Email Service, Azure-managed sender domain | yes | yes |
 
 > Only one database per subscription can use the free SQL offer, so dev takes it and prod runs a small paid
 > serverless database. The databases auto-pause when idle, so the first request after a quiet period can take a few
@@ -22,6 +23,7 @@ infra/
   main.bicep                  One environment: wires the modules, app settings and the Key Vault access
   modules/sql.bicep           SQL server (Entra-only) and database
   modules/key-vault.bicep     Key Vault and its secrets
+  modules/communication.bicep Communication Services, Email Service and an Azure-managed sender domain
   modules/api.bicep           Plan and web app with a managed identity
   modules/staticwebapp.bicep  Static Web App
   parameters/dev.bicepparam   Per-environment values (names, SKUs, free-offer switch, secrets from env variables)
@@ -35,7 +37,12 @@ infra/
 - **No passwords.** The API's managed identity is the SQL Entra administrator, so it runs EF Core migrations and
   queries with `Authentication=Active Directory Managed Identity`. Nobody else can log in to the database until you
   change the SQL admin in the portal (there is one Entra admin per server).
-- **Secrets in Key Vault.** The JWT signing key and OAuth client secrets are stored in the vault and read by the API
+- **Invitation email.** The deploy creates a Communication Services resource linked to an Azure-managed email domain
+  (`xxxx.azurecomm.net`) and gives the API `Communications__SenderAddress` plus the connection string (kept in Key
+  Vault). Azure-managed domains are fine for invitations, but mail from them can land in spam; to send from
+  `mowtrackr.com` instead, add it as a custom email domain in the portal and verify the DNS records in the shared zone.
+- **Secrets in Key Vault.** The JWT signing key, OAuth client secrets and the Communication Services connection string are
+  stored in the vault and read by the API
   through Key Vault references in its app settings.
 - **No stored Azure credentials.** GitHub signs in with OpenID Connect. The app registration has Contributor and
   Role Based Access Control Administrator on the two MowTrackr resource groups only.

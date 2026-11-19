@@ -1,4 +1,4 @@
-namespace MowTrackr.Api.Options;
+namespace MowTrackr.Core.Options;
 
 /// <summary>
 /// Where the Blazor client lives, bound from the "Client" configuration section. Used for CORS and the

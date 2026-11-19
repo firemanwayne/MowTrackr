@@ -45,6 +45,8 @@ internal static class ServiceRegistryExtensions
 
         AddApiClient<IUserApiService, UserApiService>(services, apiBaseAddress);
 
+        AddApiClient<IInvitationApiService, InvitationApiService>(services, apiBaseAddress);
+
         return services;
     }
 

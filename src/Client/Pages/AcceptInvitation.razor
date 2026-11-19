@@ -1,0 +1,124 @@
+@page "/accept-invitation"
+@attribute [AllowAnonymous]
+@inherits PageBase
+@inject IAuthApiService Auth
+@inject ISessionService Session
+@inject IPreferencesService Preferences
+@inject NavigationManager Navigation
+
+<div class="auth-card">
+    <LanguagePicker />
+    <RadzenCard>
+        @if (_loading)
+        {
+            <p>@L["Checking your invitation..."]</p>
+        }
+        else if (_preview is null)
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Invitation not available"]
+            </RadzenText>
+            <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" Variant="Variant.Flat">
+                @(_loadError ?? L["This invitation is no longer valid. Ask an administrator to send you a new one."])
+            </RadzenAlert>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
+                @L["Already have an account?"] <a href="login">@L["Sign in"]</a>
+            </RadzenText>
+        }
+        else
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Join MowTrackr"]
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">
+                @L["{0} invited you to MowTrackr as {1}.", _preview.InvitedByName, _preview.Role]
+            </RadzenText>
+            <EditForm Model="_model" OnValidSubmit="AcceptAsync">
+                <DataAnnotationsValidator />
+                <RadzenStack Gap="0.75rem" class="rz-mt-4">
+                    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
+                        @_error
+                    </RadzenAlert>
+                    <div>
+                        <RadzenLabel Text="@L["Email"]" Component="Email" />
+                        <RadzenTextBox Value="@_preview.Email" Name="Email" ReadOnly="true" Style="width: 100%" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
+                        <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.DisplayName)" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="@L["Password (8+ characters)"]" Component="Password" />
+                        <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.Password)" />
+                    </div>
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="_busy" />
+                </RadzenStack>
+            </EditForm>
+        }
+    </RadzenCard>
+</div>
+
+@code {
+    private readonly AcceptInvitationRequest _model = new();
+
+    private InvitationPreviewResponse? _preview;
+
+    private string? _loadError;
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    private bool _busy;
+
+    /// <summary>Gets or sets the secret token from the invitation link.</summary>
+    [SupplyParameterFromQuery(Name = "token")]
+    public string? Token { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Token))
+        {
+            var result = await Auth.GetInvitationAsync(Token, Cancellation);
+
+            _preview = result.Value;
+
+            _loadError = result.IsSuccess ? null : result.Error;
+
+            _model.Token = Token;
+
+            _model.Language = _preview?.Language;
+
+            _model.Theme = await Preferences.GetThemeAsync();
+        }
+
+        _loading = false;
+    }
+
+    /// <summary>Creates the account from the invitation and signs in.</summary>
+    /// <returns>A task.</returns>
+    private async Task AcceptAsync()
+    {
+        _busy = true;
+
+        _error = null;
+
+        var result = await Auth.AcceptInvitationAsync(_model, Cancellation);
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            var reload = await Session.SignInAsync(result.Value.Token, Cancellation);
+
+            Navigation.NavigateTo("", forceLoad: reload, replace: true);
+
+            return;
+        }
+
+        _error = result.Error;
+
+        _busy = false;
+    }
+}

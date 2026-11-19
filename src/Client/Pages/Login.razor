@@ -42,9 +42,18 @@
                 }
             </RadzenStack>
         }
-        <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
-            @L["New here?"] <a href="register">@L["Create an account"]</a>
-        </RadzenText>
+        @if (_registrationOpen)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
+                @L["No accounts exist yet."] <a href="register">@L["Create the first account"]</a>
+            </RadzenText>
+        }
+        else
+        {
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
+                @L["Access is by invitation. Ask your administrator to invite you."]
+            </RadzenText>
+        }
     </RadzenCard>
 </div>
 
@@ -57,6 +66,8 @@
 
     private bool _busy;
 
+    private bool _registrationOpen;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -66,6 +77,10 @@
         {
             _providers = result.Value ?? [];
         }
+
+        var registration = await Auth.GetRegistrationStatusAsync(Cancellation);
+
+        _registrationOpen = registration.Value?.IsOpen == true;
     }
 
     /// <summary>Signs in with email and password.</summary>

@@ -1,0 +1,76 @@
+@inherits PageBase
+@inject IInvitationApiService InvitationApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="SendAsync">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Email"]" Component="Email" />
+            <RadzenTextBox @bind-Value="_model.Email" Name="Email" Style="width: 100%" AutoComplete="false" />
+            <ValidationMessage For="@(() => _model.Email)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Role"]" Component="Role" />
+            <RadzenDropDown TValue="string" @bind-Value="_model.Role" Data="AppRoles.All" Name="Role" Style="width: 100%" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Email language"]" Component="Language" />
+            <RadzenDropDown TValue="string" @bind-Value="_model.Language" Data="_languages" TextProperty="Text" ValueProperty="Value" Name="Language" Style="width: 100%" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Send invitation"]" Icon="send" IsBusy="_busy" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private sealed record LanguageOption(string Value, string Text);
+
+    private readonly CreateInvitationRequest _model = new() { Language = AppLanguages.Default };
+
+    private readonly List<LanguageOption> _languages =
+    [
+        new LanguageOption(AppLanguages.English, "English"),
+        new LanguageOption(AppLanguages.Spanish, "Español"),
+    ];
+
+    private string? _error;
+
+    private bool _busy;
+
+    /// <summary>Sends the invitation and closes the dialog.</summary>
+    /// <returns>A task.</returns>
+    private async Task SendAsync()
+    {
+        _busy = true;
+
+        _error = null;
+
+        var result = await InvitationApi.CreateAsync(_model, Cancellation);
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            if (result.Value.EmailSent)
+            {
+                NotifySuccess(L["Invitation sent to {0}.", _model.Email]);
+            }
+            else
+            {
+                NotifyWarning(L["The invitation was saved but the email could not be sent. Check the email settings, then use Resend."]);
+            }
+
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+
+        _busy = false;
+    }
+}

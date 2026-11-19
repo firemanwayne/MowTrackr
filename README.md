@@ -23,9 +23,11 @@ src/
   Core/             Contracts (request/response models), interfaces, constants, Result<T>
   Assets/           Domain: mowers
   Maintenance/      Domain: service templates, interval validation, due checks, work orders
-  Identity/         Domain: users, roles, JWT issuing
+  Identity/         Domain: users, roles, invitations, JWT issuing
+  Communications/   Email sending (Azure Communication Services, or the log locally)
   Data/             EF Core context, migrations, repositories
   Localization/     UI strings (resx): English text is the key, SharedResource.es.resx holds Spanish
+tests/              Unit tests (Identity, Communications): dotnet test
 ```
 
 ## Run locally
@@ -40,7 +42,25 @@ dotnet run --project src/AppHost
 ```
 
 The Aspire dashboard shows the SQL container, API (`https://localhost:7191`) and client (`https://localhost:7072`).
-The first account you register becomes **Admin**; later accounts start as **Technician** (an Admin can change roles).
+The first account you register becomes **Admin**. From then on MowTrackr is **invitation only** (see below).
+
+## Invitations
+
+Open registration closes as soon as the first account exists. After that an **Admin** invites people from the
+**Invitations** page: pick an email address and a role (Admin, Manager or Technician), and MowTrackr emails a link. The
+invitee opens it, chooses a name and password, and is signed in with the invited role. Admins can **resend** (a new link
+and a fresh 7 days; the old link stops working) or **revoke** an invitation at any time. Links are single-use, expire
+after 7 days, and only a hash of the secret is stored. People who sign in with Google, Facebook or LinkedIn also need an
+invitation for their email.
+
+Email goes out through Azure Communication Services. Locally, with no `Communications` settings, nothing is sent and the
+invitation link is written to the API's log (the Aspire dashboard), so you can copy it into the browser. To send real
+mail locally:
+
+```bash
+dotnet user-secrets set "Communications:ConnectionString" "<Communication Services connection string>" --project src/Api
+dotnet user-secrets set "Communications:SenderAddress" "DoNotReply@<your-domain>.azurecomm.net" --project src/Api
+```
 
 ### External sign-in (optional)
 

@@ -51,11 +51,47 @@ public abstract class PageBase : ComponentBase, IDisposable
         };
     }
 
+    /// <summary>Gets the localized display text of an invitation status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The text.</returns>
+    protected string InvitationStatusText(InvitationStatus status)
+    {
+        return status switch
+        {
+            InvitationStatus.Pending => L["Pending"],
+            InvitationStatus.Accepted => L["Accepted"],
+            InvitationStatus.Revoked => L["Revoked"],
+            InvitationStatus.Expired => L["Expired"],
+            _ => status.ToString(),
+        };
+    }
+
+    /// <summary>Gets the chip colour for an invitation status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The badge style.</returns>
+    protected static BadgeStyle InvitationStatusStyle(InvitationStatus status)
+    {
+        return status switch
+        {
+            InvitationStatus.Pending => BadgeStyle.Info,
+            InvitationStatus.Accepted => BadgeStyle.Success,
+            InvitationStatus.Expired => BadgeStyle.Warning,
+            _ => BadgeStyle.Light,
+        };
+    }
+
     /// <summary>Shows a success toast.</summary>
     /// <param name="message">The message.</param>
     protected void NotifySuccess(string message)
     {
         Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = message, Duration = 3000 });
+    }
+
+    /// <summary>Shows a warning toast.</summary>
+    /// <param name="message">The message.</param>
+    protected void NotifyWarning(string message)
+    {
+        Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = message, Duration = 8000 });
     }
 
     /// <summary>Shows an error toast.</summary>

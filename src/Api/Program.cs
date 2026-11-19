@@ -1,6 +1,7 @@
 using MowTrackr.Api.Extensions;
-using MowTrackr.Api.Options;
 using MowTrackr.Assets;
+using MowTrackr.Communications;
+using MowTrackr.Core.Options;
 using MowTrackr.Data;
 using MowTrackr.Identity;
 using MowTrackr.Maintenance;
@@ -17,6 +18,7 @@ builder.AddDataServices();
 builder.Services
     .AddAssetsServices()
     .AddMaintenanceServices()
+    .AddCommunicationServices()
     .AddIdentityServices()
     .AddExternalProviders(builder.Configuration);
 

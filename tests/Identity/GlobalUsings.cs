@@ -1,0 +1,15 @@
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using Microsoft.Extensions.Options;
+global using Microsoft.Extensions.Time.Testing;
+global using MowTrackr.Core.Abstractions;
+global using MowTrackr.Core.Constants;
+global using MowTrackr.Core.Contracts.Identity;
+global using MowTrackr.Core.Enums;
+global using MowTrackr.Core.Interfaces;
+global using MowTrackr.Core.Models;
+global using MowTrackr.Identity.Models;
+global using NSubstitute;
+global using Xunit;
