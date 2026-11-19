@@ -27,7 +27,7 @@ jobs:
         run: |
           az bicep build --file infra/main.bicep --stdout > /dev/null
           for env in dev prod; do
-            "$HOME/.azure/bin/bicep" build-params "infra/parameters/$env.bicepparam" --stdout > /dev/null
+            az bicep build-params --file "infra/parameters/$env.bicepparam" --stdout > /dev/null
           done
 
       # Tests are deferred until the app is further along; add a dotnet test step here once test projects exist.
