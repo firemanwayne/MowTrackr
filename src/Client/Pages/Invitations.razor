@@ -24,8 +24,8 @@
                     <RadzenBadge Text="@InvitationStatusText(invitation.Status)" BadgeStyle="@InvitationStatusStyle(invitation.Status)" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedByName" Title="@L["Invited by"]" />
-            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedAt" Title="@L["Sent"]" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedByName" CssClass="hide-sm" Title="@L["Invited by"]" />
+            <RadzenDataGridColumn TItem="InvitationResponse" Property="InvitedAt" CssClass="hide-sm" Title="@L["Sent"]" FormatString="{0:d}" />
             <RadzenDataGridColumn TItem="InvitationResponse" Property="ExpiresAt" Title="@L["Expires"]" FormatString="{0:d}" />
             <RadzenDataGridColumn TItem="InvitationResponse" Title="" Sortable="false" Filterable="false" Width="130px">
                 <Template Context="invitation">

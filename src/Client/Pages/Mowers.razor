@@ -17,14 +17,14 @@
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_mowers" TItem="MowerResponse" IsLoading="_loading" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="15">
         <Columns>
             <RadzenDataGridColumn TItem="MowerResponse" Property="Name" Title="@L["Name"]" MinWidth="160px" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="Manufacturer" Title="@L["Manufacturer"]" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="Manufacturer" CssClass="hide-sm" Title="@L["Manufacturer"]" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Model" Title="@L["Model"]" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="SerialNumber" Title="@L["S/N"]" MinWidth="130px" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="PurchaseDate" Title="@L["Purchased"]" FormatString="{0:d}" MinWidth="120px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="SerialNumber" CssClass="hide-sm" Title="@L["S/N"]" MinWidth="130px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="PurchaseDate" CssClass="hide-sm" Title="@L["Purchased"]" FormatString="{0:d}" MinWidth="120px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="EngineHours" Title="@L["Engine hrs"]" FormatString="{0:0.#}" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="OilType" Title="@L["Oil"]" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantityQuarts" Title="@L["Qts"]" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" Title="@L["Last oil change"]" FormatString="{0:d}" MinWidth="150px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="OilType" CssClass="hide-sm" Title="@L["Oil"]" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantityQuarts" CssClass="hide-sm" Title="@L["Qts"]" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" CssClass="hide-sm" Title="@L["Last oil change"]" FormatString="{0:d}" MinWidth="150px" />
             <RadzenDataGridColumn TItem="MowerResponse" Title="@L["Active"]" Sortable="false" Filterable="false">
                 <Template Context="mower">
                     <RadzenBadge Text="@(mower.IsActive ? L["Active"] : L["Retired"])" BadgeStyle="@(mower.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />
