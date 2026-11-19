@@ -35,7 +35,30 @@ Steps 1 and 2 can run in parallel. Step 5 should wait for evidence of willingnes
 - Hour-meter entry with a numeric keypad; checklist rows that can be ticked with one tap (partly done in the mobile work).
 - QR code on each mower that opens its page (scan at the shop, start the right work order).
 - Camera: attach a photo to a work order task (damage, worn blade).
+- **Label capture** (customer request): a technician photographs the equipment's data plate or sticker and the manufacturer, model and serial number are read from it to fill in a new mower. See "Label capture" below.
 - Pin down which tablets to support (iPad Safari, Android Chrome) and test on real devices.
+
+### Label capture (S for photos, M for reading the label)
+
+Requested by a customer: take a picture of the label with the serial number, manufacturer and model, and add it to the asset. Build it in two steps so value arrives early.
+
+**Step A, photos (S).** "Add mower" gets a **Scan label** button that opens the tablet camera (`<input type="file" accept="image/*" capture="environment">` works on iPad and Android without a native app). The photo is compressed in the browser (phone photos are 5 to 10 MB), uploaded, and stored with the mower; the technician types the fields in with the photo beside the form. Useful on its own: the label photo stays on the record as proof and for parts ordering.
+
+**Step B, read the label (M).** Send the photo to a service that reads text and returns manufacturer, model and serial number, and **prefill the form**. Always show the result for the technician to confirm or correct before saving: OCR confuses 0/O and 1/I and labels are messy, and a wrong serial number is worse than an empty one.
+
+Ways to read the label, in order of how I would try them:
+
+1. **A vision AI model with a structured answer** (a JSON object with the three fields plus a confidence per field). Best at free-form labels, since "serial" and "model" are placed differently on every brand. Cost is a small amount per photo; needs a per-customer usage limit.
+2. **Azure OCR (Azure AI Vision / Document Intelligence) plus rules.** Stays inside Azure and is cheap, but needs brand-specific parsing to tell the serial from the model; weaker on unusual labels.
+3. **Read the barcode or QR code** on the label, if there is one (many modern plates encode the serial). Works offline in the browser with a JavaScript library; a good extra, not a replacement.
+
+Design points:
+
+- **Storage**: a single tenant-scoped `Attachment` (photo) record linked to a mower or work order, files in a private Azure Blob container, served by short-lived links. Reuse it for the work order task photos above.
+- **Upload safety**: accept only JPEG, PNG and HEIC (converted); reject SVG and anything else; size limit; strip location data from the photo; rate limit uploads and label reads (they cost money).
+- **Privacy**: a hosted AI model means the photo leaves our system; say so in the privacy statement, and prefer a provider and region that fit the customers' expectations.
+- **Offline**: the photo is queued with the other offline changes and read when the connection returns; the technician can still type the fields by hand at once.
+- **Measure it**: record how often the technician corrects each field, so we know whether the reading is good enough to trust.
 
 ## 2. Multi-tenant foundation (L)
 
@@ -109,3 +132,4 @@ Technicians work in yards and shops with weak signal, so offline is the feature 
 3. How do the first customers schedule and invoice today (paper, messages, QuickBooks)?
 4. Is the target customer a small landscaping crew, a municipality or golf course, or a dealer? This changes the roles, the pricing and the isolation needs.
 5. What would the design partners pay, and do they need offline from day one or can step 1 ship first?
+6. What do the labels look like (stamped metal plate, printed sticker, with or without a barcode), and are they often dirty or worn? A handful of real photos from the requesting customer would settle which reading approach to use.
