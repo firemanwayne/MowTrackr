@@ -8,7 +8,7 @@
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Mowers"]</h1>
         <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
-            <RadzenButton Text="@L["Add mower"]" Icon="add" Click="@(() => EditAsync(null))" />
+            <RadzenButton Text="@L["Add mower"]" Icon="add" Disabled="@IsRunning("add")" Click="@(() => RunOnceAsync("add", () => EditAsync(null)))" />
         </AuthorizeView>
     </RadzenStack>
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
@@ -33,8 +33,8 @@
             <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
                 <RadzenDataGridColumn TItem="MowerResponse" Title="" Sortable="false" Filterable="false" Width="110px">
                     <Template Context="mower">
-                        <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Click="@(() => EditAsync(mower))" />
-                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => DeleteAsync(mower))" />
+                        <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{mower.Id}")" Click="@(() => RunOnceAsync($"edit-{mower.Id}", () => EditAsync(mower)))" />
+                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{mower.Id}")" Click="@(() => RunOnceAsync($"delete-{mower.Id}", () => DeleteAsync(mower)))" />
                     </Template>
                 </RadzenDataGridColumn>
             </AuthorizeView>

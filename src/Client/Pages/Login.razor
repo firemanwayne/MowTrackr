@@ -11,23 +11,27 @@
         <RadzenText TextStyle="TextStyle.H5">
             @L["Sign in to MowTrackr"]
         </RadzenText>
-        <EditForm Model="_model" OnValidSubmit="SignInAsync">
+        <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("signin", SignInAsync))">
             <DataAnnotationsValidator />
             <RadzenStack Gap="0.75rem">
                 <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
                     @_error
                 </RadzenAlert>
+                @if (_needsConfirmation)
+                {
+                    <RadzenButton Text="@L["Resend confirmation email"]" Variant="Variant.Outlined" IsBusy="@IsRunning("resend")" Disabled="@IsRunning("resend")" Click="@(() => RunOnceAsync("resend", ResendConfirmationAsync))" />
+                }
                 <div>
                     <RadzenLabel Text="@L["Email"]" Component="Email" />
-                    <RadzenTextBox @bind-Value="_model.Email" Name="Email" Style="width: 100%" AutoComplete="false" />
+                    <RadzenTextBox @bind-Value="_model.Email" Name="Email" inputmode="email" autocomplete="username" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.Email)" />
                 </div>
                 <div>
                     <RadzenLabel Text="@L["Password"]" Component="Password" />
-                    <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
+                    <RadzenPassword @bind-Value="_model.Password" Name="Password" autocomplete="current-password" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.Password)" />
                 </div>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Sign in"]" IsBusy="_busy" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Sign in"]" IsBusy="@IsRunning("signin")" Disabled="@IsRunning("signin")" />
             </RadzenStack>
         </EditForm>
         @if (_providers.Count > 0)
@@ -64,7 +68,7 @@
 
     private string? _error;
 
-    private bool _busy;
+    private bool _needsConfirmation;
 
     private bool _registrationOpen;
 
@@ -87,9 +91,9 @@
     /// <returns>A task.</returns>
     private async Task SignInAsync()
     {
-        _busy = true;
-
         _error = null;
+
+        _needsConfirmation = false;
 
         var result = await Auth.LoginAsync(_model, Cancellation);
 
@@ -104,7 +108,24 @@
 
         _error = result.Error;
 
-        _busy = false;
+        // A correct password on an unconfirmed account comes back as Forbidden: offer a new confirmation email.
+        _needsConfirmation = result.StatusCode == HttpStatusCode.Forbidden;
+    }
+
+    /// <summary>Asks for a new confirmation email for the address typed in the form.</summary>
+    /// <returns>A task.</returns>
+    private async Task ResendConfirmationAsync()
+    {
+        var result = await Auth.ResendConfirmationAsync(_model.Email, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess(L["If that account still needs confirming, we sent a new link."]);
+
+            return;
+        }
+
+        NotifyError(result.Error ?? L["Could not send the email."]);
     }
 
     /// <summary>Leaves the app for the provider's sign-in page (the API redirects back to /auth/callback).</summary>

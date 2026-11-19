@@ -85,4 +85,42 @@
   <data name="Accepted" xml:space="preserve"><value>Accepted</value></data>
   <data name="Revoked" xml:space="preserve"><value>Revoked</value></data>
   <data name="Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Password requirements" xml:space="preserve"><value>Password requirements</value></data>
+  <data name="At least {0} characters" xml:space="preserve"><value>At least {0} characters</value></data>
+  <data name="An upper-case letter" xml:space="preserve"><value>An upper-case letter</value></data>
+  <data name="A lower-case letter" xml:space="preserve"><value>A lower-case letter</value></data>
+  <data name="A digit" xml:space="preserve"><value>A digit</value></data>
+  <data name="A symbol, such as ! or #" xml:space="preserve"><value>A symbol, such as ! or #</value></data>
+  <data name="Does not contain your name or email" xml:space="preserve"><value>Does not contain your name or email</value></data>
+  <data name="Not a common password" xml:space="preserve"><value>Not a common password</value></data>
+  <data name="Enter your mobile number with the country code. We will text you a code to confirm it is yours." xml:space="preserve"><value>Enter your mobile number with the country code. We will text you a code to confirm it is yours.</value></data>
+  <data name="Mobile number" xml:space="preserve"><value>Mobile number</value></data>
+  <data name="Send code" xml:space="preserve"><value>Send code</value></data>
+  <data name="Enter the code we texted to {0}." xml:space="preserve"><value>Enter the code we texted to {0}.</value></data>
+  <data name="Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Use a different number" xml:space="preserve"><value>Use a different number</value></data>
+  <data name="Verify" xml:space="preserve"><value>Verify</value></data>
+  <data name="The text could not be sent. Text messaging may not be set up yet; ask your administrator." xml:space="preserve"><value>The text could not be sent. Text messaging may not be set up yet; ask your administrator.</value></data>
+  <data name="Phone number verified." xml:space="preserve"><value>Phone number verified.</value></data>
+  <data name="Confirming your email address..." xml:space="preserve"><value>Confirming your email address...</value></data>
+  <data name="Email confirmed" xml:space="preserve"><value>Email confirmed</value></data>
+  <data name="Your email address is confirmed. You can sign in now." xml:space="preserve"><value>Your email address is confirmed. You can sign in now.</value></data>
+  <data name="Link not valid" xml:space="preserve"><value>Link not valid</value></data>
+  <data name="This confirmation link is not valid or has expired. Request a new one from the sign-in page." xml:space="preserve"><value>This confirmation link is not valid or has expired. Request a new one from the sign-in page.</value></data>
+  <data name="Go to sign in" xml:space="preserve"><value>Go to sign in</value></data>
+  <data name="Resend confirmation email" xml:space="preserve"><value>Resend confirmation email</value></data>
+  <data name="If that account still needs confirming, we sent a new link." xml:space="preserve"><value>If that account still needs confirming, we sent a new link.</value></data>
+  <data name="Could not send the email." xml:space="preserve"><value>Could not send the email.</value></data>
+  <data name="Email verified" xml:space="preserve"><value>Email verified</value></data>
+  <data name="Email not verified" xml:space="preserve"><value>Email not verified</value></data>
+  <data name="No phone number" xml:space="preserve"><value>No phone number</value></data>
+  <data name="Verified" xml:space="preserve"><value>Verified</value></data>
+  <data name="Not verified" xml:space="preserve"><value>Not verified</value></data>
+  <data name="Add and verify" xml:space="preserve"><value>Add and verify</value></data>
+  <data name="Change" xml:space="preserve"><value>Change</value></data>
+  <data name="Verify your phone" xml:space="preserve"><value>Verify your phone</value></data>
+  <data name="Check your email" xml:space="preserve"><value>Check your email</value></data>
+  <data name="We sent a confirmation link to {0}. Open it to finish creating your account, then sign in." xml:space="preserve"><value>We sent a confirmation link to {0}. Open it to finish creating your account, then sign in.</value></data>
+  <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Your account was created but the confirmation email could not be sent. Use the button below to try again.</value></data>
+  <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Too many attempts. Wait a moment and try again.</value></data>
 </root>

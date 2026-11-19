@@ -7,7 +7,7 @@
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Service templates"]</h1>
-        <RadzenButton Text="@L["New template"]" Icon="add" Click="@(() => EditAsync(null))" />
+        <RadzenButton Text="@L["New template"]" Icon="add" Disabled="@IsRunning("add")" Click="@(() => RunOnceAsync("add", () => EditAsync(null)))" />
     </RadzenStack>
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
@@ -32,8 +32,8 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="" Sortable="false" Width="110px">
                 <Template Context="template">
-                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Click="@(() => EditAsync(template))" />
-                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => DeleteAsync(template))" />
+                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{template.Id}")" Click="@(() => RunOnceAsync($"edit-{template.Id}", () => EditAsync(template)))" />
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{template.Id}")" Click="@(() => RunOnceAsync($"delete-{template.Id}", () => DeleteAsync(template)))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>

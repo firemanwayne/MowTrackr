@@ -1,0 +1,109 @@
+@inherits PageBase
+@inject IUserApiService UserApi
+@inject DialogService Dialogs
+
+<RadzenStack Gap="0.75rem">
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenAlert Visible="@(_warning is not null)" AlertStyle="AlertStyle.Warning" AllowClose="false">
+        @_warning
+    </RadzenAlert>
+    @if (!_codeRequested)
+    {
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+            @L["Enter your mobile number with the country code. We will text you a code to confirm it is yours."]
+        </RadzenText>
+        <div>
+            <RadzenLabel Text="@L["Mobile number"]" Component="Phone" />
+            <RadzenTextBox @bind-Value="_phone" Name="Phone" Placeholder="+15551234567" inputmode="tel" autocomplete="tel" Style="width: 100%" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton Text="@L["Send code"]" Icon="sms" IsBusy="@IsRunning("send")" Disabled="@IsRunning("send")" Click="@(() => RunOnceAsync("send", SendCodeAsync))" />
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+            @L["Enter the code we texted to {0}.", _phone]
+        </RadzenText>
+        <div>
+            <RadzenLabel Text="@L["Code"]" Component="Code" />
+            <RadzenTextBox @bind-Value="_code" Name="Code" MaxLength="10" inputmode="numeric" autocomplete="one-time-code" Style="width: 100%" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="@L["Use a different number"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="ChangeNumber" />
+            <RadzenButton Text="@L["Verify"]" Icon="check" IsBusy="@IsRunning("verify")" Disabled="@IsRunning("verify")" Click="@(() => RunOnceAsync("verify", VerifyAsync))" />
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    private string _phone = string.Empty;
+
+    private string _code = string.Empty;
+
+    private bool _codeRequested;
+
+    private string? _error;
+
+    private string? _warning;
+
+    /// <summary>Texts a code to the number entered.</summary>
+    /// <returns>A task.</returns>
+    private async Task SendCodeAsync()
+    {
+        _error = null;
+
+        _warning = null;
+
+        var result = await UserApi.StartPhoneVerificationAsync(new StartPhoneVerificationRequest { PhoneNumber = _phone }, Cancellation);
+
+        if (!result.IsSuccess || result.Value is null)
+        {
+            _error = result.Error;
+
+            return;
+        }
+
+        _codeRequested = true;
+
+        if (!result.Value.CodeSent)
+        {
+            _warning = L["The text could not be sent. Text messaging may not be set up yet; ask your administrator."];
+        }
+    }
+
+    /// <summary>Checks the code and saves the verified number.</summary>
+    /// <returns>A task.</returns>
+    private async Task VerifyAsync()
+    {
+        _error = null;
+
+        var result = await UserApi.VerifyPhoneAsync(new VerifyPhoneRequest { PhoneNumber = _phone, Code = _code }, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            _error = result.Error;
+
+            return;
+        }
+
+        NotifySuccess(L["Phone number verified."]);
+
+        Dialogs.Close(true);
+    }
+
+    /// <summary>Goes back to entering the number.</summary>
+    private void ChangeNumber()
+    {
+        _codeRequested = false;
+
+        _code = string.Empty;
+
+        _error = null;
+
+        _warning = null;
+    }
+}

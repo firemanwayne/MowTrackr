@@ -20,6 +20,18 @@ internal sealed class UserApiService(HttpClient http, IStringLocalizer<SharedRes
     }
 
     /// <inheritdoc />
+    public Task<ApiResult<StartPhoneVerificationResponse>> StartPhoneVerificationAsync(StartPhoneVerificationRequest request, CancellationToken cancellationToken)
+    {
+        return SendAsync<StartPhoneVerificationRequest, StartPhoneVerificationResponse>(HttpMethod.Post, $"{ApiRoutes.Users}/me/phone/send-code", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<UserResponse>> VerifyPhoneAsync(VerifyPhoneRequest request, CancellationToken cancellationToken)
+    {
+        return SendAsync<VerifyPhoneRequest, UserResponse>(HttpMethod.Post, $"{ApiRoutes.Users}/me/phone/verify", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<ApiResult<List<UserResponse>>> ListAsync(CancellationToken cancellationToken)
     {
         return GetAsync<List<UserResponse>>(ApiRoutes.Users, cancellationToken);

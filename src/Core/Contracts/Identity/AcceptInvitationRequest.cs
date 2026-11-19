@@ -1,3 +1,5 @@
+using MowTrackr.Core.Constants;
+
 namespace MowTrackr.Core.Contracts.Identity;
 
 /// <summary>
@@ -17,7 +19,7 @@ public sealed class AcceptInvitationRequest
 
     /// <summary>Gets or sets the password.</summary>
     [Required]
-    [StringLength(100, MinimumLength = 8)]
+    [StringLength(PasswordPolicy.MaxLength, MinimumLength = PasswordPolicy.MinLength)]
     public string Password { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the initial UI language code; defaults to the invitation's language when omitted or unsupported.</summary>

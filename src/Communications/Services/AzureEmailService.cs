@@ -17,29 +17,44 @@ internal sealed class AzureEmailService(IOptions<CommunicationsOptions> options,
     private readonly EmailClient _client = new(options.Value.ConnectionString);
 
     /// <inheritdoc />
-    public async Task<bool> SendInvitationAsync(InvitationEmail email, CancellationToken cancellationToken)
+    public Task<bool> SendInvitationAsync(InvitationEmail email, CancellationToken cancellationToken)
     {
-        var (subject, plainText, html) = InvitationEmailTemplate.Build(email);
+        return SendAsync(email.To, InvitationEmailTemplate.Build(email), "Invitation", cancellationToken);
+    }
 
-        var content = new EmailContent(subject)
+    /// <inheritdoc />
+    public Task<bool> SendEmailConfirmationAsync(EmailConfirmationEmail email, CancellationToken cancellationToken)
+    {
+        return SendAsync(email.To, ConfirmationEmailTemplate.Build(email), "Confirmation", cancellationToken);
+    }
+
+    /// <summary>Sends one message and reports whether the mail service accepted it.</summary>
+    /// <param name="to">The recipient address.</param>
+    /// <param name="message">The subject and bodies.</param>
+    /// <param name="kind">What kind of email this is, for the log.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> if the message was accepted.</returns>
+    private async Task<bool> SendAsync(string to, (string Subject, string PlainText, string Html) message, string kind, CancellationToken cancellationToken)
+    {
+        var content = new EmailContent(message.Subject)
         {
-            PlainText = plainText,
-            Html = html,
+            PlainText = message.PlainText,
+            Html = message.Html,
         };
 
-        var message = new EmailMessage(_options.SenderAddress, email.To, content);
+        var emailMessage = new EmailMessage(_options.SenderAddress, to, content);
 
-        var operation = await _client.SendAsync(WaitUntil.Completed, message, cancellationToken).ConfigureAwait(false);
+        var operation = await _client.SendAsync(WaitUntil.Completed, emailMessage, cancellationToken).ConfigureAwait(false);
 
         var succeeded = operation.HasCompleted && operation.Value.Status == EmailSendStatus.Succeeded;
 
         if (succeeded)
         {
-            logger.LogInformation("Invitation email sent (operation {OperationId})", operation.Id);
+            logger.LogInformation("{Kind} email sent (operation {OperationId})", kind, operation.Id);
         }
         else
         {
-            logger.LogWarning("Invitation email was not sent (operation {OperationId}, status {Status})", operation.Id, operation.Value.Status);
+            logger.LogWarning("{Kind} email was not sent (operation {OperationId}, status {Status})", kind, operation.Id, operation.Value.Status);
         }
 
         return succeeded;

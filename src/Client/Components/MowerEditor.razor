@@ -2,7 +2,7 @@
 @inject IMowerApiService MowerApi
 @inject DialogService Dialogs
 
-<EditForm Model="_model" OnValidSubmit="SaveAsync">
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
     <DataAnnotationsValidator />
     <RadzenStack Gap="0.75rem">
         <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
@@ -59,7 +59,7 @@
         </RadzenRow>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
             <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="_busy" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -68,9 +68,6 @@
     private MowerRequest _model = new();
 
     private string? _error;
-
-    private bool _busy;
-
     /// <summary>Gets or sets the mower being edited; <see langword="null"/> adds a new one.</summary>
     [Parameter]
     public MowerResponse? Existing { get; set; }
@@ -102,8 +99,6 @@
     /// <returns>A task.</returns>
     private async Task SaveAsync()
     {
-        _busy = true;
-
         _error = null;
 
         var result = Existing is null
@@ -120,7 +115,5 @@
         }
 
         _error = result.Error;
-
-        _busy = false;
     }
 }

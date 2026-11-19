@@ -29,14 +29,14 @@
             @foreach (var task in _order.Tasks)
             {
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
-                    <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen)" Change="@(isChecked => SetTaskAsync(task, isChecked))" Name="@($"task-{task.Id}")" />
+                    <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
                     <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
                 </RadzenStack>
             }
         </RadzenStack>
         @if (_isOpen)
         {
-            <EditForm Model="_completion" OnValidSubmit="CompleteAsync">
+            <EditForm Model="_completion" OnValidSubmit="@(() => RunOnceAsync("complete", CompleteAsync))">
                 <DataAnnotationsValidator />
                 <RadzenCard>
                     <RadzenStack Gap="0.75rem">
@@ -59,7 +59,7 @@
                             <RadzenTextArea @bind-Value="_completion.Notes" Name="Notes" Rows="3" Style="width: 100%" />
                         </div>
                         <div>
-                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="_busy" Disabled="@(_order.Tasks.Any(t => t.IsRequired && !t.IsComplete) || _completion.EngineHoursAtService < MinimumHours)" />
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="@IsRunning("complete")" Disabled="@(IsRunning("complete") || _order.Tasks.Any(t => t.IsRequired && !t.IsComplete) || _completion.EngineHoursAtService < MinimumHours)" />
                         </div>
                     </RadzenStack>
                 </RadzenCard>
@@ -82,9 +82,6 @@
     private string? _error;
 
     private string? _hoursError;
-
-    private bool _busy;
-
     private decimal MinimumHours => _order?.EngineHoursAtStart ?? 0m;
 
     /// <summary>Gets or sets the work order key from the route.</summary>
@@ -154,8 +151,6 @@
             return;
         }
 
-        _busy = true;
-
         var result = await MaintenanceApi.CompleteAsync(Id, _completion, Cancellation);
 
         if (result.IsSuccess)
@@ -168,7 +163,5 @@
         {
             NotifyError(result.Error ?? L["Could not complete the work order."]);
         }
-
-        _busy = false;
     }
 }

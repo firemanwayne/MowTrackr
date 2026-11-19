@@ -18,6 +18,9 @@ param secrets object
 @maxValue(90)
 param softDeleteRetentionInDays int = 7
 
+@description('Block permanent deletion during the retention period. Cannot be turned off once on, so it is enabled for production only.')
+param enablePurgeProtection bool = false
+
 @description('Resource tags.')
 param tags object = {}
 
@@ -34,6 +37,7 @@ resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: softDeleteRetentionInDays
+    enablePurgeProtection: enablePurgeProtection ? true : null
     publicNetworkAccess: 'Enabled'
     networkAcls: {
       bypass: 'AzureServices'

@@ -44,6 +44,9 @@ param dnsZoneName string = 'mowtrackr.com'
 @description('Resource group that holds the shared DNS zone.')
 param dnsZoneResourceGroup string = 'mowtrackr-rg-shared'
 
+@description('Communication Services phone number that verification texts are sent from (E.164, e.g. +18885550100). Leave empty until a number is acquired; phone verification is then unavailable.')
+param smsSenderNumber string = ''
+
 @description('Signing key for the API-issued JWTs (32+ random characters).')
 @secure()
 param jwtSigningKey string
@@ -98,6 +101,7 @@ module vault 'modules/key-vault.bicep' = {
     name: vaultName
     location: location
     tags: tags
+    enablePurgeProtection: environment == 'prod'
     secrets: {
       'jwt-signing-key': jwtSigningKey
       'google-client-secret': empty(googleClientId) ? '' : googleClientSecret
@@ -147,7 +151,8 @@ var baseSettings = {
   ConnectionStrings__mowtrackr: 'Server=tcp:${sqlServerName}${az.environment().suffixes.sqlServerHostname},1433;Initial Catalog=${databaseName};Authentication=Active Directory Managed Identity;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
   Jwt__SigningKey: secretRef(vaultName, 'jwt-signing-key')
   Client__BaseUrl: 'https://${useCustomDomain ? clientHostName : client.outputs.defaultHostname}'
-  ASPNETCORE_ENVIRONMENT: environment == 'dev' ? 'Development' : 'Production'
+  // Never 'Development' in Azure: that mode shows stack traces and exposes API docs to the internet.
+  ASPNETCORE_ENVIRONMENT: environment == 'dev' ? 'Staging' : 'Production'
   Communications__ConnectionString: secretRef(vaultName, 'communications-connection-string')
   Communications__SenderAddress: 'DoNotReply@${communication.outputs.senderDomain}'
 }
@@ -158,6 +163,9 @@ var googleSettings = empty(googleClientId) ? {} : {
 var facebookSettings = empty(facebookClientId) ? {} : {
   Authentication__Facebook__ClientId: facebookClientId
   Authentication__Facebook__ClientSecret: secretRef(vaultName, 'facebook-client-secret')
+}
+var smsSettings = empty(smsSenderNumber) ? {} : {
+  Communications__SmsSenderNumber: smsSenderNumber
 }
 var linkedInSettings = empty(linkedInClientId) ? {} : {
   Authentication__LinkedIn__ClientId: linkedInClientId
@@ -171,7 +179,7 @@ module api 'modules/api.bicep' = {
     planName: '${app}-plan-${environment}-${instance}'
     appName: apiName
     planSku: appServicePlanSku
-    appSettings: union(baseSettings, googleSettings, facebookSettings, linkedInSettings)
+    appSettings: union(baseSettings, googleSettings, facebookSettings, linkedInSettings, smsSettings)
     tags: tags
   }
   dependsOn: [

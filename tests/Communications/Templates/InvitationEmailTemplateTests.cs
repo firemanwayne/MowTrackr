@@ -31,7 +31,7 @@ public sealed class InvitationEmailTemplateTests
 
         Assert.Equal("Wayne te invitó a MowTrackr", subject);
 
-        Assert.Contains("Aceptar invitación", html, StringComparison.Ordinal);
+        Assert.Contains("Aceptar invitación", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
 
         Assert.Contains("lang=\"es\"", html, StringComparison.Ordinal);
 

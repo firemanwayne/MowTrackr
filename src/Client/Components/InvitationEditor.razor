@@ -2,7 +2,7 @@
 @inject IInvitationApiService InvitationApi
 @inject DialogService Dialogs
 
-<EditForm Model="_model" OnValidSubmit="SendAsync">
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SendAsync))">
     <DataAnnotationsValidator />
     <RadzenStack Gap="0.75rem">
         <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
@@ -23,7 +23,7 @@
         </div>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
             <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Send invitation"]" Icon="send" IsBusy="_busy" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Send invitation"]" Icon="send" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -40,15 +40,10 @@
     ];
 
     private string? _error;
-
-    private bool _busy;
-
     /// <summary>Sends the invitation and closes the dialog.</summary>
     /// <returns>A task.</returns>
     private async Task SendAsync()
     {
-        _busy = true;
-
         _error = null;
 
         var result = await InvitationApi.CreateAsync(_model, Cancellation);
@@ -70,7 +65,5 @@
         }
 
         _error = result.Error;
-
-        _busy = false;
     }
 }

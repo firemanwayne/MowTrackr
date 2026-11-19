@@ -19,6 +19,7 @@ param sqlUseFreeLimit = true
 
 // Secrets come from the deploy workflow's environment variables (GitHub environment secrets).
 param jwtSigningKey = readEnvironmentVariable('JWT_SIGNING_KEY', '')
+param smsSenderNumber = readEnvironmentVariable('SMS_SENDER_NUMBER', '')
 param googleClientId = readEnvironmentVariable('GOOGLE_CLIENT_ID', '')
 param googleClientSecret = readEnvironmentVariable('GOOGLE_CLIENT_SECRET', '')
 param facebookClientId = readEnvironmentVariable('FACEBOOK_CLIENT_ID', '')

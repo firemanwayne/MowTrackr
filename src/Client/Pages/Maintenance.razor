@@ -43,7 +43,7 @@
                     }
                     else
                     {
-                        <RadzenButton Text="@L["Schedule"]" Size="ButtonSize.Small" Click="@(() => ScheduleAsync(item))" />
+                        <RadzenButton Text="@L["Schedule"]" Size="ButtonSize.Small" Disabled="@IsRunning($"schedule-{item.MowerId}-{item.ServiceTemplateId}")" Click="@(() => RunOnceAsync($"schedule-{item.MowerId}-{item.ServiceTemplateId}", () => ScheduleAsync(item)))" />
                     }
                 </Template>
             </RadzenDataGridColumn>

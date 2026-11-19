@@ -25,7 +25,7 @@
                         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                             @context.User.Identity?.Name
                         </RadzenText>
-                        <RadzenButton Text="@L["Sign out"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="SignOutAsync" />
+                        <RadzenButton Text="@L["Sign out"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Disabled="_signingOut" Click="SignOutAsync" />
                     </Authorized>
                     <NotAuthorized>
                         <RadzenButton Text="@L["Sign in"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("login"))" />
@@ -66,6 +66,8 @@
 @code {
     private bool _sidebarExpanded = true;
 
+    private bool _signingOut;
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
@@ -85,6 +87,13 @@
     /// <returns>A task.</returns>
     private async Task SignOutAsync()
     {
+        if (_signingOut)
+        {
+            return;
+        }
+
+        _signingOut = true;
+
         await Session.SignOutAsync();
 
         Navigation.NavigateTo("login");

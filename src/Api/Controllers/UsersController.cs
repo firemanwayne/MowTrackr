@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using MowTrackr.Api.Extensions;
 using MowTrackr.Core.Contracts.Identity;
 
@@ -31,6 +32,32 @@ public sealed class UsersController(IUserService users) : ControllerBase
     public async Task<IActionResult> UpdateMeAsync([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
         var result = await users.UpdateProfileAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Texts a verification code to a phone number the user wants to use.</summary>
+    /// <param name="request">The phone number.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Whether the text was sent.</returns>
+    [HttpPost("me/phone/send-code")]
+    [EnableRateLimiting(RateLimitPolicies.Sms)]
+    public async Task<IActionResult> StartPhoneVerificationAsync([FromBody] StartPhoneVerificationRequest request, CancellationToken cancellationToken)
+    {
+        var result = await users.StartPhoneVerificationAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Finishes phone verification with the texted code and saves the number as verified.</summary>
+    /// <param name="request">The number and the code.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated profile.</returns>
+    [HttpPost("me/phone/verify")]
+    [EnableRateLimiting(RateLimitPolicies.PhoneVerify)]
+    public async Task<IActionResult> VerifyPhoneAsync([FromBody] VerifyPhoneRequest request, CancellationToken cancellationToken)
+    {
+        var result = await users.VerifyPhoneAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
 
         return result.ToActionResult();
     }

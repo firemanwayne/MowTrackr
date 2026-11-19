@@ -1,0 +1,19 @@
+# Weekly dependency updates, so known-vulnerable packages and actions do not sit unnoticed.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "Aspire.*"
+      azure:
+        patterns:
+          - "Azure.*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -40,9 +40,21 @@ internal sealed class AuthApiService(HttpClient http, IStringLocalizer<SharedRes
     }
 
     /// <inheritdoc />
-    public Task<ApiResult<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
+    public Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
-        return SendAsync<RegisterRequest, AuthResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/register", request, cancellationToken);
+        return SendAsync<RegisterRequest, RegisterResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/register", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<MessageResponse>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken)
+    {
+        return SendAsync<ConfirmEmailRequest, MessageResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/confirm-email", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<MessageResponse>> ResendConfirmationAsync(string email, CancellationToken cancellationToken)
+    {
+        return SendAsync<ResendConfirmationRequest, MessageResponse>(HttpMethod.Post, $"{ApiRoutes.Auth}/resend-confirmation", new ResendConfirmationRequest { Email = email }, cancellationToken);
     }
 
     /// <inheritdoc />

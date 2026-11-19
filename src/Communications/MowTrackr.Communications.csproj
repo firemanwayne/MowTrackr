@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Communication.Email" />
+    <PackageReference Include="Azure.Communication.Sms" />
   </ItemGroup>
 
   <ItemGroup>

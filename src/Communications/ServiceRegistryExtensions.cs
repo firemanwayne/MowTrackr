@@ -24,6 +24,15 @@ public static class ServiceRegistryExtensions
                 : ActivatorUtilities.CreateInstance<LoggingEmailService>(sp);
         });
 
+        services.TryAddSingleton<ISmsService>(sp =>
+        {
+            var settings = sp.GetRequiredService<IOptions<CommunicationsOptions>>().Value;
+
+            return settings.IsSmsConfigured
+                ? ActivatorUtilities.CreateInstance<AzureSmsService>(sp)
+                : ActivatorUtilities.CreateInstance<LoggingSmsService>(sp);
+        });
+
         return services;
     }
 }

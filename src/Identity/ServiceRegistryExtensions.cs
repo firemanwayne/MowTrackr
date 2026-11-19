@@ -7,6 +7,7 @@ using MowTrackr.Identity.Interfaces;
 using MowTrackr.Identity.Models;
 using MowTrackr.Identity.Options;
 using MowTrackr.Identity.Services;
+using MowTrackr.Identity.Validators;
 
 namespace MowTrackr.Identity;
 
@@ -15,6 +16,8 @@ namespace MowTrackr.Identity;
 /// </summary>
 public static class ServiceRegistryExtensions
 {
+    private const int MinimumSigningKeyBytes = 32;
+
     /// <summary>
     /// Adds Identity (users and roles; the EF Core stores are attached by the Data library), JWT bearer
     /// authentication, the role-based authorization policies and the auth/user services.
@@ -23,7 +26,11 @@ public static class ServiceRegistryExtensions
     /// <returns>The same collection, for chaining.</returns>
     public static IServiceCollection AddIdentityServices(this IServiceCollection services)
     {
-        services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
+        services
+            .AddOptions<JwtOptions>()
+            .BindConfiguration(JwtOptions.SectionName)
+            .Validate(o => Encoding.UTF8.GetByteCount(o.SigningKey) >= MinimumSigningKeyBytes, $"Jwt:SigningKey must be at least {MinimumSigningKeyBytes} bytes.")
+            .ValidateOnStart();
 
         services.AddOptions<InvitationOptions>().BindConfiguration(InvitationOptions.SectionName);
 
@@ -34,11 +41,21 @@ public static class ServiceRegistryExtensions
             {
                 options.User.RequireUniqueEmail = true;
 
-                options.Password.RequiredLength = 8;
+                // Password rules live in AppPasswordValidator (shared with the client), so the built-in checks are relaxed to avoid duplicate messages.
+                options.Password.RequiredLength = 1;
+                options.Password.RequiredUniqueChars = 1;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
 
+                options.Lockout.AllowedForNewUsers = true;
                 options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
-            .AddRoles<ApplicationRole>();
+            .AddRoles<ApplicationRole>()
+            .AddPasswordValidator<AppPasswordValidator>()
+            .AddDefaultTokenProviders();
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -59,6 +76,7 @@ public static class ServiceRegistryExtensions
                     ValidateAudience = true,
                     ValidAudience = settings.Audience,
                     ValidateIssuerSigningKey = true,
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SigningKey)),
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromMinutes(1),

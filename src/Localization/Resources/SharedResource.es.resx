@@ -220,4 +220,42 @@
   <data name="Accepted" xml:space="preserve"><value>Aceptada</value></data>
   <data name="Revoked" xml:space="preserve"><value>Revocada</value></data>
   <data name="Expired" xml:space="preserve"><value>Vencida</value></data>
+  <data name="Password requirements" xml:space="preserve"><value>Requisitos de la contraseña</value></data>
+  <data name="At least {0} characters" xml:space="preserve"><value>Al menos {0} caracteres</value></data>
+  <data name="An upper-case letter" xml:space="preserve"><value>Una letra mayúscula</value></data>
+  <data name="A lower-case letter" xml:space="preserve"><value>Una letra minúscula</value></data>
+  <data name="A digit" xml:space="preserve"><value>Un número</value></data>
+  <data name="A symbol, such as ! or #" xml:space="preserve"><value>Un símbolo, como ! o #</value></data>
+  <data name="Does not contain your name or email" xml:space="preserve"><value>No contiene tu nombre ni tu correo</value></data>
+  <data name="Not a common password" xml:space="preserve"><value>No es una contraseña común</value></data>
+  <data name="Enter your mobile number with the country code. We will text you a code to confirm it is yours." xml:space="preserve"><value>Escribe tu número de móvil con el código de país. Te enviaremos un código por mensaje para confirmar que es tuyo.</value></data>
+  <data name="Mobile number" xml:space="preserve"><value>Número de móvil</value></data>
+  <data name="Send code" xml:space="preserve"><value>Enviar código</value></data>
+  <data name="Enter the code we texted to {0}." xml:space="preserve"><value>Escribe el código que enviamos por mensaje a {0}.</value></data>
+  <data name="Code" xml:space="preserve"><value>Código</value></data>
+  <data name="Use a different number" xml:space="preserve"><value>Usar otro número</value></data>
+  <data name="Verify" xml:space="preserve"><value>Verificar</value></data>
+  <data name="The text could not be sent. Text messaging may not be set up yet; ask your administrator." xml:space="preserve"><value>No se pudo enviar el mensaje. Puede que los mensajes de texto aún no estén configurados; consulta a tu administrador.</value></data>
+  <data name="Phone number verified." xml:space="preserve"><value>Número de teléfono verificado.</value></data>
+  <data name="Confirming your email address..." xml:space="preserve"><value>Confirmando tu correo...</value></data>
+  <data name="Email confirmed" xml:space="preserve"><value>Correo confirmado</value></data>
+  <data name="Your email address is confirmed. You can sign in now." xml:space="preserve"><value>Tu correo está confirmado. Ya puedes iniciar sesión.</value></data>
+  <data name="Link not valid" xml:space="preserve"><value>Enlace no válido</value></data>
+  <data name="This confirmation link is not valid or has expired. Request a new one from the sign-in page." xml:space="preserve"><value>Este enlace de confirmación no es válido o ha vencido. Solicita uno nuevo desde la página de inicio de sesión.</value></data>
+  <data name="Go to sign in" xml:space="preserve"><value>Ir a iniciar sesión</value></data>
+  <data name="Resend confirmation email" xml:space="preserve"><value>Reenviar correo de confirmación</value></data>
+  <data name="If that account still needs confirming, we sent a new link." xml:space="preserve"><value>Si esa cuenta aún necesita confirmación, enviamos un enlace nuevo.</value></data>
+  <data name="Could not send the email." xml:space="preserve"><value>No se pudo enviar el correo.</value></data>
+  <data name="Email verified" xml:space="preserve"><value>Correo verificado</value></data>
+  <data name="Email not verified" xml:space="preserve"><value>Correo sin verificar</value></data>
+  <data name="No phone number" xml:space="preserve"><value>Sin número de teléfono</value></data>
+  <data name="Verified" xml:space="preserve"><value>Verificado</value></data>
+  <data name="Not verified" xml:space="preserve"><value>Sin verificar</value></data>
+  <data name="Add and verify" xml:space="preserve"><value>Añadir y verificar</value></data>
+  <data name="Change" xml:space="preserve"><value>Cambiar</value></data>
+  <data name="Verify your phone" xml:space="preserve"><value>Verifica tu teléfono</value></data>
+  <data name="Check your email" xml:space="preserve"><value>Revisa tu correo</value></data>
+  <data name="We sent a confirmation link to {0}. Open it to finish creating your account, then sign in." xml:space="preserve"><value>Enviamos un enlace de confirmación a {0}. Ábrelo para terminar de crear tu cuenta y luego inicia sesión.</value></data>
+  <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Tu cuenta se creó, pero no se pudo enviar el correo de confirmación. Usa el botón de abajo para intentarlo de nuevo.</value></data>
+  <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Demasiados intentos. Espera un momento e inténtalo de nuevo.</value></data>
 </root>

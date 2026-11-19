@@ -10,4 +10,10 @@ public interface IEmailService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><see langword="true"/> if the mail service accepted the message.</returns>
     Task<bool> SendInvitationAsync(InvitationEmail email, CancellationToken cancellationToken);
+
+    /// <summary>Sends an email asking the recipient to confirm their address.</summary>
+    /// <param name="email">The recipient, link and wording.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> if the mail service accepted the message.</returns>
+    Task<bool> SendEmailConfirmationAsync(EmailConfirmationEmail email, CancellationToken cancellationToken);
 }

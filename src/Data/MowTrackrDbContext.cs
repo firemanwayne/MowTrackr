@@ -5,8 +5,11 @@ namespace MowTrackr.Data;
 /// </summary>
 /// <param name="options">The context options.</param>
 internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> options)
-    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
+    : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IDataProtectionKeyContext
 {
+    /// <summary>Gets the data-protection keys, so email-confirmation tokens and sign-in cookies survive restarts and scale-out.</summary>
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
     /// <summary>Gets the mowers.</summary>
     public DbSet<Mower> Mowers => Set<Mower>();
 

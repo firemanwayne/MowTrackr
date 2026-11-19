@@ -15,6 +15,12 @@ public sealed class CommunicationsOptions
     /// <summary>Gets or sets the verified sender address, e.g. DoNotReply@xxxx.azurecomm.net.</summary>
     public string SenderAddress { get; set; } = string.Empty;
 
-    /// <summary>Gets a value indicating whether real sending is configured.</summary>
+    /// <summary>Gets or sets the Communication Services phone number text messages are sent from, in E.164 format.</summary>
+    public string SmsSenderNumber { get; set; } = string.Empty;
+
+    /// <summary>Gets a value indicating whether real email sending is configured.</summary>
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ConnectionString) && !string.IsNullOrWhiteSpace(SenderAddress);
+
+    /// <summary>Gets a value indicating whether real text messaging is configured.</summary>
+    public bool IsSmsConfigured => !string.IsNullOrWhiteSpace(ConnectionString) && !string.IsNullOrWhiteSpace(SmsSenderNumber);
 }

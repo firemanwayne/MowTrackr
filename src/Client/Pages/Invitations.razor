@@ -7,7 +7,7 @@
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Invitations"]</h1>
-        <RadzenButton Text="@L["Invite user"]" Icon="mail" Click="InviteAsync" />
+        <RadzenButton Text="@L["Invite user"]" Icon="mail" IsBusy="@IsRunning("invite")" Disabled="@IsRunning("invite")" Click="@(() => RunOnceAsync("invite", InviteAsync))" />
     </RadzenStack>
     <RadzenText TextStyle="TextStyle.Body2">
         @L["MowTrackr is invitation only. Invite someone by email and choose their role; they set a password from the link."]
@@ -31,8 +31,8 @@
                 <Template Context="invitation">
                     @if (invitation.Status is InvitationStatus.Pending or InvitationStatus.Expired)
                     {
-                        <RadzenButton Icon="send" Variant="Variant.Text" Size="ButtonSize.Small" title="@L["Resend"]" aria-label="@L["Resend"]" Click="@(() => ResendAsync(invitation))" />
-                        <RadzenButton Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@L["Revoke"]" aria-label="@L["Revoke"]" Click="@(() => RevokeAsync(invitation))" />
+                        <RadzenButton Icon="send" Variant="Variant.Text" Size="ButtonSize.Small" title="@L["Resend"]" aria-label="@L["Resend"]" Disabled="@IsRunning($"resend-{invitation.Id}")" Click="@(() => RunOnceAsync($"resend-{invitation.Id}", () => ResendAsync(invitation)))" />
+                        <RadzenButton Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" title="@L["Revoke"]" aria-label="@L["Revoke"]" Disabled="@IsRunning($"revoke-{invitation.Id}")" Click="@(() => RunOnceAsync($"revoke-{invitation.Id}", () => RevokeAsync(invitation)))" />
                     }
                 </Template>
             </RadzenDataGridColumn>
