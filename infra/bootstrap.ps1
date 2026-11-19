@@ -64,7 +64,13 @@ gh variable set AZURE_CLIENT_ID --repo $Repository --body $appId
 gh variable set AZURE_TENANT_ID --repo $Repository --body $tenantId
 gh variable set AZURE_SUBSCRIPTION_ID --repo $Repository --body $subscriptionId
 
-$existingSecrets = @{}
+$ownerName, $repoName = $Repository -split '/'
+$ownerId = gh api "repos/$Repository" --jq .owner.id
+$repoId = gh api "repos/$Repository" --jq .id
+if (-not $ownerId -or -not $repoId) {
+    throw "Could not read the numeric ids of $Repository from GitHub."
+}
+
 foreach ($environment in $Environments) {
     $resourceGroup = "mowtrackr-rg-$environment"
 
@@ -72,26 +78,33 @@ foreach ($environment in $Environments) {
     az group create --name $resourceGroup --location $Location `
         --tags Application=MowTrackr Environment=$environment ManagedBy=Bootstrap --output none
 
-    Write-Host "[$environment] Federated credential..."
-    $subject = "repo:${Repository}:environment:${environment}"
+    Write-Host "[$environment] Federated credentials..."
+    # GitHub presents either the name-based subject or, for repositories with immutable ids enabled, the id-based one
+    # (repo:owner@ownerId/name@repoId:...). Register both so sign-in works either way.
+    $subjects = @{
+        "github-$environment"    = "repo:${Repository}:environment:${environment}"
+        "github-$environment-id" = "repo:${ownerName}@${ownerId}/${repoName}@${repoId}:environment:${environment}"
+    }
     # Microsoft Graph directly, so this works on older Azure CLI versions without the federated-credential commands.
     # Older CLI versions return the object id as "objectId", newer ones as "id".
     $appObjectId = az ad app show --id $appId --query "objectId || id" --output tsv
     $credentialsUrl = "https://graph.microsoft.com/v1.0/applications/$appObjectId/federatedIdentityCredentials"
-    $existing = az rest --method GET --url $credentialsUrl --query "value[?subject=='$subject'].name" --output tsv
-    if (-not $existing) {
-        $credential = @{
-            name      = "github-$environment"
-            issuer    = 'https://token.actions.githubusercontent.com'
-            subject   = $subject
-            audiences = @('api://AzureADTokenExchange')
-        } | ConvertTo-Json -Compress
-        $file = New-TemporaryFile
-        Set-Content -Path $file -Value $credential -Encoding utf8
-        az rest --method POST --url $credentialsUrl --headers 'Content-Type=application/json' --body "@$file" --output none
-        Remove-Item $file
+    foreach ($credentialName in $subjects.Keys) {
+        $subject = $subjects[$credentialName]
+        $existing = az rest --method GET --url $credentialsUrl --query "value[?subject=='$subject'].name" --output tsv
+        if (-not $existing) {
+            $credential = @{
+                name      = $credentialName
+                issuer    = 'https://token.actions.githubusercontent.com'
+                subject   = $subject
+                audiences = @('api://AzureADTokenExchange')
+            } | ConvertTo-Json -Compress
+            $file = New-TemporaryFile
+            Set-Content -Path $file -Value $credential -Encoding utf8
+            az rest --method POST --url $credentialsUrl --headers 'Content-Type=application/json' --body "@$file" --output none
+            Remove-Item $file
+        }
     }
-
     Write-Host "[$environment] Role assignments on the resource group..."
     $scope = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
     az role assignment create --assignee $appId --role Contributor --scope $scope --output none

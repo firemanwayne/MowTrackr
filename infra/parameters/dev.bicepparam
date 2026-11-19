@@ -1,8 +1,9 @@
 using '../main.bicep'
 
 param environment = 'dev'
-param location = 'eastus2'
-param staticWebAppLocation = 'eastus2'
+// West US 2: the subscription's F1 (free) App Service quota is only available there.
+param location = 'westus2'
+param staticWebAppLocation = 'westus2'
 param instance = '001'
 
 // Everything free: dev takes the subscription's one free SQL database.
