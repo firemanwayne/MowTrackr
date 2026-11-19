@@ -8,6 +8,9 @@ param staticWebAppLocation = 'westus2'
 param sqlLocation = 'westus3'
 param instance = '001'
 
+// The client's custom domain (a CNAME in the shared mowtrackr.com zone).
+param clientHostName = 'dev.mowtrackr.com'
+
 // Everything free: dev takes the subscription's one free SQL database.
 param appServicePlanSku = 'F1'
 param sqlDatabaseSkuName = 'GP_S_Gen5_2'
