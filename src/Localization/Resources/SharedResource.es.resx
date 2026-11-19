@@ -259,4 +259,10 @@
   <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Tu cuenta se creó, pero no se pudo enviar el correo de confirmación. Usa el botón de abajo para intentarlo de nuevo.</value></data>
   <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Demasiados intentos. Espera un momento e inténtalo de nuevo.</value></data>
   <data name="Your session has expired. Please sign in again." xml:space="preserve"><value>Tu sesión ha vencido. Inicia sesión de nuevo.</value></data>
+  <data name="Scan label" xml:space="preserve"><value>Escanear etiqueta</value></data>
+  <data name="Reading the label... {0}%" xml:space="preserve"><value>Leyendo la etiqueta... {0}%</value></data>
+  <data name="We read the label. Check these before saving: {0}" xml:space="preserve"><value>Leímos la etiqueta. Revisa estos datos antes de guardar: {0}</value></data>
+  <data name="We could not find a manufacturer, model or serial number. Try again with the label flat, well lit and filling the photo." xml:space="preserve"><value>No encontramos fabricante, modelo ni número de serie. Inténtalo de nuevo con la etiqueta plana, bien iluminada y que llene la foto.</value></data>
+  <data name="Could not read the label." xml:space="preserve"><value>No se pudo leer la etiqueta.</value></data>
+  <data name="What the camera read" xml:space="preserve"><value>Lo que leyó la cámara</value></data>
 </root>

@@ -40,6 +40,8 @@ def build_policy(api_origin: str, script_hashes: list[str]) -> str:
             "img-src 'self' data:",
             f"connect-src 'self' {api_origin}",
             "manifest-src 'self'",
+            # The label scanner's OCR engine runs in a web worker served from our own origin.
+            "worker-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
