@@ -1,4 +1,5 @@
 using MowTrackr.Api.Extensions;
+using Microsoft.AspNetCore.HttpOverrides;
 using MowTrackr.Assets;
 using MowTrackr.Communications;
 using MowTrackr.Core.Options;
@@ -34,11 +35,36 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
+builder.Services.AddAppRateLimiting();
+
+// Behind the Azure front end the real client address is in X-Forwarded-For; without this every request looks like one client.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    options.KnownIPNetworks.Clear();
+
+    options.KnownProxies.Clear();
+});
+
+builder.Services.AddProblemDetails();
+
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+
+    app.UseHsts();
+}
+
+app.UseSecurityHeaders();
 
 app.MapDefaultEndpoints();
 
@@ -52,6 +78,8 @@ app.UseHttpsRedirection();
 app.UseCors(ClientCorsPolicy);
 
 app.UseAuthentication();
+
+app.UseRateLimiter();
 
 app.UseAuthorization();
 

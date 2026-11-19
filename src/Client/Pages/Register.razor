@@ -2,7 +2,6 @@
 @attribute [AllowAnonymous]
 @inherits PageBase
 @inject IAuthApiService Auth
-@inject ISessionService Session
 @inject IPreferencesService Preferences
 @inject ICultureService Cultures
 @inject NavigationManager Navigation
@@ -10,45 +9,67 @@
 <div class="auth-card">
     <LanguagePicker />
     <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H5">
-            @L["Create your profile"]
-        </RadzenText>
-        <EditForm Model="_model" OnValidSubmit="RegisterAsync">
-            <DataAnnotationsValidator />
-            <RadzenStack Gap="0.75rem">
-                <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
-                    @_error
-                </RadzenAlert>
-                <div>
-                    <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
-                    <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
-                    <ValidationMessage For="@(() => _model.DisplayName)" />
-                </div>
-                <div>
-                    <RadzenLabel Text="@L["Email"]" Component="Email" />
-                    <RadzenTextBox @bind-Value="_model.Email" Name="Email" Style="width: 100%" />
-                    <ValidationMessage For="@(() => _model.Email)" />
-                </div>
-                <div>
-                    <RadzenLabel Text="@L["Password (8+ characters)"]" Component="Password" />
-                    <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
-                    <ValidationMessage For="@(() => _model.Password)" />
-                </div>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="_busy" />
+        @if (_registered is not null)
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Check your email"]
+            </RadzenText>
+            <RadzenAlert AlertStyle="AlertStyle.Success" AllowClose="false" Variant="Variant.Flat" Visible="@_registered.ConfirmationEmailSent">
+                @L["We sent a confirmation link to {0}. Open it to finish creating your account, then sign in.", _registered.Email]
+            </RadzenAlert>
+            <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" Variant="Variant.Flat" Visible="@(!_registered.ConfirmationEmailSent)">
+                @L["Your account was created but the confirmation email could not be sent. Use the button below to try again."]
+            </RadzenAlert>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-mt-4">
+                <RadzenButton Text="@L["Resend confirmation email"]" Variant="Variant.Outlined" IsBusy="@IsRunning("resend")" Disabled="@IsRunning("resend")" Click="@(() => RunOnceAsync("resend", ResendAsync))" />
+                <RadzenButton Text="@L["Go to sign in"]" Click="@(() => Navigation.NavigateTo("login"))" />
             </RadzenStack>
-        </EditForm>
-        <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
-            @L["Already registered?"] <a href="login">@L["Sign in"]</a>
-        </RadzenText>
+        }
+        else
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Create the first account"]
+            </RadzenText>
+            <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("register", RegisterAsync))">
+                <DataAnnotationsValidator />
+                <RadzenStack Gap="0.75rem">
+                    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
+                        @_error
+                    </RadzenAlert>
+                    <div>
+                        <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
+                        <RadzenTextBox @bind-Value="_model.DisplayName" Immediate="true" Name="DisplayName" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.DisplayName)" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="@L["Email"]" Component="Email" />
+                        <RadzenTextBox @bind-Value="_model.Email" Immediate="true" Name="Email" inputmode="email" autocomplete="email" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.Email)" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="@L["Password"]" Component="Password" />
+                        <RadzenPassword @bind-Value="_model.Password" Immediate="true" Name="Password" autocomplete="new-password" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.Password)" />
+                        <PasswordRequirements Password="@_model.Password" PersonalInfo="@PersonalInfo" />
+                    </div>
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="@IsRunning("register")" Disabled="@IsRunning("register")" />
+                </RadzenStack>
+            </EditForm>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
+                @L["Already registered?"] <a href="login">@L["Sign in"]</a>
+            </RadzenText>
+        }
     </RadzenCard>
 </div>
 
 @code {
     private readonly RegisterRequest _model = new();
 
+    private RegisterResponse? _registered;
+
     private string? _error;
 
-    private bool _busy;
+    private IReadOnlyList<string?> PersonalInfo => [_model.Email, _model.DisplayName];
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -67,27 +88,37 @@
         _model.Theme = await Preferences.GetThemeAsync();
     }
 
-    /// <summary>Creates the account and signs in. The new profile starts with the language and theme already in effect.</summary>
+    /// <summary>Creates the account. It cannot sign in until the emailed link has been opened.</summary>
     /// <returns>A task.</returns>
     private async Task RegisterAsync()
     {
-        _busy = true;
-
         _error = null;
 
         var result = await Auth.RegisterAsync(_model, Cancellation);
 
         if (result.IsSuccess && result.Value is not null)
         {
-            var reload = await Session.SignInAsync(result.Value.Token, Cancellation);
-
-            Navigation.NavigateTo("", forceLoad: reload, replace: true);
+            _registered = result.Value;
 
             return;
         }
 
         _error = result.Error;
+    }
 
-        _busy = false;
+    /// <summary>Asks for another confirmation email.</summary>
+    /// <returns>A task.</returns>
+    private async Task ResendAsync()
+    {
+        var result = await Auth.ResendConfirmationAsync(_model.Email, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess(L["If that account still needs confirming, we sent a new link."]);
+
+            return;
+        }
+
+        NotifyError(result.Error ?? L["Could not send the email."]);
     }
 }

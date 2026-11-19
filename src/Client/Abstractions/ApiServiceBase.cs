@@ -107,6 +107,11 @@ internal abstract class ApiServiceBase(HttpClient http, IStringLocalizer<SharedR
             }
         }
 
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            error = localizer["Too many attempts. Wait a moment and try again."].Value;
+        }
+
         error ??= response.StatusCode switch
         {
             HttpStatusCode.Unauthorized => localizer["Please sign in again."].Value,

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MowTrackr.Api.Extensions;
 using MowTrackr.Core.Contracts.Identity;
@@ -17,6 +18,7 @@ namespace MowTrackr.Api.Controllers;
 /// <param name="client">The client location settings.</param>
 [ApiController]
 [AllowAnonymous]
+[EnableRateLimiting(RateLimitPolicies.Auth)]
 [Route(ApiRoutes.Auth)]
 public sealed class AuthController(IAuthService auth, IInvitationService invitations, IAuthenticationSchemeProvider schemes, IOptions<ClientOptions> client) : ControllerBase
 {
@@ -57,10 +59,34 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
         return result.ToActionResult();
     }
 
-    /// <summary>Creates the first account, which becomes an Admin. After that registration is by invitation only.</summary>
+    /// <summary>Confirms an email address from the emailed link.</summary>
+    /// <param name="request">The user and token from the link.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A message, or why the link is not valid.</returns>
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
+    {
+        var result = await auth.ConfirmEmailAsync(request, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Sends a new confirmation email. Always answers the same, so it cannot be used to find accounts.</summary>
+    /// <param name="request">The address.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A message.</returns>
+    [HttpPost("resend-confirmation")]
+    public async Task<IActionResult> ResendConfirmationAsync([FromBody] ResendConfirmationRequest request, CancellationToken cancellationToken)
+    {
+        var result = await auth.ResendConfirmationAsync(request, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Creates the first account, which becomes an Admin, and emails a confirmation link. After that registration is by invitation only.</summary>
     /// <param name="request">The registration details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The signed-in session.</returns>
+    /// <returns>Where the confirmation link was sent.</returns>
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {

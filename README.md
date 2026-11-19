@@ -42,7 +42,9 @@ dotnet run --project src/AppHost
 ```
 
 The Aspire dashboard shows the SQL container, API (`https://localhost:7191`) and client (`https://localhost:7072`).
-The first account you register becomes **Admin**. From then on MowTrackr is **invitation only** (see below).
+The first account you register becomes **Admin** and must confirm its email before it can sign in; locally nothing is sent, so the confirmation link is written to the API log (the Aspire dashboard) - copy it into the browser. From then on MowTrackr is **invitation only** (see below).
+
+Passwords need 12 to 128 characters with upper case, lower case, a digit and a symbol, and must not contain your name or email or be a common password. Phone numbers are saved only after a texted code is entered (locally the code is also written to the log). See [docs/security.md](docs/security.md) for the security review.
 
 ## Invitations
 

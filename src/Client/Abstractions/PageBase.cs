@@ -10,7 +10,11 @@ namespace MowTrackr.Client.Abstractions;
 /// </summary>
 public abstract class PageBase : ComponentBase, IDisposable
 {
+    private const int CooldownMilliseconds = 400;
+
     private readonly CancellationTokenSource _cancellation = new();
+
+    private readonly HashSet<string> _running = [];
 
     /// <summary>Gets a token that is cancelled when the component is disposed.</summary>
     protected CancellationToken Cancellation => _cancellation.Token;
@@ -22,6 +26,38 @@ public abstract class PageBase : ComponentBase, IDisposable
     /// <summary>Gets or sets the Radzen notification service.</summary>
     [Inject]
     protected NotificationService Notifications { get; set; } = default!;
+
+    /// <summary>
+    /// Runs an action at most once at a time. While it runs, and for a short cooldown afterwards, further calls with the
+    /// same key are ignored, so double-clicks, key repeats and impatient tapping cannot send the same request twice.
+    /// </summary>
+    /// <param name="key">Names the action; calls with different keys do not block each other.</param>
+    /// <param name="action">The action to run.</param>
+    /// <returns>A task.</returns>
+    protected async Task RunOnceAsync(string key, Func<Task> action)
+    {
+        if (!_running.Add(key))
+        {
+            return;
+        }
+
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            await ReleaseAfterCooldownAsync(key);
+        }
+    }
+
+    /// <summary>Gets a value indicating whether an action started with <see cref="RunOnceAsync"/> is still busy or cooling down.</summary>
+    /// <param name="key">The action's key.</param>
+    /// <returns><see langword="true"/> while the action is guarded (use it for a button's busy or disabled state).</returns>
+    protected bool IsRunning(string key)
+    {
+        return _running.Contains(key);
+    }
 
     /// <summary>Gets the localized display text of a work order status.</summary>
     /// <param name="status">The status.</param>
@@ -99,6 +135,28 @@ public abstract class PageBase : ComponentBase, IDisposable
     protected void NotifyError(string message)
     {
         Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = message, Duration = 6000 });
+    }
+
+    /// <summary>Waits out the cooldown, then lets the action run again.</summary>
+    /// <param name="key">The action's key.</param>
+    /// <returns>A task.</returns>
+    private async Task ReleaseAfterCooldownAsync(string key)
+    {
+        try
+        {
+            await Task.Delay(CooldownMilliseconds, Cancellation);
+        }
+        catch (OperationCanceledException)
+        {
+            // The component went away; nothing left to update.
+        }
+
+        _running.Remove(key);
+
+        if (!Cancellation.IsCancellationRequested)
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     /// <inheritdoc />

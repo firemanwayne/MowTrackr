@@ -13,6 +13,6 @@ internal static class UserExtensions
     /// <returns>The response.</returns>
     public static UserResponse ToResponse(this ApplicationUser user, IReadOnlyList<string> roles)
     {
-        return new UserResponse(user.Id, user.Email ?? string.Empty, user.DisplayName, user.PhoneNumber, roles, user.Language, user.Theme);
+        return new UserResponse(user.Id, user.Email ?? string.Empty, user.DisplayName, user.PhoneNumber, roles, user.Language, user.Theme, user.EmailConfirmed, user.PhoneNumberConfirmed);
     }
 }

@@ -14,7 +14,7 @@
             <RadzenDataGridColumn TItem="UserResponse" Property="Email" Title="@L["Email"]" />
             <RadzenDataGridColumn TItem="UserResponse" Title="@L["Roles"]" Sortable="false" Width="360px">
                 <Template Context="user">
-                    <RadzenDropDown TValue="IEnumerable<string>" Multiple="true" Value="user.Roles" Data="AppRoles.All" Change="@(selected => SetRolesAsync(user, selected))" Style="width: 100%" />
+                    <RadzenDropDown TValue="IEnumerable<string>" Multiple="true" Value="user.Roles" Data="AppRoles.All" Disabled="@IsRunning($"roles-{user.Id}")" Change="@(selected => RunOnceAsync($"roles-{user.Id}", () => SetRolesAsync(user, selected)))" Style="width: 100%" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>

@@ -1,0 +1,70 @@
+@page "/confirm-email"
+@attribute [AllowAnonymous]
+@inherits PageBase
+@inject IAuthApiService Auth
+
+<div class="auth-card">
+    <LanguagePicker />
+    <RadzenCard>
+        @if (_loading)
+        {
+            <p>@L["Confirming your email address..."]</p>
+        }
+        else if (_confirmed)
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Email confirmed"]
+            </RadzenText>
+            <RadzenAlert AlertStyle="AlertStyle.Success" AllowClose="false" Variant="Variant.Flat">
+                @L["Your email address is confirmed. You can sign in now."]
+            </RadzenAlert>
+            <RadzenButton Text="@L["Sign in"]" class="rz-mt-4" Click="@(() => Navigation.NavigateTo("login"))" />
+        }
+        else
+        {
+            <RadzenText TextStyle="TextStyle.H5">
+                @L["Link not valid"]
+            </RadzenText>
+            <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" Variant="Variant.Flat">
+                @(_error ?? L["This confirmation link is not valid or has expired. Request a new one from the sign-in page."])
+            </RadzenAlert>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
+                <a href="login">@L["Go to sign in"]</a>
+            </RadzenText>
+        }
+    </RadzenCard>
+</div>
+
+@code {
+    private bool _loading = true;
+
+    private bool _confirmed;
+
+    private string? _error;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    /// <summary>Gets or sets the user key from the link.</summary>
+    [SupplyParameterFromQuery(Name = "userId")]
+    public Guid? UserId { get; set; }
+
+    /// <summary>Gets or sets the secret token from the link.</summary>
+    [SupplyParameterFromQuery(Name = "token")]
+    public string? Token { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId is not null && !string.IsNullOrWhiteSpace(Token))
+        {
+            var result = await Auth.ConfirmEmailAsync(new ConfirmEmailRequest { UserId = UserId.Value, Token = Token }, Cancellation);
+
+            _confirmed = result.IsSuccess;
+
+            _error = result.IsSuccess ? null : result.Error;
+        }
+
+        _loading = false;
+    }
+}

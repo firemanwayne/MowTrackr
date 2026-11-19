@@ -32,11 +32,23 @@ internal interface IAuthApiService
     /// <returns>The session.</returns>
     Task<ApiResult<AuthResponse>> AcceptInvitationAsync(AcceptInvitationRequest request, CancellationToken cancellationToken);
 
-    /// <summary>Creates the first account, which becomes an Admin.</summary>
+    /// <summary>Creates the first account, which becomes an Admin, and emails a confirmation link.</summary>
     /// <param name="request">The registration details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The session.</returns>
-    Task<ApiResult<AuthResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken);
+    /// <returns>Where the confirmation link was sent.</returns>
+    Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Confirms an email address from the emailed link.</summary>
+    /// <param name="request">The user and token from the link.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A message.</returns>
+    Task<ApiResult<MessageResponse>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Asks for a new confirmation email.</summary>
+    /// <param name="email">The account's email address.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A message.</returns>
+    Task<ApiResult<MessageResponse>> ResendConfirmationAsync(string email, CancellationToken cancellationToken);
 
     /// <summary>Signs in with email and password.</summary>
     /// <param name="request">The credentials.</param>

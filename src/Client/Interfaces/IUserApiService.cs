@@ -16,6 +16,18 @@ internal interface IUserApiService
     /// <returns>The updated profile.</returns>
     Task<ApiResult<UserResponse>> UpdateMeAsync(UpdateProfileRequest request, CancellationToken cancellationToken);
 
+    /// <summary>Texts a verification code to a phone number.</summary>
+    /// <param name="request">The phone number.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Whether the text was sent.</returns>
+    Task<ApiResult<StartPhoneVerificationResponse>> StartPhoneVerificationAsync(StartPhoneVerificationRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Verifies a phone number with the texted code.</summary>
+    /// <param name="request">The number and the code.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated profile.</returns>
+    Task<ApiResult<UserResponse>> VerifyPhoneAsync(VerifyPhoneRequest request, CancellationToken cancellationToken);
+
     /// <summary>Lists all users (manager/admin).</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The users.</returns>

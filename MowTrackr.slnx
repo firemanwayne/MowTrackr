@@ -22,6 +22,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/Communications/MowTrackr.Communications.UnitTests.csproj" />
+    <Project Path="tests/Core/MowTrackr.Core.UnitTests.csproj" />
     <Project Path="tests/Identity/MowTrackr.Identity.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">

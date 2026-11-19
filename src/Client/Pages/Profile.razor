@@ -4,6 +4,7 @@
 @inject IUserApiService UserApi
 @inject IPreferencesService Preferences
 @inject NavigationManager Navigation
+@inject DialogService Dialogs
 
 <div class="page">
     <h1>@L["My profile"]</h1>
@@ -14,11 +15,12 @@
     else
     {
         <RadzenCard Style="max-width: 480px">
-            <EditForm Model="_model" OnValidSubmit="SaveAsync">
+            <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
                 <DataAnnotationsValidator />
                 <RadzenStack Gap="0.75rem">
                     <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                         @_user.Email &middot; @string.Join(", ", _user.Roles)
+                        <RadzenBadge Text="@(_user.EmailConfirmed ? L["Email verified"] : L["Email not verified"])" BadgeStyle="@(_user.EmailConfirmed ? BadgeStyle.Success : BadgeStyle.Warning)" />
                     </RadzenText>
                     <div>
                         <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
@@ -27,8 +29,16 @@
                     </div>
                     <div>
                         <RadzenLabel Text="@L["Phone"]" Component="Phone" />
-                        <RadzenTextBox @bind-Value="_model.PhoneNumber" Name="Phone" Style="width: 100%" />
-                        <ValidationMessage For="@(() => _model.PhoneNumber)" />
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                                @(string.IsNullOrWhiteSpace(_user.PhoneNumber) ? L["No phone number"] : _user.PhoneNumber)
+                            </RadzenText>
+                            @if (!string.IsNullOrWhiteSpace(_user.PhoneNumber))
+                            {
+                                <RadzenBadge Text="@(_user.PhoneNumberConfirmed ? L["Verified"] : L["Not verified"])" BadgeStyle="@(_user.PhoneNumberConfirmed ? BadgeStyle.Success : BadgeStyle.Warning)" />
+                            }
+                            <RadzenButton Text="@(string.IsNullOrWhiteSpace(_user.PhoneNumber) ? L["Add and verify"] : L["Change"])" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => RunOnceAsync("phone", VerifyPhoneAsync))" />
+                        </RadzenStack>
                     </div>
                     <div>
                         <RadzenLabel Text="@L["Language"]" Component="Language" />
@@ -39,7 +49,7 @@
                         <RadzenDropDown TValue="string" @bind-Value="_model.Theme" Data="_themes" TextProperty="Text" ValueProperty="Value" Name="Theme" Style="width: 100%" />
                     </div>
                     <div>
-                        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="_busy" />
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
                     </div>
                 </RadzenStack>
             </EditForm>
@@ -57,8 +67,6 @@
     private List<Option> _themes = [];
 
     private UserResponse? _user;
-
-    private bool _busy;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -80,8 +88,6 @@
 
         _model.DisplayName = _user.DisplayName;
 
-        _model.PhoneNumber = _user.PhoneNumber;
-
         _model.Language = _user.Language;
 
         _model.Theme = _user.Theme;
@@ -91,15 +97,11 @@
     /// <returns>A task.</returns>
     private async Task SaveAsync()
     {
-        _busy = true;
-
         var result = await UserApi.UpdateMeAsync(_model, Cancellation);
 
         if (!result.IsSuccess || result.Value is null)
         {
             NotifyError(result.Error ?? L["Could not save your profile."]);
-
-            _busy = false;
 
             return;
         }
@@ -116,7 +118,24 @@
         }
 
         NotifySuccess(L["Profile saved."]);
+    }
 
-        _busy = false;
+    /// <summary>Opens the phone verification dialog and reloads the profile if a number was verified.</summary>
+    /// <returns>A task.</returns>
+    private async Task VerifyPhoneAsync()
+    {
+        var verified = await Dialogs.OpenAsync<PhoneVerifier>(L["Verify your phone"], null, new DialogOptions { Width = "460px" });
+
+        if (verified is not true)
+        {
+            return;
+        }
+
+        var result = await UserApi.GetMeAsync(Cancellation);
+
+        if (result.IsSuccess && result.Value is not null)
+        {
+            _user = result.Value;
+        }
     }
 }

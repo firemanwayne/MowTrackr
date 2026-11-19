@@ -10,6 +10,8 @@ namespace MowTrackr.Core.Contracts.Identity;
 /// <param name="Roles">The assigned roles.</param>
 /// <param name="Language">The preferred UI language code ("en" or "es").</param>
 /// <param name="Theme">The preferred colour theme ("Light" or "Dark").</param>
+/// <param name="EmailConfirmed">Whether the email address has been verified.</param>
+/// <param name="PhoneNumberConfirmed">Whether the phone number has been verified by a texted code.</param>
 public sealed record UserResponse(
     Guid Id,
     string Email,
@@ -17,4 +19,6 @@ public sealed record UserResponse(
     string? PhoneNumber,
     IReadOnlyList<string> Roles,
     string Language,
-    string Theme);
+    string Theme,
+    bool EmailConfirmed,
+    bool PhoneNumberConfirmed);

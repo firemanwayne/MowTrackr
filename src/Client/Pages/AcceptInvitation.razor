@@ -33,7 +33,7 @@
             <RadzenText TextStyle="TextStyle.Body2">
                 @L["{0} invited you to MowTrackr as {1}.", _preview.InvitedByName, _preview.Role]
             </RadzenText>
-            <EditForm Model="_model" OnValidSubmit="AcceptAsync">
+            <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("accept", AcceptAsync))">
                 <DataAnnotationsValidator />
                 <RadzenStack Gap="0.75rem" class="rz-mt-4">
                     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
@@ -45,15 +45,16 @@
                     </div>
                     <div>
                         <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
-                        <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
+                        <RadzenTextBox @bind-Value="_model.DisplayName" Immediate="true" Name="DisplayName" Style="width: 100%" />
                         <ValidationMessage For="@(() => _model.DisplayName)" />
                     </div>
                     <div>
-                        <RadzenLabel Text="@L["Password (8+ characters)"]" Component="Password" />
-                        <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
+                        <RadzenLabel Text="@L["Password"]" Component="Password" />
+                        <RadzenPassword @bind-Value="_model.Password" Immediate="true" Name="Password" autocomplete="new-password" Style="width: 100%" />
                         <ValidationMessage For="@(() => _model.Password)" />
+                        <PasswordRequirements Password="@_model.Password" PersonalInfo="@PersonalInfo" />
                     </div>
-                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="_busy" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="@IsRunning("accept")" Disabled="@IsRunning("accept")" />
                 </RadzenStack>
             </EditForm>
         }
@@ -71,7 +72,7 @@
 
     private bool _loading = true;
 
-    private bool _busy;
+    private IReadOnlyList<string?> PersonalInfo => [_preview?.Email, _model.DisplayName];
 
     /// <summary>Gets or sets the secret token from the invitation link.</summary>
     [SupplyParameterFromQuery(Name = "token")]
@@ -102,8 +103,6 @@
     /// <returns>A task.</returns>
     private async Task AcceptAsync()
     {
-        _busy = true;
-
         _error = null;
 
         var result = await Auth.AcceptInvitationAsync(_model, Cancellation);
@@ -118,7 +117,5 @@
         }
 
         _error = result.Error;
-
-        _busy = false;
     }
 }

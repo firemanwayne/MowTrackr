@@ -4,7 +4,7 @@ namespace MowTrackr.Communications.Services;
 
 /// <summary>
 /// Stand-in used when Azure Communication Services is not configured. It sends nothing; in Development it logs the
-/// invitation link so the flow can be tried locally. Elsewhere the link (a secret) is never written to the log.
+/// link so the flow can be tried locally. Elsewhere the link (a secret) is never written to the log.
 /// </summary>
 /// <param name="environment">The host environment.</param>
 /// <param name="logger">The logger.</param>
@@ -20,6 +20,21 @@ internal sealed class LoggingEmailService(IHostEnvironment environment, ILogger<
         else
         {
             logger.LogWarning("Invitation for {Recipient} was not emailed because Communications settings are missing", email.To);
+        }
+
+        return Task.FromResult(false);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> SendEmailConfirmationAsync(EmailConfirmationEmail email, CancellationToken cancellationToken)
+    {
+        if (environment.IsDevelopment())
+        {
+            logger.LogInformation("[Local] Confirmation email for {Recipient} not sent; confirm link: {ConfirmUrl}", email.To, email.ConfirmUrl);
+        }
+        else
+        {
+            logger.LogWarning("A confirmation email for {Recipient} was not sent because Communications settings are missing", email.To);
         }
 
         return Task.FromResult(false);

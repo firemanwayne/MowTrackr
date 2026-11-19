@@ -3,7 +3,7 @@
 @inject IUserApiService UserApi
 @inject DialogService Dialogs
 
-<EditForm Model="_model" OnValidSubmit="SaveAsync">
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
     <RadzenStack Gap="0.75rem">
         <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
             @_error
@@ -25,7 +25,7 @@
         </div>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
             <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Schedule"]" IsBusy="_busy" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Schedule"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -36,9 +36,6 @@
     private List<UserResponse> _users = [];
 
     private string? _error;
-
-    private bool _busy;
-
     /// <summary>Gets or sets the due item being scheduled.</summary>
     [Parameter]
     public MaintenanceDueResponse? Item { get; set; }
@@ -62,8 +59,6 @@
     /// <returns>A task.</returns>
     private async Task SaveAsync()
     {
-        _busy = true;
-
         _error = null;
 
         var result = await MaintenanceApi.CreateWorkOrderAsync(_model, Cancellation);
@@ -78,7 +73,5 @@
         }
 
         _error = result.Error;
-
-        _busy = false;
     }
 }

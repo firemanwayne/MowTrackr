@@ -1,3 +1,5 @@
+using MowTrackr.Core.Constants;
+
 namespace MowTrackr.Core.Contracts.Identity;
 
 /// <summary>
@@ -8,11 +10,12 @@ public sealed class RegisterRequest
     /// <summary>Gets or sets the email address (also the user name).</summary>
     [Required]
     [EmailAddress]
+    [StringLength(256)]
     public string Email { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the password.</summary>
     [Required]
-    [StringLength(100, MinimumLength = 8)]
+    [StringLength(PasswordPolicy.MaxLength, MinimumLength = PasswordPolicy.MinLength)]
     public string Password { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the name shown in the UI.</summary>
