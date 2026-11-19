@@ -38,6 +38,12 @@ param sqlUseFreeLimit bool = false
 @description('Custom host name for the client, a subdomain of the shared DNS zone (e.g. dev.mowtrackr.com). Empty to use the default azurestaticapps.net name.')
 param clientHostName string = ''
 
+@description('Domain that email is sent from, the DNS zone itself or a subdomain (e.g. mowtrackr.com, dev.mowtrackr.com). Empty to use only the Azure-managed domain.')
+param emailDomain string = ''
+
+@description('Send from the custom email domain. Only valid once Azure has verified its DNS records (the deploy workflow checks this and sets it).')
+param linkCustomEmailDomain bool = false
+
 @description('Name of the shared DNS zone (see infra/shared.bicep).')
 param dnsZoneName string = 'mowtrackr.com'
 
@@ -81,13 +87,27 @@ var apiName = '${app}-api-${environment}-${instance}'
 var vaultName = '${app}-kv-${environment}-${instance}'
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 
-// Email: Azure Communication Services with an Azure-managed sender domain.
+// Email: Azure Communication Services, sending from invitations@<domain>. The custom domain (our own DNS zone, with SPF
+// and DKIM) is what keeps mail out of spam; until Azure has verified it the Azure-managed domain is used.
 module communication 'modules/communication.bicep' = {
   name: 'communication'
   params: {
     name: '${app}-acs-${environment}-${instance}'
     emailServiceName: '${app}-email-${environment}-${instance}'
+    customEmailDomain: emailDomain
+    linkCustomEmailDomain: linkCustomEmailDomain
     tags: tags
+  }
+}
+
+// The DNS records the custom domain needs, in the shared zone.
+module emailDnsRecords 'modules/dns-email-records.bicep' = if (!empty(emailDomain)) {
+  name: 'email-dns-records'
+  scope: resourceGroup(dnsZoneResourceGroup)
+  params: {
+    zoneName: dnsZoneName
+    emailDomain: emailDomain
+    records: communication.outputs.verificationRecords
   }
 }
 
@@ -149,7 +169,7 @@ var baseSettings = {
   Client__BaseUrl: 'https://${useCustomDomain ? clientHostName : client.outputs.defaultHostname}'
   ASPNETCORE_ENVIRONMENT: environment == 'dev' ? 'Development' : 'Production'
   Communications__ConnectionString: secretRef(vaultName, 'communications-connection-string')
-  Communications__SenderAddress: 'DoNotReply@${communication.outputs.senderDomain}'
+  Communications__SenderAddress: communication.outputs.senderAddress
 }
 var googleSettings = empty(googleClientId) ? {} : {
   Authentication__Google__ClientId: googleClientId

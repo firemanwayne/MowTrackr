@@ -37,10 +37,14 @@ infra/
 - **No passwords.** The API's managed identity is the SQL Entra administrator, so it runs EF Core migrations and
   queries with `Authentication=Active Directory Managed Identity`. Nobody else can log in to the database until you
   change the SQL admin in the portal (there is one Entra admin per server).
-- **Invitation email.** The deploy creates a Communication Services resource linked to an Azure-managed email domain
-  (`xxxx.azurecomm.net`) and gives the API `Communications__SenderAddress` plus the connection string (kept in Key
-  Vault). Azure-managed domains are fine for invitations, but mail from them can land in spam; to send from
-  `mowtrackr.com` instead, add it as a custom email domain in the portal and verify the DNS records in the shared zone.
+- **Invitation email.** Mail is sent from `invitations@<domain>`: `invitations@mowtrackr.com` in prod and
+  `invitations@mail.dev.mowtrackr.com` in dev (dev uses a `mail.` subdomain because `dev.mowtrackr.com` is a CNAME to the
+  client, and a CNAME cannot share a name with TXT records). The domain is authenticated with SPF, DKIM and a DMARC
+  policy, so it is trusted by mail providers; mail from the shared Azure-managed domain (`xxxx.azurecomm.net`) tends to
+  land in spam. The deploy creates the domain and its DNS records in the shared zone, then
+  `infra/scripts/email-domain.sh` asks Azure to verify them (DNS can take a few minutes) and a second pass links the
+  domain. Until that finishes, or if it ever fails, mail still goes out from `invitations@` on the Azure-managed domain.
+  The API gets `Communications__SenderAddress` plus the connection string (kept in Key Vault).
 - **Secrets in Key Vault.** The JWT signing key, OAuth client secrets and the Communication Services connection string are
   stored in the vault and read by the API
   through Key Vault references in its app settings.
