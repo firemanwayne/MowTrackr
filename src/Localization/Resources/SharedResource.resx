@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -21,4 +21,37 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.NetStandard.ResXResourceReader, System.Resources.NetStandard, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.NetStandard.ResXResourceWriter, System.Resources.NetStandard, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Welcome, {0}" xml:space="preserve"><value>Welcome, {0}</value></data>
+  <data name="Here is what needs your attention today." xml:space="preserve"><value>Here is what needs your attention today.</value></data>
+  <data name="Every mower serviced on time." xml:space="preserve"><value>Every mower serviced on time.</value></data>
+  <data name="Track engine hours, see what is due, and assign the work." xml:space="preserve"><value>Track engine hours, see what is due, and assign the work.</value></data>
+  <data name="Example data" xml:space="preserve"><value>Example data</value></data>
+  <data name="Oil change" xml:space="preserve"><value>Oil change</value></data>
+  <data name="12.5 hrs over" xml:space="preserve"><value>12.5 hrs over</value></data>
+  <data name="Blade sharpening" xml:space="preserve"><value>Blade sharpening</value></data>
+  <data name="9 days left" xml:space="preserve"><value>9 days left</value></data>
+  <data name="Air filter" xml:space="preserve"><value>Air filter</value></data>
+  <data name="Work order open" xml:space="preserve"><value>Work order open</value></data>
+  <data name="Service by hours, days, or both." xml:space="preserve"><value>Service by hours, days, or both.</value></data>
+  <data name="Hours interval" xml:space="preserve"><value>Hours interval</value></data>
+  <data name="Due after a set number of engine hours." xml:space="preserve"><value>Due after a set number of engine hours.</value></data>
+  <data name="Days interval" xml:space="preserve"><value>Days interval</value></data>
+  <data name="Due after a set number of days." xml:space="preserve"><value>Due after a set number of days.</value></data>
+  <data name="Required tasks" xml:space="preserve"><value>Required tasks</value></data>
+  <data name="Mark them in the checklist. A work order cannot be completed without them." xml:space="preserve"><value>Mark them in the checklist. A work order cannot be completed without them.</value></data>
+  <data name="Work orders a technician can finish." xml:space="preserve"><value>Work orders a technician can finish.</value></data>
+  <data name="Engine hours are recorded when the work starts and when it is done." xml:space="preserve"><value>Engine hours are recorded when the work starts and when it is done.</value></data>
+  <data name="Drain and refill oil" xml:space="preserve"><value>Drain and refill oil</value></data>
+  <data name="Replace oil filter" xml:space="preserve"><value>Replace oil filter</value></data>
+  <data name="Check blade for wear" xml:space="preserve"><value>Check blade for wear</value></data>
+  <data name="Enter the hour meter reading" xml:space="preserve"><value>Enter the hour meter reading</value></data>
+  <data name="Access that fits each role." xml:space="preserve"><value>Access that fits each role.</value></data>
+  <data name="Admin" xml:space="preserve"><value>Admin</value></data>
+  <data name="Everything a manager does, plus users and roles." xml:space="preserve"><value>Everything a manager does, plus users and roles.</value></data>
+  <data name="Manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="Registers mowers, builds service templates and schedules work." xml:space="preserve"><value>Registers mowers, builds service templates and schedules work.</value></data>
+  <data name="Technician" xml:space="preserve"><value>Technician</value></data>
+  <data name="Works through open work orders and checks off tasks." xml:space="preserve"><value>Works through open work orders and checks off tasks.</value></data>
+  <data name="Add your first mower today." xml:space="preserve"><value>Add your first mower today.</value></data>
+  <data name="Available in English and Spanish." xml:space="preserve"><value>Available in English and Spanish.</value></data>
 </root>

@@ -7,12 +7,17 @@
 
 <RadzenLayout>
     <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="rz-px-4">
-            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">
-                MowTrackr
-            </RadzenText>
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Style="flex: 1">
+        <div class="app-header">
+            <div class="app-header__start">
+                <AuthorizeView>
+                    <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+                </AuthorizeView>
+            </div>
+            <a class="app-brand" href="">
+                <img class="app-logo" src="assets/icon-192.png" alt="" width="32" height="32" />
+                <span class="app-brand__name">MowTrackr</span>
+            </a>
+            <div class="app-header__end">
                 <AuthorizeView>
                     <Authorized>
                         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
@@ -24,12 +29,12 @@
                         <RadzenButton Text="@L["Sign in"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("login"))" />
                     </NotAuthorized>
                 </AuthorizeView>
-            </RadzenStack>
-        </RadzenStack>
+            </div>
+        </div>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="_sidebarExpanded">
-        <AuthorizeView>
-            <Authorized>
+    <AuthorizeView>
+        <Authorized Context="signedIn">
+            <RadzenSidebar @bind-Expanded="_sidebarExpanded">
                 <RadzenPanelMenu>
                     <RadzenPanelMenuItem Text="@L["Home"]" Path="" Icon="home" Match="NavLinkMatch.All" />
                     <RadzenPanelMenuItem Text="@L["Mowers"]" Path="mowers" Icon="agriculture" />
@@ -43,9 +48,9 @@
                     </AuthorizeView>
                     <RadzenPanelMenuItem Text="@L["My profile"]" Path="profile" Icon="person" />
                 </RadzenPanelMenu>
-            </Authorized>
-        </AuthorizeView>
-    </RadzenSidebar>
+            </RadzenSidebar>
+        </Authorized>
+    </AuthorizeView>
     <RadzenBody>
         @Body
     </RadzenBody>

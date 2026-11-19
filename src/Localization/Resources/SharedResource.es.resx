@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -156,4 +156,37 @@
   <data name="Work orders" xml:space="preserve"><value>Órdenes de trabajo</value></data>
   <data name="You do not have permission to do that." xml:space="preserve"><value>No tienes permiso para hacer eso.</value></data>
   <data name="You do not have permission to view this page." xml:space="preserve"><value>No tienes permiso para ver esta página.</value></data>
+  <data name="Welcome, {0}" xml:space="preserve"><value>Bienvenido, {0}</value></data>
+  <data name="Here is what needs your attention today." xml:space="preserve"><value>Esto es lo que necesita tu atención hoy.</value></data>
+  <data name="Every mower serviced on time." xml:space="preserve"><value>Cada cortacésped con su servicio a tiempo.</value></data>
+  <data name="Track engine hours, see what is due, and assign the work." xml:space="preserve"><value>Controla las horas de motor, ve qué toca y asigna el trabajo.</value></data>
+  <data name="Example data" xml:space="preserve"><value>Datos de ejemplo</value></data>
+  <data name="Oil change" xml:space="preserve"><value>Cambio de aceite</value></data>
+  <data name="12.5 hrs over" xml:space="preserve"><value>12.5 h de retraso</value></data>
+  <data name="Blade sharpening" xml:space="preserve"><value>Afilado de cuchillas</value></data>
+  <data name="9 days left" xml:space="preserve"><value>Faltan 9 días</value></data>
+  <data name="Air filter" xml:space="preserve"><value>Filtro de aire</value></data>
+  <data name="Work order open" xml:space="preserve"><value>Orden de trabajo abierta</value></data>
+  <data name="Service by hours, days, or both." xml:space="preserve"><value>Servicio por horas, días o ambos.</value></data>
+  <data name="Hours interval" xml:space="preserve"><value>Intervalo en horas</value></data>
+  <data name="Due after a set number of engine hours." xml:space="preserve"><value>Vence tras un número fijo de horas de motor.</value></data>
+  <data name="Days interval" xml:space="preserve"><value>Intervalo en días</value></data>
+  <data name="Due after a set number of days." xml:space="preserve"><value>Vence tras un número fijo de días.</value></data>
+  <data name="Required tasks" xml:space="preserve"><value>Tareas obligatorias</value></data>
+  <data name="Mark them in the checklist. A work order cannot be completed without them." xml:space="preserve"><value>Márcalas en la lista de verificación. Una orden de trabajo no se puede completar sin ellas.</value></data>
+  <data name="Work orders a technician can finish." xml:space="preserve"><value>Órdenes de trabajo que un técnico puede terminar.</value></data>
+  <data name="Engine hours are recorded when the work starts and when it is done." xml:space="preserve"><value>Las horas de motor se registran cuando empieza el trabajo y cuando termina.</value></data>
+  <data name="Drain and refill oil" xml:space="preserve"><value>Vaciar y rellenar el aceite</value></data>
+  <data name="Replace oil filter" xml:space="preserve"><value>Cambiar el filtro de aceite</value></data>
+  <data name="Check blade for wear" xml:space="preserve"><value>Revisar el desgaste de la cuchilla</value></data>
+  <data name="Enter the hour meter reading" xml:space="preserve"><value>Introduce la lectura del horómetro</value></data>
+  <data name="Access that fits each role." xml:space="preserve"><value>Acceso adecuado a cada rol.</value></data>
+  <data name="Admin" xml:space="preserve"><value>Administrador</value></data>
+  <data name="Everything a manager does, plus users and roles." xml:space="preserve"><value>Todo lo que hace un gerente, más usuarios y roles.</value></data>
+  <data name="Manager" xml:space="preserve"><value>Gerente</value></data>
+  <data name="Registers mowers, builds service templates and schedules work." xml:space="preserve"><value>Registra cortacéspedes, crea plantillas de servicio y programa el trabajo.</value></data>
+  <data name="Technician" xml:space="preserve"><value>Técnico</value></data>
+  <data name="Works through open work orders and checks off tasks." xml:space="preserve"><value>Trabaja las órdenes abiertas y marca las tareas.</value></data>
+  <data name="Add your first mower today." xml:space="preserve"><value>Añade hoy tu primer cortacésped.</value></data>
+  <data name="Available in English and Spanish." xml:space="preserve"><value>Disponible en inglés y español.</value></data>
 </root>
