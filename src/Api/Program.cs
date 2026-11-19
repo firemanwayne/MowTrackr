@@ -27,7 +27,7 @@ var clientUrl = builder.Configuration[$"{ClientOptions.SectionName}:{nameof(Clie
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(ClientCorsPolicy, policy => policy
-        .WithOrigins(clientUrl.TrimEnd('/'))
+        .SetIsOriginAllowed(origin => IsAllowedOrigin(origin, clientUrl, builder.Environment.IsDevelopment()))
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
@@ -56,3 +56,14 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Decides whether a browser origin may call the API: the configured client, or any localhost origin in Development.
+static bool IsAllowedOrigin(string origin, string clientUrl, bool isDevelopment)
+{
+    if (string.Equals(origin.TrimEnd('/'), clientUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+    {
+        return true;
+    }
+
+    return isDevelopment && Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback;
+}
