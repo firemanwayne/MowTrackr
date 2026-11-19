@@ -24,7 +24,8 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Point the client at the deployed API
-        run: echo '{ "ApiBaseUrl": "${{ vars.AZURE_API_BASE_URL }}" }' > src/Client/wwwroot/appsettings.json
+        run: |
+          echo '{ "ApiBaseUrl": "${{ vars.AZURE_API_BASE_URL }}" }' > src/Client/wwwroot/appsettings.json
 
       - name: Publish
         run: dotnet publish src/Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
