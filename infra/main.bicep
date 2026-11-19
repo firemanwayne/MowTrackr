@@ -14,6 +14,9 @@ param environment string
 @description('Region for the SQL server, plan, web app and Key Vault.')
 param location string = resourceGroup().location
 
+@description('Region for the SQL server. Separate because SQL provisioning is restricted in some regions per subscription.')
+param sqlLocation string = location
+
 @description('Region for the Static Web App (supported: westus2, centralus, eastus2, westeurope, eastasia).')
 param staticWebAppLocation string = 'eastus2'
 
@@ -67,7 +70,7 @@ var sqlServerName = '${app}-sql-${environment}-${instance}'
 var databaseName = 'mowtrackr'
 var apiName = '${app}-api-${environment}-${instance}'
 var vaultName = '${app}-kv-${environment}-${instance}'
-var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0f2c5c4b6c9c'
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 
 // Secrets go to Key Vault; the API reads them with Key Vault references.
 module vault 'modules/key-vault.bicep' = {
@@ -152,7 +155,7 @@ resource secretsReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 module sql 'modules/sql.bicep' = {
   name: 'sql'
   params: {
-    location: location
+    location: sqlLocation
     serverName: sqlServerName
     databaseName: databaseName
     adminLogin: apiName
