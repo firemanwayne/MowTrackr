@@ -25,6 +25,10 @@ public static class ServiceRegistryExtensions
     {
         services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
 
+        services.AddOptions<InvitationOptions>().BindConfiguration(InvitationOptions.SectionName);
+
+        services.TryAddSingleton(TimeProvider.System);
+
         services
             .AddIdentityCore<ApplicationUser>(options =>
             {
@@ -70,6 +74,8 @@ public static class ServiceRegistryExtensions
         services.TryAddScoped<IAuthService, AuthService>();
 
         services.TryAddScoped<IUserService, UserService>();
+
+        services.TryAddScoped<IInvitationService, InvitationService>();
 
         services.AddHostedService<RoleSeedService>();
 

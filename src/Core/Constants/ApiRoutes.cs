@@ -19,4 +19,7 @@ public static class ApiRoutes
 
     /// <summary>User and profile endpoints.</summary>
     public const string Users = "api/users";
+
+    /// <summary>Invitation administration endpoints (Admin only).</summary>
+    public const string Invitations = "api/invitations";
 }

@@ -45,6 +45,7 @@
                     </AuthorizeView>
                     <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
                         <RadzenPanelMenuItem Text="@L["Users & roles"]" Path="users" Icon="group" />
+                        <RadzenPanelMenuItem Text="@L["Invitations"]" Path="invitations" Icon="mail" />
                     </AuthorizeView>
                     <RadzenPanelMenuItem Text="@L["My profile"]" Path="profile" Icon="person" />
                 </RadzenPanelMenu>

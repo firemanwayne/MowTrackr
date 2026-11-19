@@ -22,6 +22,9 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the work order checklist tasks.</summary>
     public DbSet<WorkOrderTask> WorkOrderTasks => Set<WorkOrderTask>();
 
+    /// <summary>Gets the user invitations.</summary>
+    public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {

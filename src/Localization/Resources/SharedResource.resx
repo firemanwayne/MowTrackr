@@ -54,4 +54,35 @@
   <data name="Works through open work orders and checks off tasks." xml:space="preserve"><value>Works through open work orders and checks off tasks.</value></data>
   <data name="Add your first mower today." xml:space="preserve"><value>Add your first mower today.</value></data>
   <data name="Available in English and Spanish." xml:space="preserve"><value>Available in English and Spanish.</value></data>
+  <data name="Invitations" xml:space="preserve"><value>Invitations</value></data>
+  <data name="Invite user" xml:space="preserve"><value>Invite user</value></data>
+  <data name="MowTrackr is invitation only. Invite someone by email and choose their role; they set a password from the link." xml:space="preserve"><value>MowTrackr is invitation only. Invite someone by email and choose their role; they set a password from the link.</value></data>
+  <data name="Role" xml:space="preserve"><value>Role</value></data>
+  <data name="Invited by" xml:space="preserve"><value>Invited by</value></data>
+  <data name="Sent" xml:space="preserve"><value>Sent</value></data>
+  <data name="Expires" xml:space="preserve"><value>Expires</value></data>
+  <data name="Resend" xml:space="preserve"><value>Resend</value></data>
+  <data name="Revoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="Could not resend the invitation." xml:space="preserve"><value>Could not resend the invitation.</value></data>
+  <data name="Revoke the invitation for {0}? Its link will stop working." xml:space="preserve"><value>Revoke the invitation for {0}? Its link will stop working.</value></data>
+  <data name="Revoke invitation" xml:space="preserve"><value>Revoke invitation</value></data>
+  <data name="Could not revoke the invitation." xml:space="preserve"><value>Could not revoke the invitation.</value></data>
+  <data name="Invitation revoked." xml:space="preserve"><value>Invitation revoked.</value></data>
+  <data name="Invitation sent to {0}." xml:space="preserve"><value>Invitation sent to {0}.</value></data>
+  <data name="The invitation was saved but the email could not be sent. Check the email settings, then use Resend." xml:space="preserve"><value>The invitation was saved but the email could not be sent. Check the email settings, then use Resend.</value></data>
+  <data name="Email language" xml:space="preserve"><value>Email language</value></data>
+  <data name="Send invitation" xml:space="preserve"><value>Send invitation</value></data>
+  <data name="Checking your invitation..." xml:space="preserve"><value>Checking your invitation...</value></data>
+  <data name="Invitation not available" xml:space="preserve"><value>Invitation not available</value></data>
+  <data name="This invitation is no longer valid. Ask an administrator to send you a new one." xml:space="preserve"><value>This invitation is no longer valid. Ask an administrator to send you a new one.</value></data>
+  <data name="Already have an account?" xml:space="preserve"><value>Already have an account?</value></data>
+  <data name="Join MowTrackr" xml:space="preserve"><value>Join MowTrackr</value></data>
+  <data name="{0} invited you to MowTrackr as {1}." xml:space="preserve"><value>{0} invited you to MowTrackr as {1}.</value></data>
+  <data name="No accounts exist yet." xml:space="preserve"><value>No accounts exist yet.</value></data>
+  <data name="Create the first account" xml:space="preserve"><value>Create the first account</value></data>
+  <data name="Access is by invitation. Ask your administrator to invite you." xml:space="preserve"><value>Access is by invitation. Ask your administrator to invite you.</value></data>
+  <data name="Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Accepted" xml:space="preserve"><value>Accepted</value></data>
+  <data name="Revoked" xml:space="preserve"><value>Revoked</value></data>
+  <data name="Expired" xml:space="preserve"><value>Expired</value></data>
 </root>

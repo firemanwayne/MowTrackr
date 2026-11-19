@@ -30,4 +30,5 @@ jobs:
             az bicep build-params --file "infra/parameters/$env.bicepparam" --stdout > /dev/null
           done
 
-      # Tests are deferred until the app is further along; add a dotnet test step here once test projects exist.
+      - name: Test
+        run: dotnet test MowTrackr.slnx --configuration Release --no-build

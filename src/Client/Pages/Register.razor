@@ -53,6 +53,15 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        var registration = await Auth.GetRegistrationStatusAsync(Cancellation);
+
+        if (registration.IsSuccess && registration.Value?.IsOpen != true)
+        {
+            Navigation.NavigateTo("login", replace: true);
+
+            return;
+        }
+
         _model.Language = Cultures.GetCurrent();
 
         _model.Theme = await Preferences.GetThemeAsync();

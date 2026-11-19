@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
 using MowTrackr.Api.Extensions;
-using MowTrackr.Api.Options;
 using MowTrackr.Core.Contracts.Identity;
+using MowTrackr.Core.Options;
 
 namespace MowTrackr.Api.Controllers;
 
@@ -12,16 +12,52 @@ namespace MowTrackr.Api.Controllers;
 /// Registration, sign-in and external provider flows. All of these return or redirect with a JWT.
 /// </summary>
 /// <param name="auth">The auth service.</param>
+/// <param name="invitations">The invitation service (anonymous preview and accept).</param>
 /// <param name="schemes">The authentication scheme provider (to discover enabled external providers).</param>
 /// <param name="client">The client location settings.</param>
 [ApiController]
 [AllowAnonymous]
 [Route(ApiRoutes.Auth)]
-public sealed class AuthController(IAuthService auth, IAuthenticationSchemeProvider schemes, IOptions<ClientOptions> client) : ControllerBase
+public sealed class AuthController(IAuthService auth, IInvitationService invitations, IAuthenticationSchemeProvider schemes, IOptions<ClientOptions> client) : ControllerBase
 {
     private const string LoginProviderKey = "LoginProvider";
 
-    /// <summary>Creates a local account. The first account becomes an Admin.</summary>
+    /// <summary>Reports whether open registration is available (only until the first account exists).</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The registration status.</returns>
+    [HttpGet("registration")]
+    public async Task<IActionResult> GetRegistrationAsync(CancellationToken cancellationToken)
+    {
+        var result = await auth.GetRegistrationStatusAsync(cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Describes the invitation behind a link token, so the accept page can confirm it.</summary>
+    /// <param name="token">The secret token from the invitation link.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The invitation preview.</returns>
+    [HttpGet("invitation")]
+    public async Task<IActionResult> GetInvitationAsync([FromQuery] string token, CancellationToken cancellationToken)
+    {
+        var result = await invitations.PreviewAsync(token, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Accepts an invitation: creates the account with the invited role and signs it in.</summary>
+    /// <param name="request">The token and the new account's details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The signed-in session.</returns>
+    [HttpPost("accept-invitation")]
+    public async Task<IActionResult> AcceptInvitationAsync([FromBody] AcceptInvitationRequest request, CancellationToken cancellationToken)
+    {
+        var result = await invitations.AcceptAsync(request, cancellationToken).ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Creates the first account, which becomes an Admin. After that registration is by invitation only.</summary>
     /// <param name="request">The registration details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The signed-in session.</returns>
