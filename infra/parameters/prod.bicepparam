@@ -4,6 +4,8 @@ param environment = 'prod'
 // West US 2: the subscription's F1 (free) App Service quota is only available there.
 param location = 'westus2'
 param staticWebAppLocation = 'westus2'
+// SQL provisioning is restricted in West US 2 and East US 2 for this subscription; West US 3 is open.
+param sqlLocation = 'westus3'
 param instance = '001'
 
 // The free SQL offer is taken by dev, so prod runs a small paid serverless database (1 vCore, auto-pauses when idle).
