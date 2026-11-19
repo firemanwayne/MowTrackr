@@ -70,7 +70,7 @@ internal abstract class ApiServiceBase(HttpClient http)
         }
         catch (HttpRequestException)
         {
-            return new ApiResult<T>(HttpStatusCode.ServiceUnavailable, default, "Unable to reach the server. Please try again.");
+            return new ApiResult<T>(HttpStatusCode.ServiceUnavailable, default, $"Unable to reach the API at {http.BaseAddress}. Check that it is running and the browser trusts its certificate.");
         }
     }
 
