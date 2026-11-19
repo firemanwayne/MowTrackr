@@ -75,6 +75,11 @@ jobs:
     if: ${{ vars.AZURE_CLIENT_ID != '' }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev' }}
+    env:
+      # Mail is sent from invitations@<EMAIL_DOMAIN>; the domain's DNS records live in the shared mowtrackr.com zone.
+      # (dev uses a mail. subdomain because dev.mowtrackr.com is a CNAME to the client, and a CNAME cannot share a name with TXT records.)
+      EMAIL_DOMAIN: ${{ (github.event.inputs.environment || 'dev') == 'prod' && 'mowtrackr.com' || 'mail.dev.mowtrackr.com' }}
+      EMAIL_SERVICE: mowtrackr-email-${{ github.event.inputs.environment || 'dev' }}-001
     outputs:
       apiName: ${{ steps.deploy.outputs.apiName }}
       apiUrl: ${{ steps.deploy.outputs.apiUrl }}
@@ -89,10 +94,19 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      # A custom email domain can only be linked once Azure has verified its DNS records. If it already has been
+      # (every deploy after the first), link it in the same pass; otherwise the first pass creates the domain and
+      # records, and the steps below verify it and link it.
+      - name: Check email domain
+        id: emailstate
+        run: |
+          echo "linked=$(bash infra/scripts/email-domain.sh state "${{ vars.AZURE_RESOURCE_GROUP }}" "$EMAIL_SERVICE" "$EMAIL_DOMAIN")" >> "$GITHUB_OUTPUT"
+
       - name: What-if
         if: ${{ github.event.inputs.what_if == 'true' }}
         env:
           JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          LINK_EMAIL_DOMAIN: ${{ steps.emailstate.outputs.linked }}
         run: |
           az deployment group what-if \
             --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
@@ -105,6 +119,7 @@ jobs:
         env:
           JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
           SMS_SENDER_NUMBER: ${{ vars.SMS_SENDER_NUMBER }}
+          LINK_EMAIL_DOMAIN: ${{ steps.emailstate.outputs.linked }}
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
@@ -128,6 +143,32 @@ jobs:
             echo "- API: $(echo "$outputs" | jq -r .apiUrl.value)"
             echo "- Client: $(echo "$outputs" | jq -r .clientUrl.value)"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify email domain
+        id: emailverify
+        if: ${{ github.event.inputs.what_if != 'true' && steps.emailstate.outputs.linked != 'true' }}
+        run: |
+          echo "verified=$(bash infra/scripts/email-domain.sh verify "${{ vars.AZURE_RESOURCE_GROUP }}" "$EMAIL_SERVICE" "$EMAIL_DOMAIN" 600)" >> "$GITHUB_OUTPUT"
+
+      - name: Link email domain
+        if: ${{ steps.emailverify.outputs.verified == 'true' }}
+        env:
+          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
+          LINK_EMAIL_DOMAIN: 'true'
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
+          FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
+          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+        run: |
+          az deployment group create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --name "mowtrackr-${TARGET_ENV}-${{ github.run_number }}-email" \
+            --template-file infra/main.bicep \
+            --parameters "infra/parameters/${TARGET_ENV}.bicepparam" \
+            --output none
+          echo "Email now sends from invitations@${EMAIL_DOMAIN}" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-api:
     name: Deploy API

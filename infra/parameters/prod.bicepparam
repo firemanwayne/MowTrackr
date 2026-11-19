@@ -15,6 +15,10 @@ param sqlDatabaseSkuName = 'GP_S_Gen5_1'
 param sqlDatabaseSkuCapacity = 1
 param sqlUseFreeLimit = false
 
+// Email sender domain and whether Azure has verified it: both set by the deploy workflow (see infra/scripts/email-domain.sh).
+param emailDomain = readEnvironmentVariable('EMAIL_DOMAIN', '')
+param linkCustomEmailDomain = readEnvironmentVariable('LINK_EMAIL_DOMAIN', 'false') == 'true'
+
 param jwtSigningKey = readEnvironmentVariable('JWT_SIGNING_KEY', '')
 param smsSenderNumber = readEnvironmentVariable('SMS_SENDER_NUMBER', '')
 param googleClientId = readEnvironmentVariable('GOOGLE_CLIENT_ID', '')

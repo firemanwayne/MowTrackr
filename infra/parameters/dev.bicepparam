@@ -18,6 +18,10 @@ param sqlDatabaseSkuCapacity = 2
 param sqlUseFreeLimit = true
 
 // Secrets come from the deploy workflow's environment variables (GitHub environment secrets).
+// Email sender domain and whether Azure has verified it: both set by the deploy workflow (see infra/scripts/email-domain.sh).
+param emailDomain = readEnvironmentVariable('EMAIL_DOMAIN', '')
+param linkCustomEmailDomain = readEnvironmentVariable('LINK_EMAIL_DOMAIN', 'false') == 'true'
+
 param jwtSigningKey = readEnvironmentVariable('JWT_SIGNING_KEY', '')
 param smsSenderNumber = readEnvironmentVariable('SMS_SENDER_NUMBER', '')
 param googleClientId = readEnvironmentVariable('GOOGLE_CLIENT_ID', '')
