@@ -1,0 +1,92 @@
+@page "/maintenance"
+@attribute [Authorize(Roles = AppRoles.ManagerOrAdmin)]
+@inherits PageBase
+@inject IMaintenanceApiService MaintenanceApi
+@inject DialogService Dialogs
+
+<div class="page">
+    <h1>Due maintenance</h1>
+    <RadzenText TextStyle="TextStyle.Body2">
+        Mowers that are overdue, or will be soon, for each active service template. Schedule a work order to assign the work.
+    </RadzenText>
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid Data="_due" TItem="MaintenanceDueResponse" IsLoading="_loading" AllowSorting="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Property="MowerName" Title="Mower" />
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Property="TemplateName" Title="Service" />
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Title="Hours until due">
+                <Template Context="item">
+                    @(item.HoursUntilDue is { } hours ? $"{hours:0.#}" : "-")
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Title="Days until due">
+                <Template Context="item">
+                    @(item.DaysUntilDue?.ToString() ?? "-")
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Title="Status">
+                <Template Context="item">
+                    <RadzenBadge Text="@(item.IsOverdue ? "Overdue" : "Coming due")" BadgeStyle="@(item.IsOverdue ? BadgeStyle.Danger : BadgeStyle.Warning)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="MaintenanceDueResponse" Title="" Sortable="false" Width="140px">
+                <Template Context="item">
+                    @if (item.HasOpenWorkOrder)
+                    {
+                        <RadzenBadge Text="Scheduled" BadgeStyle="BadgeStyle.Info" />
+                    }
+                    else
+                    {
+                        <RadzenButton Text="Schedule" Size="ButtonSize.Small" Click="@(() => ScheduleAsync(item))" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private List<MaintenanceDueResponse> _due = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    /// <summary>Loads the due list.</summary>
+    /// <returns>A task.</returns>
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        var result = await MaintenanceApi.GetDueAsync(Cancellation);
+
+        _due = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+
+    /// <summary>Opens the scheduler dialog for a due item and reloads if a work order was created.</summary>
+    /// <param name="item">The due item.</param>
+    /// <returns>A task.</returns>
+    private async Task ScheduleAsync(MaintenanceDueResponse item)
+    {
+        var parameters = new Dictionary<string, object?> { [nameof(WorkOrderScheduler.Item)] = item };
+
+        var saved = await Dialogs.OpenAsync<WorkOrderScheduler>($"Schedule {item.TemplateName}", parameters, new DialogOptions { Width = "480px" });
+
+        if (saved is true)
+        {
+            await LoadAsync();
+        }
+    }
+}

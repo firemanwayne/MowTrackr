@@ -1,0 +1,39 @@
+name: Deploy Client
+
+# Publishes the Blazor WebAssembly client to Azure Static Web Apps (Free). Skipped until the settings below exist.
+#   Repository variable : AZURE_API_BASE_URL                   (e.g. https://mowtrackr-api.azurewebsites.net/)
+#   Repository secret   : AZURE_STATIC_WEB_APPS_API_TOKEN      (Static Web App > Manage deployment token)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.AZURE_API_BASE_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Point the client at the deployed API
+        run: echo '{ "ApiBaseUrl": "${{ vars.AZURE_API_BASE_URL }}" }' > src/Client/wwwroot/appsettings.json
+
+      - name: Publish
+        run: dotnet publish src/Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: ./publish/client/wwwroot
+          skip_app_build: true
+          skip_api_build: true

@@ -1,0 +1,45 @@
+@page "/work-orders"
+@attribute [Authorize]
+@inherits PageBase
+@inject IMaintenanceApiService MaintenanceApi
+@inject NavigationManager Navigation
+
+<div class="page">
+    <h1>Work orders</h1>
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid Data="_orders" TItem="WorkOrderResponse" IsLoading="_loading" AllowSorting="true" RowClick="@(args => Navigation.NavigateTo($"work-orders/{args.Data?.Id}"))">
+        <Columns>
+            <RadzenDataGridColumn TItem="WorkOrderResponse" Property="MowerName" Title="Mower" />
+            <RadzenDataGridColumn TItem="WorkOrderResponse" Property="TemplateName" Title="Service" />
+            <RadzenDataGridColumn TItem="WorkOrderResponse" Property="ScheduledFor" Title="Scheduled" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="WorkOrderResponse" Title="Progress">
+                <Template Context="order">
+                    @order.Tasks.Count(t => t.IsComplete) / @order.Tasks.Count
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WorkOrderResponse" Property="Status" Title="Status" />
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private List<WorkOrderResponse> _orders = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await MaintenanceApi.ListWorkOrdersAsync(Cancellation);
+
+        _orders = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+}

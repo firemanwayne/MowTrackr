@@ -1,0 +1,84 @@
+@inherits PageBase
+@inject IMaintenanceApiService MaintenanceApi
+@inject IUserApiService UserApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">
+            @Item?.MowerName
+        </RadzenText>
+        <div>
+            <RadzenLabel Text="Assign to" Component="Assignee" />
+            <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssignedToUserId" Data="_users" TextProperty="DisplayName" ValueProperty="Id" Name="Assignee" AllowClear="true" Placeholder="Unassigned" Style="width: 100%" />
+        </div>
+        <div>
+            <RadzenLabel Text="Scheduled for" Component="ScheduledFor" />
+            <RadzenDatePicker TValue="DateOnly?" @bind-Value="_model.ScheduledFor" Name="ScheduledFor" DateFormat="d" AllowClear="true" Style="width: 100%" />
+        </div>
+        <div>
+            <RadzenLabel Text="Notes" Component="Notes" />
+            <RadzenTextArea @bind-Value="_model.Notes" Name="Notes" Rows="3" Style="width: 100%" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Schedule" IsBusy="_busy" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private readonly WorkOrderCreateRequest _model = new();
+
+    private List<UserResponse> _users = [];
+
+    private string? _error;
+
+    private bool _busy;
+
+    /// <summary>Gets or sets the due item being scheduled.</summary>
+    [Parameter]
+    public MaintenanceDueResponse? Item { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (Item is not null)
+        {
+            _model.MowerId = Item.MowerId;
+
+            _model.ServiceTemplateId = Item.ServiceTemplateId;
+        }
+
+        var result = await UserApi.ListAsync(Cancellation);
+
+        _users = result.Value ?? [];
+    }
+
+    /// <summary>Creates the work order and closes the dialog.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _busy = true;
+
+        _error = null;
+
+        var result = await MaintenanceApi.CreateWorkOrderAsync(_model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess("Work order scheduled.");
+
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+
+        _busy = false;
+    }
+}

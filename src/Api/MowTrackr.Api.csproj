@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>MowTrackr.Api</RootNamespace>
+    <UserSecretsId>mowtrackr-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNet.Security.OAuth.LinkedIn" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDefaults\MowTrackr.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Core\MowTrackr.Core.csproj" />
+    <ProjectReference Include="..\Assets\MowTrackr.Assets.csproj" />
+    <ProjectReference Include="..\Maintenance\MowTrackr.Maintenance.csproj" />
+    <ProjectReference Include="..\Identity\MowTrackr.Identity.csproj" />
+    <ProjectReference Include="..\Data\MowTrackr.Data.csproj" />
+  </ItemGroup>
+
+</Project>

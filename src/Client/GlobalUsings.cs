@@ -1,0 +1,15 @@
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using System.Net;
+global using System.Net.Http.Json;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Components;
+global using Microsoft.AspNetCore.Components.Authorization;
+global using MowTrackr.Client.Abstractions;
+global using MowTrackr.Client.Interfaces;
+global using MowTrackr.Client.Models;
+global using MowTrackr.Core.Constants;
+global using MowTrackr.Core.Contracts.Assets;
+global using MowTrackr.Core.Contracts.Identity;
+global using MowTrackr.Core.Contracts.Maintenance;
+global using MowTrackr.Core.Enums;

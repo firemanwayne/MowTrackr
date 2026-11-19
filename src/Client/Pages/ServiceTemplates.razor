@@ -1,0 +1,131 @@
+@page "/service-templates"
+@attribute [Authorize(Roles = AppRoles.ManagerOrAdmin)]
+@inherits PageBase
+@inject IServiceTemplateApiService TemplateApi
+@inject DialogService Dialogs
+
+<div class="page">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <h1>Service templates</h1>
+        <RadzenButton Text="New template" Icon="add" Click="@(() => EditAsync(null))" />
+    </RadzenStack>
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="Name" />
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Due every">
+                <Template Context="template">
+                    @DescribeInterval(template)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Tasks">
+                <Template Context="template">
+                    @template.Tasks.Count
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Status">
+                <Template Context="template">
+                    <RadzenBadge Text="@(template.IsActive ? "Active" : "Inactive")" BadgeStyle="@(template.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="" Sortable="false" Width="110px">
+                <Template Context="template">
+                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Click="@(() => EditAsync(template))" />
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => DeleteAsync(template))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private List<ServiceTemplateResponse> _templates = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    /// <summary>Formats a template's interval for display.</summary>
+    /// <param name="template">The template.</param>
+    /// <returns>For example "50 hrs or 90 days".</returns>
+    private static string DescribeInterval(ServiceTemplateResponse template)
+    {
+        var parts = new List<string>();
+
+        if (template.IntervalHours is { } hours)
+        {
+            parts.Add($"{hours:0.##} hrs");
+        }
+
+        if (template.IntervalDays is { } days)
+        {
+            parts.Add($"{days} days");
+        }
+
+        return string.Join(" or ", parts);
+    }
+
+    /// <summary>Loads the templates.</summary>
+    /// <returns>A task.</returns>
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        var result = await TemplateApi.ListAsync(Cancellation);
+
+        _templates = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+
+    /// <summary>Opens the editor for a new or existing template and reloads if it was saved.</summary>
+    /// <param name="template">The template to edit, or <see langword="null"/> to create one.</param>
+    /// <returns>A task.</returns>
+    private async Task EditAsync(ServiceTemplateResponse? template)
+    {
+        var parameters = new Dictionary<string, object?> { [nameof(ServiceTemplateEditor.Existing)] = template };
+
+        var saved = await Dialogs.OpenAsync<ServiceTemplateEditor>(template is null ? "New service template" : "Edit service template", parameters, new DialogOptions { Width = "720px" });
+
+        if (saved is true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    /// <summary>Deletes a template after confirmation.</summary>
+    /// <param name="template">The template.</param>
+    /// <returns>A task.</returns>
+    private async Task DeleteAsync(ServiceTemplateResponse template)
+    {
+        var confirmed = await Dialogs.Confirm($"Delete {template.Name}?", "Delete template", new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+
+        if (confirmed is not true)
+        {
+            return;
+        }
+
+        var result = await TemplateApi.DeleteAsync(template.Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? "Could not delete the template.");
+
+            return;
+        }
+
+        NotifySuccess("Template deleted.");
+
+        await LoadAsync();
+    }
+}

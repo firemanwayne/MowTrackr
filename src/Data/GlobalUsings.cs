@@ -1,0 +1,13 @@
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Metadata.Builders;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Microsoft.Extensions.Logging;
+global using MowTrackr.Assets.Models;
+global using MowTrackr.Core.Abstractions;
+global using MowTrackr.Core.Interfaces;
+global using MowTrackr.Core.Models;
+global using MowTrackr.Identity.Models;
+global using MowTrackr.Maintenance.Models;

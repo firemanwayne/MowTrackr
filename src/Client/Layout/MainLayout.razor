@@ -1,0 +1,64 @@
+@inherits LayoutComponentBase
+@inject ISessionService Session
+@inject NavigationManager Navigation
+
+<RadzenComponents />
+
+<RadzenLayout>
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="rz-px-4">
+            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+            <RadzenText TextStyle="TextStyle.H6" class="rz-m-0">
+                MowTrackr
+            </RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Style="flex: 1">
+                <AuthorizeView>
+                    <Authorized>
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                            @context.User.Identity?.Name
+                        </RadzenText>
+                        <RadzenButton Text="Sign out" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="SignOutAsync" />
+                    </Authorized>
+                    <NotAuthorized>
+                        <RadzenButton Text="Sign in" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("login"))" />
+                    </NotAuthorized>
+                </AuthorizeView>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="_sidebarExpanded">
+        <AuthorizeView>
+            <Authorized>
+                <RadzenPanelMenu>
+                    <RadzenPanelMenuItem Text="Home" Path="" Icon="home" Match="NavLinkMatch.All" />
+                    <RadzenPanelMenuItem Text="Mowers" Path="mowers" Icon="agriculture" />
+                    <RadzenPanelMenuItem Text="Work orders" Path="work-orders" Icon="assignment" />
+                    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
+                        <RadzenPanelMenuItem Text="Due maintenance" Path="maintenance" Icon="build" />
+                        <RadzenPanelMenuItem Text="Service templates" Path="service-templates" Icon="checklist" />
+                    </AuthorizeView>
+                    <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
+                        <RadzenPanelMenuItem Text="Users &amp; roles" Path="users" Icon="group" />
+                    </AuthorizeView>
+                    <RadzenPanelMenuItem Text="My profile" Path="profile" Icon="person" />
+                </RadzenPanelMenu>
+            </Authorized>
+        </AuthorizeView>
+    </RadzenSidebar>
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+    private bool _sidebarExpanded = true;
+
+    /// <summary>Ends the session and returns to the sign-in page.</summary>
+    /// <returns>A task.</returns>
+    private async Task SignOutAsync()
+    {
+        await Session.SignOutAsync();
+
+        Navigation.NavigateTo("login");
+    }
+}

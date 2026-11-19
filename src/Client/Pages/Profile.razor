@@ -1,0 +1,87 @@
+@page "/profile"
+@attribute [Authorize]
+@inherits PageBase
+@inject IUserApiService UserApi
+
+<div class="page">
+    <h1>My profile</h1>
+    @if (_user is null)
+    {
+        <p>Loading&hellip;</p>
+    }
+    else
+    {
+        <RadzenCard Style="max-width: 480px">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <RadzenStack Gap="0.75rem">
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                        @_user.Email &middot; @string.Join(", ", _user.Roles)
+                    </RadzenText>
+                    <div>
+                        <RadzenLabel Text="Display name" Component="DisplayName" />
+                        <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.DisplayName)" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="Phone" Component="Phone" />
+                        <RadzenTextBox @bind-Value="_model.PhoneNumber" Name="Phone" Style="width: 100%" />
+                        <ValidationMessage For="@(() => _model.PhoneNumber)" />
+                    </div>
+                    <div>
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_busy" />
+                    </div>
+                </RadzenStack>
+            </EditForm>
+        </RadzenCard>
+    }
+</div>
+
+@code {
+    private readonly UpdateProfileRequest _model = new();
+
+    private UserResponse? _user;
+
+    private bool _busy;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await UserApi.GetMeAsync(Cancellation);
+
+        if (!result.IsSuccess || result.Value is null)
+        {
+            NotifyError(result.Error ?? "Could not load your profile.");
+
+            return;
+        }
+
+        _user = result.Value;
+
+        _model.DisplayName = _user.DisplayName;
+
+        _model.PhoneNumber = _user.PhoneNumber;
+    }
+
+    /// <summary>Saves the profile.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _busy = true;
+
+        var result = await UserApi.UpdateMeAsync(_model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            _user = result.Value;
+
+            NotifySuccess("Profile saved.");
+        }
+        else
+        {
+            NotifyError(result.Error ?? "Could not save your profile.");
+        }
+
+        _busy = false;
+    }
+}

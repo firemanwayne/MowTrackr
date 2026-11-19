@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Api/MowTrackr.Api.csproj" />
+    <Project Path="src/AppHost/MowTrackr.AppHost.csproj" />
+    <Project Path="src/Assets/MowTrackr.Assets.csproj" />
+    <Project Path="src/Client/MowTrackr.Client.csproj" />
+    <Project Path="src/Core/MowTrackr.Core.csproj" />
+    <Project Path="src/Data/MowTrackr.Data.csproj" />
+    <Project Path="src/Identity/MowTrackr.Identity.csproj" />
+    <Project Path="src/Maintenance/MowTrackr.Maintenance.csproj" />
+    <Project Path="src/ServiceDefaults/MowTrackr.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>

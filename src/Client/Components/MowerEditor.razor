@@ -1,0 +1,126 @@
+@inherits PageBase
+@inject IMowerApiService MowerApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Name" Component="Name" />
+                <RadzenTextBox @bind-Value="_model.Name" Name="Name" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.Name)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Serial number" Component="SerialNumber" />
+                <RadzenTextBox @bind-Value="_model.SerialNumber" Name="SerialNumber" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.SerialNumber)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Manufacturer" Component="Manufacturer" />
+                <RadzenTextBox @bind-Value="_model.Manufacturer" Name="Manufacturer" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.Manufacturer)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Model" Component="Model" />
+                <RadzenTextBox @bind-Value="_model.Model" Name="Model" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.Model)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Purchase date" Component="PurchaseDate" />
+                <RadzenDatePicker TValue="DateOnly" @bind-Value="_model.PurchaseDate" Name="PurchaseDate" DateFormat="d" Style="width: 100%" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Engine hours" Component="EngineHours" />
+                <RadzenNumeric TValue="decimal" @bind-Value="_model.EngineHours" Name="EngineHours" Min="0" Step="0.1" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.EngineHours)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Oil type" Component="OilType" />
+                <RadzenTextBox @bind-Value="_model.OilType" Name="OilType" Placeholder="e.g. SAE 10W-30" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.OilType)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Oil quantity (quarts)" Component="OilQuantity" />
+                <RadzenNumeric TValue="decimal" @bind-Value="_model.OilQuantityQuarts" Name="OilQuantity" Min="0" Step="0.25" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.OilQuantityQuarts)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="Last oil change" Component="LastOilChange" />
+                <RadzenDatePicker TValue="DateOnly?" @bind-Value="_model.LastOilChange" Name="LastOilChange" DateFormat="d" AllowClear="true" Style="width: 100%" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
+                <RadzenLabel Text="In service" Component="IsActive" class="rz-ms-2" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_busy" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private MowerRequest _model = new();
+
+    private string? _error;
+
+    private bool _busy;
+
+    /// <summary>Gets or sets the mower being edited; <see langword="null"/> adds a new one.</summary>
+    [Parameter]
+    public MowerResponse? Existing { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        if (Existing is null)
+        {
+            return;
+        }
+
+        _model = new MowerRequest
+        {
+            Name = Existing.Name,
+            Manufacturer = Existing.Manufacturer,
+            Model = Existing.Model,
+            SerialNumber = Existing.SerialNumber,
+            PurchaseDate = Existing.PurchaseDate,
+            EngineHours = Existing.EngineHours,
+            OilType = Existing.OilType,
+            LastOilChange = Existing.LastOilChange,
+            OilQuantityQuarts = Existing.OilQuantityQuarts,
+            IsActive = Existing.IsActive,
+        };
+    }
+
+    /// <summary>Saves the mower and closes the dialog.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _busy = true;
+
+        _error = null;
+
+        var result = Existing is null
+            ? await MowerApi.CreateAsync(_model, Cancellation)
+            : await MowerApi.UpdateAsync(Existing.Id, _model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess("Mower saved.");
+
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+
+        _busy = false;
+    }
+}

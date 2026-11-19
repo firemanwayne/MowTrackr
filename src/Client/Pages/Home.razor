@@ -1,0 +1,64 @@
+@page "/"
+@attribute [Authorize]
+@inherits PageBase
+@inject IMaintenanceApiService Maintenance
+
+<div class="page">
+    <h1>Dashboard</h1>
+    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
+        <Authorized>
+            @if (_due is null)
+            {
+                <p>Checking what needs service&hellip;</p>
+            }
+            else
+            {
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                            @_due.Count(d => d.IsOverdue)
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            Overdue services
+                        </RadzenText>
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                            @_due.Count(d => !d.IsOverdue)
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            Coming due
+                        </RadzenText>
+                    </RadzenCard>
+                    <RadzenCard>
+                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                            @_due.Count(d => d.HasOpenWorkOrder)
+                        </RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2">
+                            Already scheduled
+                        </RadzenText>
+                    </RadzenCard>
+                </RadzenStack>
+                <RadzenButton Text="Review due maintenance" Path="maintenance" class="rz-mt-4" />
+            }
+        </Authorized>
+        <NotAuthorized>
+            <p>Open <a href="work-orders">Work orders</a> to see the maintenance assigned to you.</p>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private List<MaintenanceDueResponse>? _due;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Maintenance.GetDueAsync(Cancellation);
+
+        if (result.IsSuccess)
+        {
+            _due = result.Value ?? [];
+        }
+    }
+}
