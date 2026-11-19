@@ -28,6 +28,8 @@ internal sealed class AuthService(UserManager<ApplicationUser> userManager, ITok
             UserName = request.Email,
             Email = request.Email,
             DisplayName = request.DisplayName.Trim(),
+            Language = AppLanguages.IsSupported(request.Language) ? request.Language!.ToLowerInvariant() : AppLanguages.Default,
+            Theme = AppThemes.IsSupported(request.Theme) ? AppThemes.All.First(t => string.Equals(t, request.Theme, StringComparison.OrdinalIgnoreCase)) : AppThemes.Default,
         };
 
         var created = await userManager.CreateAsync(user, request.Password).ConfigureAwait(false);

@@ -9,4 +9,7 @@ public sealed class ServiceTaskRequest
     [Required]
     [StringLength(300)]
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets a value indicating whether the task must be checked off before the work order can be completed.</summary>
+    public bool IsRequired { get; set; } = true;
 }

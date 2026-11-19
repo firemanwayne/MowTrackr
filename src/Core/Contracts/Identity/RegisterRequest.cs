@@ -19,4 +19,12 @@ public sealed class RegisterRequest
     [Required]
     [StringLength(100)]
     public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the initial UI language code; defaults to English when omitted or unsupported.</summary>
+    [StringLength(10)]
+    public string? Language { get; set; }
+
+    /// <summary>Gets or sets the initial colour theme; defaults to Light when omitted or unsupported.</summary>
+    [StringLength(10)]
+    public string? Theme { get; set; }
 }

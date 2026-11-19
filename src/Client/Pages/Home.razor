@@ -4,61 +4,96 @@
 @inject IMaintenanceApiService Maintenance
 
 <div class="page">
-    <h1>Dashboard</h1>
-    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
-        <Authorized>
-            @if (_due is null)
-            {
-                <p>Checking what needs service&hellip;</p>
-            }
-            else
-            {
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
-                            @_due.Count(d => d.IsOverdue)
-                        </RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body2">
-                            Overdue services
-                        </RadzenText>
-                    </RadzenCard>
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
-                            @_due.Count(d => !d.IsOverdue)
-                        </RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body2">
-                            Coming due
-                        </RadzenText>
-                    </RadzenCard>
-                    <RadzenCard>
-                        <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
-                            @_due.Count(d => d.HasOpenWorkOrder)
-                        </RadzenText>
-                        <RadzenText TextStyle="TextStyle.Body2">
-                            Already scheduled
-                        </RadzenText>
-                    </RadzenCard>
-                </RadzenStack>
-                <RadzenButton Text="Review due maintenance" Path="maintenance" class="rz-mt-4" />
-            }
-        </Authorized>
-        <NotAuthorized>
-            <p>Open <a href="work-orders">Work orders</a> to see the maintenance assigned to you.</p>
-        </NotAuthorized>
-    </AuthorizeView>
+    <h1>@L["Dashboard"]</h1>
+    @if (_loading)
+    {
+        <p>@L["Checking what needs service..."]</p>
+    }
+    else if (_isManager)
+    {
+        <div class="dash-tiles">
+            <a class="dash-tile" href="maintenance?filter=overdue">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                        @_due.Count(d => d.IsOverdue)
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["Overdue services"]
+                    </RadzenText>
+                </RadzenCard>
+            </a>
+            <a class="dash-tile" href="maintenance?filter=upcoming">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                        @_due.Count(d => !d.IsOverdue)
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["Coming due"]
+                    </RadzenText>
+                </RadzenCard>
+            </a>
+            <a class="dash-tile" href="maintenance?filter=scheduled">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                        @_due.Count(d => d.HasOpenWorkOrder)
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["Already scheduled"]
+                    </RadzenText>
+                </RadzenCard>
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="dash-tiles">
+            <a class="dash-tile" href="work-orders?status=open">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H3" class="rz-m-0">
+                        @_openOrders
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L["My open work orders"]
+                    </RadzenText>
+                </RadzenCard>
+            </a>
+        </div>
+    }
 </div>
 
 @code {
-    private List<MaintenanceDueResponse>? _due;
+    private List<MaintenanceDueResponse> _due = [];
+
+    private int _openOrders;
+
+    private bool _isManager;
+
+    private bool _loading = true;
+
+    /// <summary>Gets or sets the cascaded authentication state.</summary>
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        var result = await Maintenance.GetDueAsync(Cancellation);
+        var state = AuthState is null ? null : await AuthState;
 
-        if (result.IsSuccess)
+        _isManager = state?.User.IsInRole(AppRoles.Admin) == true || state?.User.IsInRole(AppRoles.Manager) == true;
+
+        if (_isManager)
         {
-            _due = result.Value ?? [];
+            var due = await Maintenance.GetDueAsync(Cancellation);
+
+            _due = due.Value ?? [];
         }
+        else
+        {
+            var orders = await Maintenance.ListWorkOrdersAsync(Cancellation);
+
+            _openOrders = (orders.Value ?? []).Count(o => o.Status is WorkOrderStatus.Scheduled or WorkOrderStatus.InProgress);
+        }
+
+        _loading = false;
     }
 }

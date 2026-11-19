@@ -25,6 +25,7 @@ src/
   Maintenance/      Domain: service templates, interval validation, due checks, work orders
   Identity/         Domain: users, roles, JWT issuing
   Data/             EF Core context, migrations, repositories
+  Localization/     UI strings (resx): English text is the key, SharedResource.es.resx holds Spanish
 ```
 
 ## Run locally
@@ -51,6 +52,13 @@ dotnet user-secrets set "Authentication:Google:ClientSecret" "..." --project src
 ```
 
 A provider with no credentials is simply hidden on the sign-in page.
+
+## Language and theme
+
+Each user picks a **language** (English / Spanish) and an **appearance** (Light / Dark) on their profile page. The choice is
+stored on the profile and re-applied at sign-in; a copy is cached in the browser so the sign-in page already uses it.
+Changing the language reloads the page so every string switches. To add a string, wrap it as `L["English text"]` and add the
+Spanish entry to `src/Localization/Resources/SharedResource.es.resx`. API validation/error messages are still English.
 
 ## Maintenance intervals
 

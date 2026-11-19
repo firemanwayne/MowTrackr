@@ -4,7 +4,8 @@ namespace MowTrackr.Client.Services;
 /// Default <see cref="IMowerApiService"/>.
 /// </summary>
 /// <param name="http">The HTTP client.</param>
-internal sealed class MowerApiService(HttpClient http) : ApiServiceBase(http), IMowerApiService
+/// <param name="localizer">The string localizer for error messages.</param>
+internal sealed class MowerApiService(HttpClient http, IStringLocalizer<SharedResource> localizer) : ApiServiceBase(http, localizer), IMowerApiService
 {
     /// <inheritdoc />
     public Task<ApiResult<List<MowerResponse>>> ListAsync(CancellationToken cancellationToken)

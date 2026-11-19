@@ -54,3 +54,39 @@ html, body {
     right: 0.75rem;
     top: 0.5rem;
 }
+/* Clickable dashboard tiles that lift slightly on hover/focus. */
+.dash-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dash-tile {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--rz-card-border-radius, 8px);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-tile .rz-card {
+    min-width: 13rem;
+    cursor: pointer;
+}
+
+.dash-tile:hover,
+.dash-tile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dash-tile {
+        transition: none;
+    }
+
+    .dash-tile:hover,
+    .dash-tile:focus-visible {
+        transform: none;
+    }
+}

@@ -8,9 +8,13 @@ namespace MowTrackr.Core.Contracts.Identity;
 /// <param name="DisplayName">The display name.</param>
 /// <param name="PhoneNumber">The phone number.</param>
 /// <param name="Roles">The assigned roles.</param>
+/// <param name="Language">The preferred UI language code ("en" or "es").</param>
+/// <param name="Theme">The preferred colour theme ("Light" or "Dark").</param>
 public sealed record UserResponse(
     Guid Id,
     string Email,
     string DisplayName,
     string? PhoneNumber,
-    IReadOnlyList<string> Roles);
+    IReadOnlyList<string> Roles,
+    string Language,
+    string Theme);

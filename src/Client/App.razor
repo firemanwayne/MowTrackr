@@ -1,3 +1,5 @@
+@inject IStringLocalizer<SharedResource> L
+
 <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
@@ -5,7 +7,7 @@
                 @if (context.User.Identity?.IsAuthenticated == true)
                 {
                     <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
-                        You do not have permission to view this page.
+                        @L["You do not have permission to view this page."]
                     </RadzenAlert>
                 }
                 else
@@ -14,7 +16,7 @@
                 }
             </NotAuthorized>
             <Authorizing>
-                <p>Checking your session&hellip;</p>
+                <p>@L["Checking your session..."]</p>
             </Authorizing>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -22,8 +24,8 @@
     <NotFound>
         <LayoutView Layout="@typeof(MainLayout)">
             <div class="page">
-                <h1>Not found</h1>
-                <p>Sorry, there is nothing at this address.</p>
+                <h1>@L["Not found"]</h1>
+                <p>@L["Sorry, there is nothing at this address."]</p>
             </div>
         </LayoutView>
     </NotFound>

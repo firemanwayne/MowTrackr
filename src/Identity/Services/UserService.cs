@@ -49,7 +49,21 @@ internal sealed class UserService(UserManager<ApplicationUser> userManager, ILog
             return Result<UserResponse>.NotFound("User not found.");
         }
 
+        if (!AppLanguages.IsSupported(request.Language))
+        {
+            return Result<UserResponse>.Invalid($"Unsupported language '{request.Language}'.");
+        }
+
+        if (!AppThemes.IsSupported(request.Theme))
+        {
+            return Result<UserResponse>.Invalid($"Unsupported theme '{request.Theme}'.");
+        }
+
         user.DisplayName = request.DisplayName.Trim();
+
+        user.Language = request.Language.ToLowerInvariant();
+
+        user.Theme = AppThemes.All.First(t => string.Equals(t, request.Theme, StringComparison.OrdinalIgnoreCase));
 
         user.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
 

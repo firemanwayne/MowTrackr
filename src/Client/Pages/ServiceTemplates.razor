@@ -6,28 +6,28 @@
 
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-        <h1>Service templates</h1>
-        <RadzenButton Text="New template" Icon="add" Click="@(() => EditAsync(null))" />
+        <h1>@L["Service templates"]</h1>
+        <RadzenButton Text="@L["New template"]" Icon="add" Click="@(() => EditAsync(null))" />
     </RadzenStack>
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
-            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="Name" />
-            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Due every">
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="@L["Name"]" />
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="@L["Due every"]">
                 <Template Context="template">
                     @DescribeInterval(template)
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Tasks">
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="@L["Tasks"]">
                 <Template Context="template">
                     @template.Tasks.Count
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Status">
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="@L["Status"]">
                 <Template Context="template">
-                    <RadzenBadge Text="@(template.IsActive ? "Active" : "Inactive")" BadgeStyle="@(template.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />
+                    <RadzenBadge Text="@(template.IsActive ? L["Active"] : L["Inactive"])" BadgeStyle="@(template.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="" Sortable="false" Width="110px">
@@ -56,21 +56,21 @@
     /// <summary>Formats a template's interval for display.</summary>
     /// <param name="template">The template.</param>
     /// <returns>For example "50 hrs or 90 days".</returns>
-    private static string DescribeInterval(ServiceTemplateResponse template)
+    private string DescribeInterval(ServiceTemplateResponse template)
     {
         var parts = new List<string>();
 
         if (template.IntervalHours is { } hours)
         {
-            parts.Add($"{hours:0.##} hrs");
+            parts.Add($"{hours:0.##} {L["hrs"]}");
         }
 
         if (template.IntervalDays is { } days)
         {
-            parts.Add($"{days} days");
+            parts.Add($"{days} {L["days"]}");
         }
 
-        return string.Join(" or ", parts);
+        return string.Join($" {L["or"]} ", parts);
     }
 
     /// <summary>Loads the templates.</summary>
@@ -95,7 +95,7 @@
     {
         var parameters = new Dictionary<string, object?> { [nameof(ServiceTemplateEditor.Existing)] = template };
 
-        var saved = await Dialogs.OpenAsync<ServiceTemplateEditor>(template is null ? "New service template" : "Edit service template", parameters, new DialogOptions { Width = "720px" });
+        var saved = await Dialogs.OpenAsync<ServiceTemplateEditor>(template is null ? L["New service template"] : L["Edit service template"], parameters, new DialogOptions { Width = "720px" });
 
         if (saved is true)
         {
@@ -108,7 +108,7 @@
     /// <returns>A task.</returns>
     private async Task DeleteAsync(ServiceTemplateResponse template)
     {
-        var confirmed = await Dialogs.Confirm($"Delete {template.Name}?", "Delete template", new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        var confirmed = await Dialogs.Confirm(L["Delete {0}?", template.Name], L["Delete template"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
 
         if (confirmed is not true)
         {
@@ -119,12 +119,12 @@
 
         if (!result.IsSuccess)
         {
-            NotifyError(result.Error ?? "Could not delete the template.");
+            NotifyError(result.Error ?? L["Could not delete the template."]);
 
             return;
         }
 
-        NotifySuccess("Template deleted.");
+        NotifySuccess(L["Template deleted."]);
 
         await LoadAsync();
     }

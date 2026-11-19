@@ -4,7 +4,8 @@ namespace MowTrackr.Client.Services;
 /// Default <see cref="IAuthApiService"/>.
 /// </summary>
 /// <param name="http">The HTTP client.</param>
-internal sealed class AuthApiService(HttpClient http) : ApiServiceBase(http), IAuthApiService
+/// <param name="localizer">The string localizer for error messages.</param>
+internal sealed class AuthApiService(HttpClient http, IStringLocalizer<SharedResource> localizer) : ApiServiceBase(http, localizer), IAuthApiService
 {
     private readonly HttpClient _http = http;
 

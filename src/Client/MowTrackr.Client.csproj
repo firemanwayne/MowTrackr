@@ -3,6 +3,8 @@
   <PropertyGroup>
     <RootNamespace>MowTrackr.Client</RootNamespace>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Spanish number/date formats need the full ICU data set. -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\MowTrackr.Core.csproj" />
+    <ProjectReference Include="..\Localization\MowTrackr.Localization.csproj" />
   </ItemGroup>
 
 </Project>

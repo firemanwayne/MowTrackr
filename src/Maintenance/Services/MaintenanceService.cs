@@ -104,7 +104,7 @@ internal sealed class MaintenanceService(
 
         foreach (var task in template.Tasks.OrderBy(t => t.SortOrder))
         {
-            order.Tasks.Add(new WorkOrderTask { WorkOrderId = order.Id, Description = task.Description, SortOrder = task.SortOrder });
+            order.Tasks.Add(new WorkOrderTask { WorkOrderId = order.Id, Description = task.Description, SortOrder = task.SortOrder, IsRequired = task.IsRequired });
         }
 
         await workOrders.AddAsync(order, cancellationToken).ConfigureAwait(false);
@@ -207,9 +207,9 @@ internal sealed class MaintenanceService(
             return Result<WorkOrderResponse>.Conflict("This work order is already closed.");
         }
 
-        if (order.Tasks.Any(t => !t.IsComplete))
+        if (order.Tasks.Any(t => t.IsRequired && !t.IsComplete))
         {
-            return Result<WorkOrderResponse>.Invalid("Every task must be checked off before the work order can be completed.");
+            return Result<WorkOrderResponse>.Invalid("Every required task must be checked off before the work order can be completed.");
         }
 
         var mower = await mowers.GetByIdAsync(order.MowerId, new QuerySpec<Mower> { Track = true }, cancellationToken).ConfigureAwait(false);

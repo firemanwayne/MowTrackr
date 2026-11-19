@@ -1,3 +1,6 @@
+using MowTrackr.Core.Enums;
+using Microsoft.Extensions.Localization;
+using MowTrackr.Localization.Resources;
 using Radzen;
 
 namespace MowTrackr.Client.Abstractions;
@@ -12,10 +15,28 @@ public abstract class PageBase : ComponentBase, IDisposable
     /// <summary>Gets a token that is cancelled when the component is disposed.</summary>
     protected CancellationToken Cancellation => _cancellation.Token;
 
+    /// <summary>Gets or sets the string localizer (English text is the key; Spanish comes from the Localization library).</summary>
+    [Inject]
+    protected IStringLocalizer<SharedResource> L { get; set; } = default!;
+
     /// <summary>Gets or sets the Radzen notification service.</summary>
     [Inject]
     protected NotificationService Notifications { get; set; } = default!;
 
+    /// <summary>Gets the localized display text of a work order status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The text.</returns>
+    protected string StatusText(WorkOrderStatus status)
+    {
+        return status switch
+        {
+            WorkOrderStatus.Scheduled => L["Scheduled"],
+            WorkOrderStatus.InProgress => L["In progress"],
+            WorkOrderStatus.Completed => L["Completed"],
+            WorkOrderStatus.Cancelled => L["Cancelled"],
+            _ => status.ToString(),
+        };
+    }
     /// <summary>Shows a success toast.</summary>
     /// <param name="message">The message.</param>
     protected void NotifySuccess(string message)

@@ -14,7 +14,7 @@ internal static class ServiceTemplateExtensions
     {
         var tasks = template.Tasks
             .OrderBy(t => t.SortOrder)
-            .Select(t => new ServiceTaskResponse(t.Id, t.Description, t.SortOrder))
+            .Select(t => new ServiceTaskResponse(t.Id, t.Description, t.SortOrder, t.IsRequired))
             .ToList();
 
         return new ServiceTemplateResponse(
@@ -63,6 +63,7 @@ internal static class ServiceTemplateExtensions
                 ServiceTemplateId = template.Id,
                 Description = task.Description.Trim(),
                 SortOrder = order++,
+                IsRequired = task.IsRequired,
             });
         }
     }

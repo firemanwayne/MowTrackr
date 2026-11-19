@@ -13,4 +13,7 @@ public sealed class ServiceTask : EntityBase
 
     /// <summary>Gets or sets the display order.</summary>
     public int SortOrder { get; set; }
+
+    /// <summary>Gets or sets a value indicating whether the task must be checked off to complete a work order.</summary>
+    public bool IsRequired { get; set; } = true;
 }

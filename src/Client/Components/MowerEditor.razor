@@ -10,56 +10,56 @@
         </RadzenAlert>
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Name" Component="Name" />
+                <RadzenLabel Text="@L["Name"]" Component="Name" />
                 <RadzenTextBox @bind-Value="_model.Name" Name="Name" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.Name)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Serial number" Component="SerialNumber" />
+                <RadzenLabel Text="@L["Serial number"]" Component="SerialNumber" />
                 <RadzenTextBox @bind-Value="_model.SerialNumber" Name="SerialNumber" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.SerialNumber)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Manufacturer" Component="Manufacturer" />
+                <RadzenLabel Text="@L["Manufacturer"]" Component="Manufacturer" />
                 <RadzenTextBox @bind-Value="_model.Manufacturer" Name="Manufacturer" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.Manufacturer)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Model" Component="Model" />
+                <RadzenLabel Text="@L["Model"]" Component="Model" />
                 <RadzenTextBox @bind-Value="_model.Model" Name="Model" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.Model)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Purchase date" Component="PurchaseDate" />
+                <RadzenLabel Text="@L["Purchase date"]" Component="PurchaseDate" />
                 <RadzenDatePicker TValue="DateOnly" @bind-Value="_model.PurchaseDate" Name="PurchaseDate" DateFormat="d" Style="width: 100%" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Engine hours" Component="EngineHours" />
+                <RadzenLabel Text="@L["Engine hours"]" Component="EngineHours" />
                 <RadzenNumeric TValue="decimal" @bind-Value="_model.EngineHours" Name="EngineHours" Min="0" Step="0.1" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.EngineHours)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Oil type" Component="OilType" />
-                <RadzenTextBox @bind-Value="_model.OilType" Name="OilType" Placeholder="e.g. SAE 10W-30" Style="width: 100%" />
+                <RadzenLabel Text="@L["Oil type"]" Component="OilType" />
+                <RadzenTextBox @bind-Value="_model.OilType" Name="OilType" Placeholder="@L["e.g. SAE 10W-30"]" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.OilType)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Oil quantity (quarts)" Component="OilQuantity" />
+                <RadzenLabel Text="@L["Oil quantity (quarts)"]" Component="OilQuantity" />
                 <RadzenNumeric TValue="decimal" @bind-Value="_model.OilQuantityQuarts" Name="OilQuantity" Min="0" Step="0.25" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.OilQuantityQuarts)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Last oil change" Component="LastOilChange" />
+                <RadzenLabel Text="@L["Last oil change"]" Component="LastOilChange" />
                 <RadzenDatePicker TValue="DateOnly?" @bind-Value="_model.LastOilChange" Name="LastOilChange" DateFormat="d" AllowClear="true" Style="width: 100%" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
-                <RadzenLabel Text="In service" Component="IsActive" class="rz-ms-2" />
+                <RadzenLabel Text="@L["In service"]" Component="IsActive" class="rz-ms-2" />
             </RadzenColumn>
         </RadzenRow>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_busy" />
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="_busy" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -112,7 +112,7 @@
 
         if (result.IsSuccess)
         {
-            NotifySuccess("Mower saved.");
+            NotifySuccess(L["Mower saved."]);
 
             Dialogs.Close(true);
 

@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject ISessionService Session
+@inject IStringLocalizer<SharedResource> L
 @inject NavigationManager Navigation
 
 <RadzenComponents />
@@ -17,10 +18,10 @@
                         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                             @context.User.Identity?.Name
                         </RadzenText>
-                        <RadzenButton Text="Sign out" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="SignOutAsync" />
+                        <RadzenButton Text="@L["Sign out"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="SignOutAsync" />
                     </Authorized>
                     <NotAuthorized>
-                        <RadzenButton Text="Sign in" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("login"))" />
+                        <RadzenButton Text="@L["Sign in"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Navigation.NavigateTo("login"))" />
                     </NotAuthorized>
                 </AuthorizeView>
             </RadzenStack>
@@ -30,17 +31,17 @@
         <AuthorizeView>
             <Authorized>
                 <RadzenPanelMenu>
-                    <RadzenPanelMenuItem Text="Home" Path="" Icon="home" Match="NavLinkMatch.All" />
-                    <RadzenPanelMenuItem Text="Mowers" Path="mowers" Icon="agriculture" />
-                    <RadzenPanelMenuItem Text="Work orders" Path="work-orders" Icon="assignment" />
+                    <RadzenPanelMenuItem Text="@L["Home"]" Path="" Icon="home" Match="NavLinkMatch.All" />
+                    <RadzenPanelMenuItem Text="@L["Mowers"]" Path="mowers" Icon="agriculture" />
+                    <RadzenPanelMenuItem Text="@L["Work orders"]" Path="work-orders" Icon="assignment" />
                     <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
-                        <RadzenPanelMenuItem Text="Due maintenance" Path="maintenance" Icon="build" />
-                        <RadzenPanelMenuItem Text="Service templates" Path="service-templates" Icon="checklist" />
+                        <RadzenPanelMenuItem Text="@L["Due maintenance"]" Path="maintenance" Icon="build" />
+                        <RadzenPanelMenuItem Text="@L["Service templates"]" Path="service-templates" Icon="checklist" />
                     </AuthorizeView>
                     <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
-                        <RadzenPanelMenuItem Text="Users &amp; roles" Path="users" Icon="group" />
+                        <RadzenPanelMenuItem Text="@L["Users & roles"]" Path="users" Icon="group" />
                     </AuthorizeView>
-                    <RadzenPanelMenuItem Text="My profile" Path="profile" Icon="person" />
+                    <RadzenPanelMenuItem Text="@L["My profile"]" Path="profile" Icon="person" />
                 </RadzenPanelMenu>
             </Authorized>
         </AuthorizeView>

@@ -4,7 +4,8 @@ namespace MowTrackr.Client.Services;
 /// Default <see cref="IUserApiService"/>.
 /// </summary>
 /// <param name="http">The HTTP client.</param>
-internal sealed class UserApiService(HttpClient http) : ApiServiceBase(http), IUserApiService
+/// <param name="localizer">The string localizer for error messages.</param>
+internal sealed class UserApiService(HttpClient http, IStringLocalizer<SharedResource> localizer) : ApiServiceBase(http, localizer), IUserApiService
 {
     /// <inheritdoc />
     public Task<ApiResult<UserResponse>> GetMeAsync(CancellationToken cancellationToken)

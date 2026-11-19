@@ -9,16 +9,16 @@
     </RadzenAlert>
     @if (_order is null)
     {
-        <p>Loading&hellip;</p>
+        <p>@L["Loading..."]</p>
     }
     else
     {
         <h1>@_order.TemplateName &mdash; @_order.MowerName</h1>
         <RadzenText TextStyle="TextStyle.Body2">
-            Status: @_order.Status
+            @L["Status"]: @StatusText(_order.Status)
             @if (_order.ScheduledFor is { } scheduled)
             {
-                <span>&middot; Scheduled @scheduled.ToString("d")</span>
+                <span>&middot; @L["Scheduled"] @scheduled.ToString("d")</span>
             }
         </RadzenText>
         <RadzenStack Gap="0.5rem" class="rz-my-4">
@@ -26,7 +26,7 @@
             {
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                     <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen)" Change="@(isChecked => SetTaskAsync(task, isChecked))" Name="@($"task-{task.Id}")" />
-                    <RadzenLabel Text="@task.Description" Component="@($"task-{task.Id}")" />
+                    <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
                 </RadzenStack>
             }
         </RadzenStack>
@@ -37,19 +37,19 @@
                 <RadzenCard>
                     <RadzenStack Gap="0.75rem">
                         <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
-                            Complete this work order
+                            @L["Complete this work order"]
                         </RadzenText>
                         <div>
-                            <RadzenLabel Text="Engine hours now" Component="Hours" />
+                            <RadzenLabel Text="@L["Engine hours now"]" Component="Hours" />
                             <RadzenNumeric TValue="decimal" @bind-Value="_completion.EngineHoursAtService" Name="Hours" Min="0" Step="0.1" Style="width: 100%" />
                             <ValidationMessage For="@(() => _completion.EngineHoursAtService)" />
                         </div>
                         <div>
-                            <RadzenLabel Text="Notes" Component="Notes" />
+                            <RadzenLabel Text="@L["Notes"]" Component="Notes" />
                             <RadzenTextArea @bind-Value="_completion.Notes" Name="Notes" Rows="3" Style="width: 100%" />
                         </div>
                         <div>
-                            <RadzenButton ButtonType="ButtonType.Submit" Text="Mark complete" IsBusy="_busy" Disabled="@(!_order.Tasks.All(t => t.IsComplete))" />
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="_busy" Disabled="@(_order.Tasks.Any(t => t.IsRequired && !t.IsComplete))" />
                         </div>
                     </RadzenStack>
                 </RadzenCard>
@@ -58,7 +58,7 @@
         else if (_order.CompletedAt is { } completedAt)
         {
             <RadzenText TextStyle="TextStyle.Body2">
-                Completed @completedAt.LocalDateTime.ToString("g") at @_order.EngineHoursAtService?.ToString("0.#") engine hours.
+                @L["Completed {0} at {1} engine hours.", completedAt.LocalDateTime.ToString("g"), _order.EngineHoursAtService?.ToString("0.#") ?? "-"]
             </RadzenText>
         }
     }
@@ -111,7 +111,7 @@
             return;
         }
 
-        NotifyError(result.Error ?? "Could not update the task.");
+        NotifyError(result.Error ?? L["Could not update the task."]);
     }
 
     /// <summary>Completes the work order.</summary>
@@ -126,11 +126,11 @@
         {
             _order = result.Value;
 
-            NotifySuccess("Work order completed.");
+            NotifySuccess(L["Work order completed."]);
         }
         else
         {
-            NotifyError(result.Error ?? "Could not complete the work order.");
+            NotifyError(result.Error ?? L["Could not complete the work order."]);
         }
 
         _busy = false;

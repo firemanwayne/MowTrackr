@@ -12,20 +12,20 @@
             @Item?.MowerName
         </RadzenText>
         <div>
-            <RadzenLabel Text="Assign to" Component="Assignee" />
-            <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssignedToUserId" Data="_users" TextProperty="DisplayName" ValueProperty="Id" Name="Assignee" AllowClear="true" Placeholder="Unassigned" Style="width: 100%" />
+            <RadzenLabel Text="@L["Assign to"]" Component="Assignee" />
+            <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssignedToUserId" Data="_users" TextProperty="DisplayName" ValueProperty="Id" Name="Assignee" AllowClear="true" Placeholder="@L["Unassigned"]" Style="width: 100%" />
         </div>
         <div>
-            <RadzenLabel Text="Scheduled for" Component="ScheduledFor" />
+            <RadzenLabel Text="@L["Scheduled for"]" Component="ScheduledFor" />
             <RadzenDatePicker TValue="DateOnly?" @bind-Value="_model.ScheduledFor" Name="ScheduledFor" DateFormat="d" AllowClear="true" Style="width: 100%" />
         </div>
         <div>
-            <RadzenLabel Text="Notes" Component="Notes" />
+            <RadzenLabel Text="@L["Notes"]" Component="Notes" />
             <RadzenTextArea @bind-Value="_model.Notes" Name="Notes" Rows="3" Style="width: 100%" />
         </div>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Schedule" IsBusy="_busy" />
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Schedule"]" IsBusy="_busy" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -70,7 +70,7 @@
 
         if (result.IsSuccess)
         {
-            NotifySuccess("Work order scheduled.");
+            NotifySuccess(L["Work order scheduled."]);
 
             Dialogs.Close(true);
 

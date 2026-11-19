@@ -9,26 +9,26 @@
             @_error
         </RadzenAlert>
         <div>
-            <RadzenLabel Text="Name" Component="Name" />
-            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="e.g. Quarterly Maintenance" Style="width: 100%" />
+            <RadzenLabel Text="@L["Name"]" Component="Name" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. Quarterly Maintenance"]" Style="width: 100%" />
             <ValidationMessage For="@(() => _model.Name)" />
         </div>
         <div>
-            <RadzenLabel Text="Description" Component="Description" />
+            <RadzenLabel Text="@L["Description"]" Component="Description" />
             <RadzenTextArea @bind-Value="_model.Description" Name="Description" Rows="2" Style="width: 100%" />
         </div>
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Due every (engine hours)" Component="IntervalHours" />
-                <RadzenNumeric TValue="decimal?" Value="_model.IntervalHours" ValueChanged="OnHoursChangedAsync" Name="IntervalHours" Min="0" Step="1" Placeholder="optional" Style="width: 100%" />
+                <RadzenLabel Text="@L["Due every (engine hours)"]" Component="IntervalHours" />
+                <RadzenNumeric TValue="decimal?" Value="_model.IntervalHours" ValueChanged="OnHoursChangedAsync" Name="IntervalHours" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="Due every (days)" Component="IntervalDays" />
-                <RadzenNumeric TValue="int?" Value="_model.IntervalDays" ValueChanged="OnDaysChangedAsync" Name="IntervalDays" Min="0" Step="1" Placeholder="optional" Style="width: 100%" />
+                <RadzenLabel Text="@L["Due every (days)"]" Component="IntervalDays" />
+                <RadzenNumeric TValue="int?" Value="_model.IntervalDays" ValueChanged="OnDaysChangedAsync" Name="IntervalDays" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
             </RadzenColumn>
         </RadzenRow>
         <RadzenText TextStyle="TextStyle.Caption">
-            Set hours, days, or both. Whichever comes first makes the service due.
+            @L["Set hours, days, or both. Whichever comes first makes the service due."]
         </RadzenText>
         @foreach (var issue in _issues)
         {
@@ -38,26 +38,28 @@
         }
         <div>
             <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
-            <RadzenLabel Text="Active (used for due checks)" Component="IsActive" class="rz-ms-2" />
+            <RadzenLabel Text="@L["Active (used for due checks)"]" Component="IsActive" class="rz-ms-2" />
         </div>
         <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
-            Checklist
+            @L["Checklist"]
         </RadzenText>
         @for (var i = 0; i < _model.Tasks.Count; i++)
         {
             var index = i;
 
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                <RadzenTextBox @bind-Value="_model.Tasks[index].Description" Placeholder="Task description" Style="flex: 1" />
+                <RadzenTextBox @bind-Value="_model.Tasks[index].Description" Placeholder="@L["Task description"]" Style="flex: 1" />
+                <RadzenCheckBox TValue="bool" @bind-Value="_model.Tasks[index].IsRequired" Name="@($"required-{index}")" />
+                <RadzenLabel Text="@L["Required"]" Component="@($"required-{index}")" />
                 <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
             </RadzenStack>
         }
         <div>
-            <RadzenButton Text="Add task" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
+            <RadzenButton Text="@L["Add task"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
         </div>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
-            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_busy" />
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="_busy" />
         </RadzenStack>
     </RadzenStack>
 </EditForm>
@@ -92,7 +94,7 @@
             IntervalHours = Existing.IntervalHours,
             IntervalDays = Existing.IntervalDays,
             IsActive = Existing.IsActive,
-            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description }).ToList(),
+            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired }).ToList(),
         };
     }
 
@@ -146,7 +148,7 @@
 
         if (result.IsSuccess)
         {
-            NotifySuccess("Template saved.");
+            NotifySuccess(L["Template saved."]);
 
             Dialogs.Close(true);
 

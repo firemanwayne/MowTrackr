@@ -15,5 +15,7 @@ internal sealed class WorkOrderTaskConfiguration : IEntityTypeConfiguration<Work
         builder.Property(t => t.Id).ValueGeneratedNever();
 
         builder.Property(t => t.Description).HasMaxLength(300).IsRequired();
+
+        builder.Property(t => t.IsRequired).HasDefaultValue(true);
     }
 }

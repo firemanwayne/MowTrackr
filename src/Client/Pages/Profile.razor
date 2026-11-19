@@ -2,12 +2,14 @@
 @attribute [Authorize]
 @inherits PageBase
 @inject IUserApiService UserApi
+@inject IPreferencesService Preferences
+@inject NavigationManager Navigation
 
 <div class="page">
-    <h1>My profile</h1>
+    <h1>@L["My profile"]</h1>
     @if (_user is null)
     {
-        <p>Loading&hellip;</p>
+        <p>@L["Loading..."]</p>
     }
     else
     {
@@ -19,17 +21,25 @@
                         @_user.Email &middot; @string.Join(", ", _user.Roles)
                     </RadzenText>
                     <div>
-                        <RadzenLabel Text="Display name" Component="DisplayName" />
+                        <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
                         <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
                         <ValidationMessage For="@(() => _model.DisplayName)" />
                     </div>
                     <div>
-                        <RadzenLabel Text="Phone" Component="Phone" />
+                        <RadzenLabel Text="@L["Phone"]" Component="Phone" />
                         <RadzenTextBox @bind-Value="_model.PhoneNumber" Name="Phone" Style="width: 100%" />
                         <ValidationMessage For="@(() => _model.PhoneNumber)" />
                     </div>
                     <div>
-                        <RadzenButton ButtonType="ButtonType.Submit" Text="Save" IsBusy="_busy" />
+                        <RadzenLabel Text="@L["Language"]" Component="Language" />
+                        <RadzenDropDown TValue="string" @bind-Value="_model.Language" Data="_languages" TextProperty="Text" ValueProperty="Value" Name="Language" Style="width: 100%" />
+                    </div>
+                    <div>
+                        <RadzenLabel Text="@L["Appearance"]" Component="Theme" />
+                        <RadzenDropDown TValue="string" @bind-Value="_model.Theme" Data="_themes" TextProperty="Text" ValueProperty="Value" Name="Theme" Style="width: 100%" />
+                    </div>
+                    <div>
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="_busy" />
                     </div>
                 </RadzenStack>
             </EditForm>
@@ -38,7 +48,13 @@
 </div>
 
 @code {
+    private sealed record Option(string Value, string Text);
+
     private readonly UpdateProfileRequest _model = new();
+
+    private List<Option> _languages = [];
+
+    private List<Option> _themes = [];
 
     private UserResponse? _user;
 
@@ -47,11 +63,15 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        _languages = [new Option(AppLanguages.English, "English"), new Option(AppLanguages.Spanish, "Espa\u00f1ol")];
+
+        _themes = [new Option(AppThemes.Light, L["Light"]), new Option(AppThemes.Dark, L["Dark"])];
+
         var result = await UserApi.GetMeAsync(Cancellation);
 
         if (!result.IsSuccess || result.Value is null)
         {
-            NotifyError(result.Error ?? "Could not load your profile.");
+            NotifyError(result.Error ?? L["Could not load your profile."]);
 
             return;
         }
@@ -61,9 +81,13 @@
         _model.DisplayName = _user.DisplayName;
 
         _model.PhoneNumber = _user.PhoneNumber;
+
+        _model.Language = _user.Language;
+
+        _model.Theme = _user.Theme;
     }
 
-    /// <summary>Saves the profile.</summary>
+    /// <summary>Saves the profile. The theme applies immediately; a changed language reloads the page so every string switches.</summary>
     /// <returns>A task.</returns>
     private async Task SaveAsync()
     {
@@ -71,16 +95,27 @@
 
         var result = await UserApi.UpdateMeAsync(_model, Cancellation);
 
-        if (result.IsSuccess)
+        if (!result.IsSuccess || result.Value is null)
         {
-            _user = result.Value;
+            NotifyError(result.Error ?? L["Could not save your profile."]);
 
-            NotifySuccess("Profile saved.");
+            _busy = false;
+
+            return;
         }
-        else
+
+        _user = result.Value;
+
+        var reload = await Preferences.ApplyProfileAsync(_user);
+
+        if (reload)
         {
-            NotifyError(result.Error ?? "Could not save your profile.");
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+
+            return;
         }
+
+        NotifySuccess(L["Profile saved."]);
 
         _busy = false;
     }

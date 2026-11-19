@@ -9,5 +9,9 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100).IsRequired();
+
+        builder.Property(u => u.Language).HasMaxLength(10).IsRequired().HasDefaultValue("en");
+
+        builder.Property(u => u.Theme).HasMaxLength(10).IsRequired().HasDefaultValue("Light");
     }
 }

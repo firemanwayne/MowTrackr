@@ -2,6 +2,7 @@ using MowTrackr.Client.Handlers;
 using MowTrackr.Client.Providers;
 using MowTrackr.Client.Services;
 using MowTrackr.Client.Stores;
+using MowTrackr.Localization;
 
 namespace MowTrackr.Client;
 
@@ -16,6 +17,8 @@ internal static class ServiceRegistryExtensions
     /// <returns>The same collection, for chaining.</returns>
     public static IServiceCollection AddClientServices(this IServiceCollection services, Uri apiBaseAddress)
     {
+        services.AddLocalizationServices();
+
         services.AddAuthorizationCore();
 
         services.AddCascadingAuthenticationState();
@@ -27,6 +30,8 @@ internal static class ServiceRegistryExtensions
         services.TryAddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<JwtAuthenticationStateProvider>());
 
         services.TryAddScoped<ISessionService, SessionService>();
+
+        services.TryAddScoped<IPreferencesService, PreferencesService>();
 
         services.TryAddTransient<BearerTokenHandler>();
 

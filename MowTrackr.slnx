@@ -17,6 +17,7 @@
   <Folder Name="/Foundation/">
     <Project Path="src/Core/MowTrackr.Core.csproj" />
     <Project Path="src/Data/MowTrackr.Data.csproj" />
+    <Project Path="src/Localization/MowTrackr.Localization.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />

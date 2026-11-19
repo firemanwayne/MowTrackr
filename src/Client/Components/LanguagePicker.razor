@@ -1,0 +1,31 @@
+@inject IPreferencesService Preferences
+@inject NavigationManager Navigation
+
+<RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" JustifyContent="JustifyContent.End">
+    <RadzenButton Text="English" Variant="@VariantFor(AppLanguages.English)" Size="ButtonSize.Small" Click="@(() => SelectAsync(AppLanguages.English))" />
+    <RadzenButton Text="Espa&ntilde;ol" Variant="@VariantFor(AppLanguages.Spanish)" Size="ButtonSize.Small" Click="@(() => SelectAsync(AppLanguages.Spanish))" />
+</RadzenStack>
+
+@code {
+    [Inject]
+    private ICultureService Cultures { get; set; } = default!;
+
+    /// <summary>Highlights the button of the language in effect.</summary>
+    /// <param name="language">The button's language.</param>
+    /// <returns>The button variant.</returns>
+    private Variant VariantFor(string language)
+    {
+        return Cultures.GetCurrent() == language ? Variant.Filled : Variant.Text;
+    }
+
+    /// <summary>Caches the language and reloads so every string is rendered in it.</summary>
+    /// <param name="language">The language code.</param>
+    /// <returns>A task.</returns>
+    private async Task SelectAsync(string language)
+    {
+        if (await Preferences.SetLanguageAsync(language))
+        {
+            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        }
+    }
+}

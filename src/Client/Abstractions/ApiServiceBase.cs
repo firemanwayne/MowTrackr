@@ -4,7 +4,8 @@ namespace MowTrackr.Client.Abstractions;
 /// Shared HTTP plumbing for the typed API services: JSON in/out and uniform error handling.
 /// </summary>
 /// <param name="http">The HTTP client (base address and bearer handler are configured at registration).</param>
-internal abstract class ApiServiceBase(HttpClient http)
+/// <param name="localizer">The string localizer for user-facing error messages.</param>
+internal abstract class ApiServiceBase(HttpClient http, IStringLocalizer<SharedResource> localizer)
 {
     /// <summary>Sends a GET and reads the JSON payload.</summary>
     /// <typeparam name="T">The payload type.</typeparam>
@@ -70,7 +71,7 @@ internal abstract class ApiServiceBase(HttpClient http)
         }
         catch (HttpRequestException)
         {
-            return new ApiResult<T>(HttpStatusCode.ServiceUnavailable, default, $"Unable to reach the API at {http.BaseAddress}. Check that it is running and the browser trusts its certificate.");
+            return new ApiResult<T>(HttpStatusCode.ServiceUnavailable, default, localizer["Unable to reach the API at {0}. Check that it is running and the browser trusts its certificate.", http.BaseAddress?.ToString() ?? string.Empty].Value);
         }
     }
 
@@ -79,7 +80,7 @@ internal abstract class ApiServiceBase(HttpClient http)
     /// <param name="response">The failed response.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The failed result.</returns>
-    private static async Task<ApiResult<T>> ReadFailureAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<ApiResult<T>> ReadFailureAsync<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var text = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -108,9 +109,9 @@ internal abstract class ApiServiceBase(HttpClient http)
 
         error ??= response.StatusCode switch
         {
-            HttpStatusCode.Unauthorized => "Please sign in again.",
-            HttpStatusCode.Forbidden => "You do not have permission to do that.",
-            _ => $"The request failed ({(int)response.StatusCode}).",
+            HttpStatusCode.Unauthorized => localizer["Please sign in again."].Value,
+            HttpStatusCode.Forbidden => localizer["You do not have permission to do that."].Value,
+            _ => localizer["The request failed ({0}).", (int)response.StatusCode].Value,
         };
 
         return new ApiResult<T>(response.StatusCode, detail, error);

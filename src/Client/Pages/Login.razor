@@ -6,9 +6,10 @@
 @inject NavigationManager Navigation
 
 <div class="auth-card">
+    <LanguagePicker />
     <RadzenCard>
         <RadzenText TextStyle="TextStyle.H5">
-            Sign in to MowTrackr
+            @L["Sign in to MowTrackr"]
         </RadzenText>
         <EditForm Model="_model" OnValidSubmit="SignInAsync">
             <DataAnnotationsValidator />
@@ -17,22 +18,22 @@
                     @_error
                 </RadzenAlert>
                 <div>
-                    <RadzenLabel Text="Email" Component="Email" />
+                    <RadzenLabel Text="@L["Email"]" Component="Email" />
                     <RadzenTextBox @bind-Value="_model.Email" Name="Email" Style="width: 100%" AutoComplete="false" />
                     <ValidationMessage For="@(() => _model.Email)" />
                 </div>
                 <div>
-                    <RadzenLabel Text="Password" Component="Password" />
+                    <RadzenLabel Text="@L["Password"]" Component="Password" />
                     <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.Password)" />
                 </div>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Sign in" IsBusy="_busy" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Sign in"]" IsBusy="_busy" />
             </RadzenStack>
         </EditForm>
         @if (_providers.Count > 0)
         {
             <RadzenText TextStyle="TextStyle.Overline" class="rz-mt-4">
-                Or continue with
+                @L["Or continue with"]
             </RadzenText>
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                 @foreach (var provider in _providers)
@@ -42,7 +43,7 @@
             </RadzenStack>
         }
         <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
-            New here? <a href="register">Create an account</a>
+            @L["New here?"] <a href="register">@L["Create an account"]</a>
         </RadzenText>
     </RadzenCard>
 </div>
@@ -79,9 +80,9 @@
 
         if (result.IsSuccess && result.Value is not null)
         {
-            await Session.SignInAsync(result.Value.Token);
+            var reload = await Session.SignInAsync(result.Value.Token, Cancellation);
 
-            Navigation.NavigateTo("", replace: true);
+            Navigation.NavigateTo("", forceLoad: reload, replace: true);
 
             return;
         }

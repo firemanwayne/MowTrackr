@@ -4,7 +4,8 @@ namespace MowTrackr.Client.Services;
 /// Default <see cref="IServiceTemplateApiService"/>.
 /// </summary>
 /// <param name="http">The HTTP client.</param>
-internal sealed class ServiceTemplateApiService(HttpClient http) : ApiServiceBase(http), IServiceTemplateApiService
+/// <param name="localizer">The string localizer for error messages.</param>
+internal sealed class ServiceTemplateApiService(HttpClient http, IStringLocalizer<SharedResource> localizer) : ApiServiceBase(http, localizer), IServiceTemplateApiService
 {
     /// <inheritdoc />
     public Task<ApiResult<List<ServiceTemplateResponse>>> ListAsync(CancellationToken cancellationToken)

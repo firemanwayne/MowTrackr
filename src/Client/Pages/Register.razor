@@ -3,12 +3,15 @@
 @inherits PageBase
 @inject IAuthApiService Auth
 @inject ISessionService Session
+@inject IPreferencesService Preferences
+@inject ICultureService Cultures
 @inject NavigationManager Navigation
 
 <div class="auth-card">
+    <LanguagePicker />
     <RadzenCard>
         <RadzenText TextStyle="TextStyle.H5">
-            Create your profile
+            @L["Create your profile"]
         </RadzenText>
         <EditForm Model="_model" OnValidSubmit="RegisterAsync">
             <DataAnnotationsValidator />
@@ -17,25 +20,25 @@
                     @_error
                 </RadzenAlert>
                 <div>
-                    <RadzenLabel Text="Display name" Component="DisplayName" />
+                    <RadzenLabel Text="@L["Display name"]" Component="DisplayName" />
                     <RadzenTextBox @bind-Value="_model.DisplayName" Name="DisplayName" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.DisplayName)" />
                 </div>
                 <div>
-                    <RadzenLabel Text="Email" Component="Email" />
+                    <RadzenLabel Text="@L["Email"]" Component="Email" />
                     <RadzenTextBox @bind-Value="_model.Email" Name="Email" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.Email)" />
                 </div>
                 <div>
-                    <RadzenLabel Text="Password (8+ characters)" Component="Password" />
+                    <RadzenLabel Text="@L["Password (8+ characters)"]" Component="Password" />
                     <RadzenPassword @bind-Value="_model.Password" Name="Password" Style="width: 100%" />
                     <ValidationMessage For="@(() => _model.Password)" />
                 </div>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Create account" IsBusy="_busy" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create account"]" IsBusy="_busy" />
             </RadzenStack>
         </EditForm>
         <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">
-            Already registered? <a href="login">Sign in</a>
+            @L["Already registered?"] <a href="login">@L["Sign in"]</a>
         </RadzenText>
     </RadzenCard>
 </div>
@@ -47,7 +50,15 @@
 
     private bool _busy;
 
-    /// <summary>Creates the account and signs in.</summary>
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _model.Language = Cultures.GetCurrent();
+
+        _model.Theme = await Preferences.GetThemeAsync();
+    }
+
+    /// <summary>Creates the account and signs in. The new profile starts with the language and theme already in effect.</summary>
     /// <returns>A task.</returns>
     private async Task RegisterAsync()
     {
@@ -59,9 +70,9 @@
 
         if (result.IsSuccess && result.Value is not null)
         {
-            await Session.SignInAsync(result.Value.Token);
+            var reload = await Session.SignInAsync(result.Value.Token, Cancellation);
 
-            Navigation.NavigateTo("", replace: true);
+            Navigation.NavigateTo("", forceLoad: reload, replace: true);
 
             return;
         }

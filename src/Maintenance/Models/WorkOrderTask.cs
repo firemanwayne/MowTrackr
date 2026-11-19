@@ -14,6 +14,9 @@ public sealed class WorkOrderTask : EntityBase
     /// <summary>Gets or sets the display order.</summary>
     public int SortOrder { get; set; }
 
+    /// <summary>Gets or sets a value indicating whether the task must be checked off to complete the work order.</summary>
+    public bool IsRequired { get; set; } = true;
+
     /// <summary>Gets or sets a value indicating whether the task has been checked off.</summary>
     public bool IsComplete { get; set; }
 

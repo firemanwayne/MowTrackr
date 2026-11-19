@@ -4,15 +4,15 @@
 @inject IUserApiService UserApi
 
 <div class="page">
-    <h1>Users &amp; roles</h1>
+    <h1>@L["Users & roles"]</h1>
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_users" TItem="UserResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
-            <RadzenDataGridColumn TItem="UserResponse" Property="DisplayName" Title="Name" />
-            <RadzenDataGridColumn TItem="UserResponse" Property="Email" Title="Email" />
-            <RadzenDataGridColumn TItem="UserResponse" Title="Roles" Sortable="false" Width="360px">
+            <RadzenDataGridColumn TItem="UserResponse" Property="DisplayName" Title="@L["Name"]" />
+            <RadzenDataGridColumn TItem="UserResponse" Property="Email" Title="@L["Email"]" />
+            <RadzenDataGridColumn TItem="UserResponse" Title="@L["Roles"]" Sortable="false" Width="360px">
                 <Template Context="user">
                     <RadzenDropDown TValue="IEnumerable<string>" Multiple="true" Value="user.Roles" Data="AppRoles.All" Change="@(selected => SetRolesAsync(user, selected))" Style="width: 100%" />
                 </Template>
@@ -61,11 +61,11 @@
 
         if (result.IsSuccess)
         {
-            NotifySuccess($"Roles updated for {user.DisplayName}.");
+            NotifySuccess(L["Roles updated for {0}.", user.DisplayName]);
         }
         else
         {
-            NotifyError(result.Error ?? "Could not update roles.");
+            NotifyError(result.Error ?? L["Could not update roles."]);
         }
 
         await LoadAsync();
