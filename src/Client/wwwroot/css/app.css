@@ -13,7 +13,17 @@ html, body {
 
 .page {
     padding: 1.25rem;
-    max-width: 1200px;
+}
+
+/* Grids fill the page, scroll sideways instead of clipping, and wrap long text instead of truncating it. */
+.app-grid {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.app-grid .rz-cell-data {
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .auth-card {

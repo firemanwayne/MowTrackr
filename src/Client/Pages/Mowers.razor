@@ -14,17 +14,17 @@
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
     </RadzenAlert>
-    <RadzenDataGrid Data="_mowers" TItem="MowerResponse" IsLoading="_loading" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="15">
+    <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_mowers" TItem="MowerResponse" IsLoading="_loading" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="15">
         <Columns>
-            <RadzenDataGridColumn TItem="MowerResponse" Property="Name" Title="Name" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="Name" Title="Name" MinWidth="160px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Manufacturer" Title="Manufacturer" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Model" Title="Model" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="SerialNumber" Title="S/N" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="PurchaseDate" Title="Purchased" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="SerialNumber" Title="S/N" MinWidth="130px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="PurchaseDate" Title="Purchased" FormatString="{0:d}" MinWidth="120px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="EngineHours" Title="Engine hrs" FormatString="{0:0.#}" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="OilType" Title="Oil" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantityQuarts" Title="Qts" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" Title="Last oil change" FormatString="{0:d}" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" Title="Last oil change" FormatString="{0:d}" MinWidth="150px" />
             <RadzenDataGridColumn TItem="MowerResponse" Title="Active" Sortable="false" Filterable="false">
                 <Template Context="mower">
                     <RadzenBadge Text="@(mower.IsActive ? "Active" : "Retired")" BadgeStyle="@(mower.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />

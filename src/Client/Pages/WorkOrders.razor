@@ -9,7 +9,7 @@
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
     </RadzenAlert>
-    <RadzenDataGrid Data="_orders" TItem="WorkOrderResponse" IsLoading="_loading" AllowSorting="true" RowClick="@(args => Navigation.NavigateTo($"work-orders/{args.Data?.Id}"))">
+    <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_orders" TItem="WorkOrderResponse" IsLoading="_loading" AllowSorting="true" RowClick="@(args => Navigation.NavigateTo($"work-orders/{args.Data?.Id}"))">
         <Columns>
             <RadzenDataGridColumn TItem="WorkOrderResponse" Property="MowerName" Title="Mower" />
             <RadzenDataGridColumn TItem="WorkOrderResponse" Property="TemplateName" Title="Service" />

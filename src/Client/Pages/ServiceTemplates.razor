@@ -12,7 +12,7 @@
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error
     </RadzenAlert>
-    <RadzenDataGrid Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
+    <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="Name" />
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="Due every">
