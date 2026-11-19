@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Client.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Core\MowTrackr.Core.csproj" />
     <ProjectReference Include="..\Localization\MowTrackr.Localization.csproj" />
   </ItemGroup>

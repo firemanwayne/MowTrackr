@@ -123,4 +123,5 @@
   <data name="We sent a confirmation link to {0}. Open it to finish creating your account, then sign in." xml:space="preserve"><value>We sent a confirmation link to {0}. Open it to finish creating your account, then sign in.</value></data>
   <data name="Your account was created but the confirmation email could not be sent. Use the button below to try again." xml:space="preserve"><value>Your account was created but the confirmation email could not be sent. Use the button below to try again.</value></data>
   <data name="Too many attempts. Wait a moment and try again." xml:space="preserve"><value>Too many attempts. Wait a moment and try again.</value></data>
+  <data name="Your session has expired. Please sign in again." xml:space="preserve"><value>Your session has expired. Please sign in again.</value></data>
 </root>

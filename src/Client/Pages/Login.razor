@@ -14,6 +14,9 @@
         <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("signin", SignInAsync))">
             <DataAnnotationsValidator />
             <RadzenStack Gap="0.75rem">
+                <RadzenAlert Visible="@Expired" AlertStyle="AlertStyle.Info" AllowClose="false" Variant="Variant.Flat">
+                    @L["Your session has expired. Please sign in again."]
+                </RadzenAlert>
                 <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false" Variant="Variant.Flat">
                     @_error
                 </RadzenAlert>
@@ -69,6 +72,10 @@
     private string? _error;
 
     private bool _needsConfirmation;
+
+    /// <summary>Gets or sets a value indicating that the user arrived because their session ended.</summary>
+    [SupplyParameterFromQuery(Name = "expired")]
+    public bool Expired { get; set; }
 
     private bool _registrationOpen;
 

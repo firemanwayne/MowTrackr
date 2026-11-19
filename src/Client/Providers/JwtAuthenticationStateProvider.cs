@@ -7,15 +7,24 @@ namespace MowTrackr.Client.Providers;
 /// Builds the Blazor authentication state from the stored JWT (no server round-trip; the API validates the token itself).
 /// </summary>
 /// <param name="tokens">The token store.</param>
-internal sealed class JwtAuthenticationStateProvider(ITokenStore tokens) : AuthenticationStateProvider
+/// <param name="expiry">The session-expiry signal.</param>
+internal sealed class JwtAuthenticationStateProvider(ITokenStore tokens, ISessionExpiry expiry) : AuthenticationStateProvider, IDisposable
 {
     private const string AuthenticationType = "jwt";
 
+    private static readonly TimeSpan MaxTimerDelay = TimeSpan.FromDays(24);
+
     private static readonly AuthenticationState Anonymous = new(new ClaimsPrincipal(new ClaimsIdentity()));
+
+    private Timer? _expiryTimer;
+
+    private bool _subscribed;
 
     /// <inheritdoc />
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        Subscribe();
+
         var token = await tokens.GetAsync();
 
         if (string.IsNullOrWhiteSpace(token))
@@ -29,18 +38,67 @@ internal sealed class JwtAuthenticationStateProvider(ITokenStore tokens) : Authe
         {
             await tokens.ClearAsync();
 
+            // There was a token and it is no longer good (expired or damaged): tell the user, do not just show the login page.
+            expiry.FlagExpired();
+
             return Anonymous;
         }
+
+        ScheduleExpiry(claims);
 
         var identity = new ClaimsIdentity(claims, AuthenticationType, AppClaims.Name, AppClaims.Role);
 
         return new AuthenticationState(new ClaimsPrincipal(identity));
     }
 
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _expiryTimer?.Dispose();
+
+        expiry.Expired -= NotifyStateChanged;
+    }
+
     /// <summary>Tells the UI that the session changed so it re-evaluates <c>AuthorizeView</c>s.</summary>
     public void NotifyStateChanged()
     {
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    /// <summary>Starts listening for the session ending unexpectedly (once).</summary>
+    private void Subscribe()
+    {
+        if (_subscribed)
+        {
+            return;
+        }
+
+        _subscribed = true;
+
+        expiry.Expired += NotifyStateChanged;
+    }
+
+    /// <summary>Arranges for the app to notice the moment the token expires, even if the page sits idle.</summary>
+    /// <param name="claims">The token's claims.</param>
+    private void ScheduleExpiry(List<Claim> claims)
+    {
+        _expiryTimer?.Dispose();
+
+        var expiryClaim = claims.FirstOrDefault(c => c.Type == "exp");
+
+        if (expiryClaim is null || !long.TryParse(expiryClaim.Value, out var seconds))
+        {
+            return;
+        }
+
+        var remaining = DateTimeOffset.FromUnixTimeSeconds(seconds) - DateTimeOffset.UtcNow;
+
+        if (remaining <= TimeSpan.Zero || remaining > MaxTimerDelay)
+        {
+            return;
+        }
+
+        _expiryTimer = new Timer(_ => expiry.SignalExpired(), null, remaining, Timeout.InfiniteTimeSpan);
     }
 
     /// <summary>Reads the claims out of a JWT payload, returning <see langword="null"/> if it is malformed or expired.</summary>
