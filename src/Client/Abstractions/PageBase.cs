@@ -37,6 +37,20 @@ public abstract class PageBase : ComponentBase, IDisposable
             _ => status.ToString(),
         };
     }
+    /// <summary>Gets the chip colour for a work order status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The badge style.</returns>
+    protected static BadgeStyle StatusStyle(WorkOrderStatus status)
+    {
+        return status switch
+        {
+            WorkOrderStatus.Scheduled => BadgeStyle.Info,
+            WorkOrderStatus.InProgress => BadgeStyle.Warning,
+            WorkOrderStatus.Completed => BadgeStyle.Success,
+            _ => BadgeStyle.Light,
+        };
+    }
+
     /// <summary>Shows a success toast.</summary>
     /// <param name="message">The message.</param>
     protected void NotifySuccess(string message)

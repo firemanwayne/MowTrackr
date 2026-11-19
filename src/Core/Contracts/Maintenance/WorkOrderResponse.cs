@@ -12,6 +12,7 @@ namespace MowTrackr.Core.Contracts.Maintenance;
 /// <param name="ScheduledFor">The planned date.</param>
 /// <param name="AssignedToUserId">The assigned technician.</param>
 /// <param name="CompletedAt">When the order was closed.</param>
+/// <param name="EngineHoursAtStart">The mower's engine hours when the work started (read-only).</param>
 /// <param name="EngineHoursAtService">Engine hours recorded at completion.</param>
 /// <param name="Notes">Free-form notes.</param>
 /// <param name="Tasks">The checklist.</param>
@@ -25,6 +26,7 @@ public sealed record WorkOrderResponse(
     DateOnly? ScheduledFor,
     Guid? AssignedToUserId,
     DateTimeOffset? CompletedAt,
+    decimal? EngineHoursAtStart,
     decimal? EngineHoursAtService,
     string? Notes,
     IReadOnlyList<WorkOrderTaskResponse> Tasks);

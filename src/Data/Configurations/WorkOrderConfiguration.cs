@@ -22,6 +22,8 @@ internal sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrde
 
         builder.Property(w => w.Status).HasConversion<string>().HasMaxLength(20);
 
+        builder.Property(w => w.EngineHoursAtStart).HasPrecision(10, 2);
+
         builder.Property(w => w.EngineHoursAtService).HasPrecision(10, 2);
 
         builder.HasIndex(w => new { w.MowerId, w.ServiceTemplateId, w.Status });

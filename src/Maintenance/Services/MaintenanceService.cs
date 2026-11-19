@@ -99,6 +99,7 @@ internal sealed class MaintenanceService(
             TemplateName = template.Name,
             ScheduledFor = request.ScheduledFor,
             AssignedToUserId = request.AssignedToUserId,
+            EngineHoursAtStart = mower.EngineHours,
             Notes = request.Notes?.Trim(),
         };
 
@@ -183,7 +184,17 @@ internal sealed class MaintenanceService(
 
         task.CompletedByUserId = command.IsComplete ? command.UserId : null;
 
+        var wasScheduled = order.Status == WorkOrderStatus.Scheduled;
+
         order.Status = order.Tasks.Any(t => t.IsComplete) ? WorkOrderStatus.InProgress : WorkOrderStatus.Scheduled;
+
+        if (wasScheduled && order.Status == WorkOrderStatus.InProgress)
+        {
+            // Work is starting now: take the mower's current hours as the starting reading.
+            var mower = await mowers.GetByIdAsync(order.MowerId, null, cancellationToken).ConfigureAwait(false);
+
+            order.EngineHoursAtStart = mower?.EngineHours ?? order.EngineHoursAtStart;
+        }
 
         order.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -213,6 +224,13 @@ internal sealed class MaintenanceService(
         }
 
         var mower = await mowers.GetByIdAsync(order.MowerId, new QuerySpec<Mower> { Track = true }, cancellationToken).ConfigureAwait(false);
+
+        var minimumHours = Math.Max(order.EngineHoursAtStart ?? 0m, mower?.EngineHours ?? 0m);
+
+        if (request.EngineHoursAtService < minimumHours)
+        {
+            return Result<WorkOrderResponse>.Invalid($"Engine hours when done cannot be less than the current hours ({minimumHours:0.##}).");
+        }
 
         if (mower is not null && request.EngineHoursAtService > mower.EngineHours)
         {

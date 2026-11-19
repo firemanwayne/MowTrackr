@@ -389,6 +389,10 @@ namespace MowTrackr.Data.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<decimal?>("EngineHoursAtStart")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.Property<Guid>("MowerId")
                         .HasColumnType("uniqueidentifier");
 

@@ -29,6 +29,9 @@ public sealed class WorkOrder : EntityBase
     /// <summary>Gets or sets when the order was closed.</summary>
     public DateTimeOffset? CompletedAt { get; set; }
 
+    /// <summary>Gets or sets the mower's engine hours when the work was scheduled (refreshed when work starts); read-only to users.</summary>
+    public decimal? EngineHoursAtStart { get; set; }
+
     /// <summary>Gets or sets the mower's engine hours at completion.</summary>
     public decimal? EngineHoursAtService { get; set; }
 

@@ -27,6 +27,7 @@ internal static class WorkOrderExtensions
             order.ScheduledFor,
             order.AssignedToUserId,
             order.CompletedAt,
+            order.EngineHoursAtStart,
             order.EngineHoursAtService,
             order.Notes,
             tasks);

@@ -73,7 +73,9 @@
   <data name="Edit service template" xml:space="preserve"><value>Editar plantilla de servicio</value></data>
   <data name="Email" xml:space="preserve"><value>Correo electrónico</value></data>
   <data name="Engine hours" xml:space="preserve"><value>Horas de motor</value></data>
-  <data name="Engine hours now" xml:space="preserve"><value>Horas de motor actuales</value></data>
+  <data name="Engine hours at start" xml:space="preserve"><value>Horas de motor al iniciar</value></data>
+  <data name="Engine hours when done" xml:space="preserve"><value>Horas de motor al terminar</value></data>
+  <data name="Engine hours when done cannot be less than {0}." xml:space="preserve"><value>Las horas de motor al terminar no pueden ser menores que {0}.</value></data>
   <data name="Engine hrs" xml:space="preserve"><value>Horas motor</value></data>
   <data name="Finishing sign-in..." xml:space="preserve"><value>Finalizando el inicio de sesión...</value></data>
   <data name="Home" xml:space="preserve"><value>Inicio</value></data>
