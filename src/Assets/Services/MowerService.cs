@@ -7,13 +7,17 @@ namespace MowTrackr.Assets.Services;
 /// Default <see cref="IMowerService"/> backed by the generic repository.
 /// </summary>
 /// <param name="mowers">The mower repository.</param>
+/// <param name="models">The model repository, used to validate the manufacturer/model pairing.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerService> logger) : IMowerService
+internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, ILogger<MowerService> logger) : IMowerService
 {
+    /// <summary>Navigation paths loaded so responses can carry the manufacturer and model names.</summary>
+    private static readonly string[] _lookupIncludes = [nameof(Mower.Manufacturer), nameof(Mower.Model)];
+
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<MowerResponse>>> ListAsync(CancellationToken cancellationToken)
     {
-        var spec = new QuerySpec<Mower> { OrderBy = m => m.Name };
+        var spec = new QuerySpec<Mower> { Includes = _lookupIncludes, OrderBy = m => m.Name };
 
         var items = await mowers.ListAsync(spec, cancellationToken).ConfigureAwait(false);
 
@@ -23,7 +27,7 @@ internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerServi
     /// <inheritdoc />
     public async Task<Result<MowerResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var mower = await mowers.GetByIdAsync(id, null, cancellationToken).ConfigureAwait(false);
+        var mower = await mowers.GetByIdAsync(id, new QuerySpec<Mower> { Includes = _lookupIncludes }, cancellationToken).ConfigureAwait(false);
 
         if (mower is null)
         {
@@ -43,6 +47,13 @@ internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerServi
             return Result<MowerResponse>.Conflict("A mower with that serial number already exists.");
         }
 
+        var pairingError = await ValidatePairingAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (pairingError is not null)
+        {
+            return Result<MowerResponse>.Invalid(pairingError);
+        }
+
         var mower = new Mower();
 
         mower.Apply(request);
@@ -53,7 +64,7 @@ internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerServi
 
         logger.LogInformation("Created mower {MowerId} ({MowerName})", mower.Id, mower.Name);
 
-        return Result<MowerResponse>.Ok(mower.ToResponse());
+        return await GetAsync(mower.Id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -73,13 +84,20 @@ internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerServi
             return Result<MowerResponse>.Conflict("A mower with that serial number already exists.");
         }
 
+        var pairingError = await ValidatePairingAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (pairingError is not null)
+        {
+            return Result<MowerResponse>.Invalid(pairingError);
+        }
+
         mower.Apply(request);
 
         await mowers.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated mower {MowerId}", mower.Id);
 
-        return Result<MowerResponse>.Ok(mower.ToResponse());
+        return await GetAsync(mower.Id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -115,5 +133,22 @@ internal sealed class MowerService(IRepository<Mower> mowers, ILogger<MowerServi
         var matches = await mowers.ListAsync(spec, cancellationToken).ConfigureAwait(false);
 
         return matches.Count > 0;
+    }
+
+    /// <summary>Checks that the chosen model exists and belongs to the chosen manufacturer.</summary>
+    /// <param name="request">The mower request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An error message, or <see langword="null"/> when the pairing is valid.</returns>
+    private async Task<string?> ValidatePairingAsync(MowerRequest request, CancellationToken cancellationToken)
+    {
+        var modelId = request.ManufacturerModelId;
+
+        var manufacturerId = request.ManufacturerId;
+
+        var spec = new QuerySpec<ManufacturerModel> { Filter = m => m.Id == modelId && m.ManufacturerId == manufacturerId };
+
+        var matches = await models.ListAsync(spec, cancellationToken).ConfigureAwait(false);
+
+        return matches.Count == 0 ? "Choose a manufacturer and one of its models." : null;
     }
 }

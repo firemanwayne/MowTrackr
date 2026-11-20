@@ -144,6 +144,57 @@ namespace MowTrackr.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("MowTrackr.Assets.Models.Manufacturer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Manufacturers", (string)null);
+                });
+
+            modelBuilder.Entity("MowTrackr.Assets.Models.ManufacturerModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ManufacturerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ManufacturerId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ManufacturerModels", (string)null);
+                });
+
             modelBuilder.Entity("MowTrackr.Assets.Models.Mower", b =>
                 {
                     b.Property<Guid>("Id")
@@ -162,15 +213,11 @@ namespace MowTrackr.Data.Migrations
                     b.Property<DateOnly?>("LastOilChange")
                         .HasColumnType("date");
 
-                    b.Property<string>("Manufacturer")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<Guid>("ManufacturerId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<Guid>("ManufacturerModelId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -198,6 +245,10 @@ namespace MowTrackr.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ManufacturerId");
+
+                    b.HasIndex("ManufacturerModelId");
 
                     b.HasIndex("SerialNumber")
                         .IsUnique();
@@ -615,6 +666,36 @@ namespace MowTrackr.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MowTrackr.Assets.Models.ManufacturerModel", b =>
+                {
+                    b.HasOne("MowTrackr.Assets.Models.Manufacturer", "Manufacturer")
+                        .WithMany("Models")
+                        .HasForeignKey("ManufacturerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Manufacturer");
+                });
+
+            modelBuilder.Entity("MowTrackr.Assets.Models.Mower", b =>
+                {
+                    b.HasOne("MowTrackr.Assets.Models.Manufacturer", "Manufacturer")
+                        .WithMany()
+                        .HasForeignKey("ManufacturerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MowTrackr.Assets.Models.ManufacturerModel", "Model")
+                        .WithMany()
+                        .HasForeignKey("ManufacturerModelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Manufacturer");
+
+                    b.Navigation("Model");
+                });
+
             modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTask", b =>
                 {
                     b.HasOne("MowTrackr.Maintenance.Models.ServiceTemplate", null)
@@ -631,6 +712,11 @@ namespace MowTrackr.Data.Migrations
                         .HasForeignKey("WorkOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MowTrackr.Assets.Models.Manufacturer", b =>
+                {
+                    b.Navigation("Models");
                 });
 
             modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTemplate", b =>

@@ -10,15 +10,13 @@ public sealed class MowerRequest
     [StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the manufacturer.</summary>
+    /// <summary>Gets or sets the manufacturer key (chosen from the manufacturer list).</summary>
     [Required]
-    [StringLength(100)]
-    public string Manufacturer { get; set; } = string.Empty;
+    public Guid? ManufacturerId { get; set; }
 
-    /// <summary>Gets or sets the model.</summary>
+    /// <summary>Gets or sets the model key (must belong to <see cref="ManufacturerId"/>).</summary>
     [Required]
-    [StringLength(100)]
-    public string Model { get; set; } = string.Empty;
+    public Guid? ManufacturerModelId { get; set; }
 
     /// <summary>Gets or sets the serial number.</summary>
     [Required]

@@ -102,4 +102,38 @@ public sealed class LabelTextParserTests
 
         Assert.Equal("412233445", reading.SerialNumber);
     }
+
+    [Fact]
+    public void Parse_JohnDeereProductIdentificationPlate_ReadsPinAndModel()
+    {
+        var reading = LabelTextParser.Parse("JOHN DEERE\nProduct Identification Number\n*1LV4066RLPN415746*\nTRACTOR 4066R\nASSEMBLED IN USA\nDEERE & COMPANY, MOLINE, ILLINOIS, USA");
+
+        Assert.Equal("John Deere", reading.Manufacturer);
+
+        Assert.Equal("4066R", reading.Model);
+
+        Assert.Equal("1LV4066RLPN415746", reading.SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_PinWithoutItsHeading_IsFoundByShape()
+    {
+        Assert.Equal("1LV4066RLPN415746", LabelTextParser.Parse("JOHN DEERE\n* 1LV4066RLPN415746 *\nTRACTOR 4066R").SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_EngineSerialPlate_UsesTheEngineSerial()
+    {
+        var reading = LabelTextParser.Parse("JOHN DEERE\nEngine Serial Number\n*PE6068U123456*\n6068HFC09\nDEERE & COMPANY MOLINE, ILLINOIS");
+
+        Assert.Equal("PE6068U123456", reading.SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_EngineSerialAndMachineSerial_PrefersTheMachine()
+    {
+        var reading = LabelTextParser.Parse("Engine Serial No. PE6068U123456\nSerial No. 1TC0Z254ABC001234");
+
+        Assert.Equal("1TC0Z254ABC001234", reading.SerialNumber);
+    }
 }

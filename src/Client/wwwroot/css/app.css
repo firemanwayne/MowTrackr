@@ -109,6 +109,13 @@ html, body {
     min-width: 0;
 }
 
+/* The sidebar toggle's cell runs from the screen edge to its divider; pull it flush left (cancelling the header padding)
+   so the hamburger icon sits centered in that cell instead of 8px to the right. */
+.app-header__start .rz-sidebar-toggle {
+    margin-inline-start: calc(-1 * max(1rem, env(safe-area-inset-left)));
+    padding-inline: 21px;
+}
+
 .app-header__end {
     display: flex;
     align-items: center;

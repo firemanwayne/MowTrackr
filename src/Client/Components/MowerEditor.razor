@@ -1,5 +1,6 @@
 @inherits PageBase
 @inject IMowerApiService MowerApi
+@inject IManufacturerApiService ManufacturerApi
 @inject DialogService Dialogs
 
 <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
@@ -22,13 +23,23 @@
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Manufacturer"]" Component="Manufacturer" />
-                <RadzenTextBox @bind-Value="_model.Manufacturer" Name="Manufacturer" Style="width: 100%" />
-                <ValidationMessage For="@(() => _model.Manufacturer)" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <RadzenDropDown TValue="Guid?" Value="_model.ManufacturerId" ValueChanged="OnManufacturerChanged" Data="_manufacturers" TextProperty="Name" ValueProperty="Id" Name="Manufacturer" AllowFiltering="true" Placeholder="@L["Select a manufacturer"]" Style="width: 100%" />
+                    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
+                        <RadzenButton Icon="add" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" title="@L["Add manufacturer"]" Click="@(() => RunOnceAsync("add-manufacturer", AddManufacturerAsync))" />
+                    </AuthorizeView>
+                </RadzenStack>
+                <ValidationMessage For="@(() => _model.ManufacturerId)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Model"]" Component="Model" />
-                <RadzenTextBox @bind-Value="_model.Model" Name="Model" Style="width: 100%" />
-                <ValidationMessage For="@(() => _model.Model)" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <RadzenDropDown TValue="Guid?" @bind-Value="_model.ManufacturerModelId" Data="CurrentModels" TextProperty="Name" ValueProperty="Id" Name="Model" AllowFiltering="true" Disabled="@(_model.ManufacturerId is null)" Placeholder="@L["Select a model"]" Style="width: 100%" />
+                    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
+                        <RadzenButton Icon="add" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" title="@L["Add model"]" Disabled="@(_model.ManufacturerId is null)" Click="@(() => RunOnceAsync("add-model", AddModelAsync))" />
+                    </AuthorizeView>
+                </RadzenStack>
+                <ValidationMessage For="@(() => _model.ManufacturerModelId)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Purchase date"]" Component="PurchaseDate" />
@@ -69,13 +80,29 @@
     private MowerRequest _model = new();
 
     private string? _error;
+
+    private List<ManufacturerResponse> _manufacturers = [];
+
     /// <summary>Gets or sets the mower being edited; <see langword="null"/> adds a new one.</summary>
     [Parameter]
     public MowerResponse? Existing { get; set; }
 
+    /// <summary>Gets the models belonging to the selected manufacturer.</summary>
+    private IReadOnlyList<ManufacturerModelResponse> CurrentModels =>
+        _manufacturers.FirstOrDefault(m => m.Id == _model.ManufacturerId)?.Models ?? [];
+
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var result = await ManufacturerApi.ListAsync(Cancellation);
+
+        _manufacturers = result.Value ?? [];
+
+        if (!result.IsSuccess)
+        {
+            _error = result.Error;
+        }
+
         if (Existing is null)
         {
             return;
@@ -84,8 +111,8 @@
         _model = new MowerRequest
         {
             Name = Existing.Name,
-            Manufacturer = Existing.Manufacturer,
-            Model = Existing.Model,
+            ManufacturerId = Existing.ManufacturerId,
+            ManufacturerModelId = Existing.ManufacturerModelId,
             SerialNumber = Existing.SerialNumber,
             PurchaseDate = Existing.PurchaseDate,
             EngineHours = Existing.EngineHours,
@@ -101,13 +128,101 @@
     /// <returns>A completed task.</returns>
     private Task OnLabelReadAsync(LabelReading reading)
     {
-        _model.Manufacturer = reading.Manufacturer ?? _model.Manufacturer;
+        var manufacturer = _manufacturers.FirstOrDefault(m => string.Equals(m.Name, reading.Manufacturer, StringComparison.OrdinalIgnoreCase));
 
-        _model.Model = reading.Model ?? _model.Model;
+        if (manufacturer is not null)
+        {
+            OnManufacturerChanged(manufacturer.Id);
+
+            var model = manufacturer.Models.FirstOrDefault(m => string.Equals(m.Name, reading.Model, StringComparison.OrdinalIgnoreCase));
+
+            _model.ManufacturerModelId = model?.Id ?? _model.ManufacturerModelId;
+        }
 
         _model.SerialNumber = reading.SerialNumber ?? _model.SerialNumber;
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>Selects a manufacturer and clears the model if it does not belong to it.</summary>
+    /// <param name="manufacturerId">The chosen manufacturer key.</param>
+    private void OnManufacturerChanged(Guid? manufacturerId)
+    {
+        if (_model.ManufacturerId == manufacturerId)
+        {
+            return;
+        }
+
+        _model.ManufacturerId = manufacturerId;
+
+        _model.ManufacturerModelId = null;
+    }
+
+    /// <summary>Prompts for a new manufacturer name, adds it and selects it.</summary>
+    /// <returns>A task.</returns>
+    private async Task AddManufacturerAsync()
+    {
+        var saved = await PromptAsync(L["Add manufacturer"], async (request, token) =>
+        {
+            var result = await ManufacturerApi.CreateAsync(request, token);
+
+            return (result.IsSuccess ? result.Value?.Id : null, result.Error);
+        });
+
+        if (saved is null)
+        {
+            return;
+        }
+
+        await ReloadAsync();
+
+        OnManufacturerChanged(saved);
+    }
+
+    /// <summary>Prompts for a new model name under the selected manufacturer, adds it and selects it.</summary>
+    /// <returns>A task.</returns>
+    private async Task AddModelAsync()
+    {
+        if (_model.ManufacturerId is not { } manufacturerId)
+        {
+            return;
+        }
+
+        var saved = await PromptAsync(L["Add model"], async (request, token) =>
+        {
+            var result = await ManufacturerApi.CreateModelAsync(manufacturerId, request, token);
+
+            return (result.IsSuccess ? result.Value?.Id : null, result.Error);
+        });
+
+        if (saved is null)
+        {
+            return;
+        }
+
+        await ReloadAsync();
+
+        _model.ManufacturerModelId = saved;
+    }
+
+    /// <summary>Opens the name prompt dialog.</summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="onSave">Saves the entered name, returning the new key or an error.</param>
+    /// <returns>The new key, or <see langword="null"/> if cancelled.</returns>
+    private async Task<Guid?> PromptAsync(string title, Func<ManufacturerRequest, CancellationToken, Task<(Guid? Id, string? Error)>> onSave)
+    {
+        var parameters = new Dictionary<string, object?> { [nameof(LookupNameEditor.OnSave)] = onSave };
+
+        return await Dialogs.OpenAsync<LookupNameEditor>(title, parameters, new DialogOptions { Width = "400px" }) as Guid?;
+    }
+
+    /// <summary>Reloads the manufacturer and model lists.</summary>
+    /// <returns>A task.</returns>
+    private async Task ReloadAsync()
+    {
+        var result = await ManufacturerApi.ListAsync(Cancellation);
+
+        _manufacturers = result.Value ?? _manufacturers;
     }
 
     /// <summary>Saves the mower and closes the dialog.</summary>

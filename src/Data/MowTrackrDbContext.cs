@@ -13,6 +13,12 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the mowers.</summary>
     public DbSet<Mower> Mowers => Set<Mower>();
 
+    /// <summary>Gets the equipment manufacturers.</summary>
+    public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
+
+    /// <summary>Gets the equipment models.</summary>
+    public DbSet<ManufacturerModel> ManufacturerModels => Set<ManufacturerModel>();
+
     /// <summary>Gets the service templates.</summary>
     public DbSet<ServiceTemplate> ServiceTemplates => Set<ServiceTemplate>();
 

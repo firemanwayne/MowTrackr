@@ -31,9 +31,12 @@ internal static partial class LabelTextParser
             .Where(line => line.Length > 0)
             .ToList();
 
-        var serial = FindValue(lines, SerialKeyPattern(), MinimumSerialLength, requireDigit: true);
+        // A machine's own serial/PIN beats an engine serial plate, which is only used when nothing else is found.
+        var serial = FindValue(lines, SerialKeyPattern(), MinimumSerialLength, requireDigit: true, allowEngine: false)
+            ?? FindProductIdentificationNumber(lines)
+            ?? FindValue(lines, SerialKeyPattern(), MinimumSerialLength, requireDigit: true, allowEngine: true);
 
-        var model = FindValue(lines, ModelKeyPattern(), MinimumModelLength, requireDigit: false);
+        var model = FindValue(lines, ModelKeyPattern(), MinimumModelLength, requireDigit: false, allowEngine: true);
 
         return new LabelReading(FindBrand(lines), model, serial);
     }
@@ -43,14 +46,20 @@ internal static partial class LabelTextParser
     /// <param name="key">Matches the keyword.</param>
     /// <param name="minimumLength">The shortest acceptable value.</param>
     /// <param name="requireDigit">Whether the value must contain a digit (serial numbers always do).</param>
+    /// <param name="allowEngine">Whether a keyword line mentioning the engine may be used.</param>
     /// <returns>The value, or <see langword="null"/>.</returns>
-    private static string? FindValue(List<string> lines, Regex key, int minimumLength, bool requireDigit)
+    private static string? FindValue(List<string> lines, Regex key, int minimumLength, bool requireDigit, bool allowEngine)
     {
         for (var i = 0; i < lines.Count; i++)
         {
             var match = key.Match(lines[i]);
 
             if (!match.Success)
+            {
+                continue;
+            }
+
+            if (!allowEngine && lines[i].Contains("engine", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -65,6 +74,25 @@ internal static partial class LabelTextParser
             if (candidate is not null && candidate.Length >= minimumLength && (!requireDigit || candidate.Any(char.IsDigit)))
             {
                 return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Looks for a bare 17-character identification number (the VIN-style PIN on tractors and zero-turns) anywhere on the label.</summary>
+    /// <param name="lines">The label's lines.</param>
+    /// <returns>The number, or <see langword="null"/>.</returns>
+    private static string? FindProductIdentificationNumber(List<string> lines)
+    {
+        foreach (var line in lines)
+        {
+            foreach (Match match in IdentificationNumberPattern().Matches(line))
+            {
+                if (match.Value.Any(char.IsDigit) && match.Value.Any(char.IsLetter))
+                {
+                    return match.Value.ToUpperInvariant();
+                }
             }
         }
 
@@ -135,14 +163,17 @@ internal static partial class LabelTextParser
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespacePattern();
 
-    [GeneratedRegex(@"\b(?:serial|ser\.?|s/n|s\.n\.|sn)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?:serial|ser\.?|s/n|s\.n\.|sn|(?:product\s+)?identification|pin)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex SerialKeyPattern();
 
-    [GeneratedRegex(@"\b(?:model|mod\.?|m/n)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?:model|mod\.?|m/n|tractor)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ModelKeyPattern();
 
-    [GeneratedRegex(@"^[\s:#.\-=]*(?:(?:no|number|num)\b\.?[\s:#.\-=]*)?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^[^A-Za-z0-9]*(?:(?:no|number|num)\b\.?[^A-Za-z0-9]*)?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LeadingNoisePattern();
+
+    [GeneratedRegex(@"(?<![A-Za-z0-9])[A-Za-z0-9]{17}(?![A-Za-z0-9])")]
+    private static partial Regex IdentificationNumberPattern();
 
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9\-/.]*")]
     private static partial Regex TokenPattern();
