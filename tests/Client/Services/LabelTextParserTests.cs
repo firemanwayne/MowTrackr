@@ -136,4 +136,46 @@ public sealed class LabelTextParserTests
 
         Assert.Equal("1TC0Z254ABC001234", reading.SerialNumber);
     }
+
+    [Fact]
+    public void Parse_RealOcrOfJohnDeerePinPlate_ReadsAllThreeFields()
+    {
+        const string ocr = "JOHN DEERE ; | Jr | his TRACTOR 4066R 18 | : DEERE & COMPANY, NOLWE, LOS, USA : | JOHN DEERE ~~ | Product Identification Number : / | . *1LV4066RLPN415746 + _ | oni iia ?] | TRACTOR 4066R |e | ASSEMBLED N USA. RB | | DEERE & COMPANY, NOLIE, ALS, 84 Ww -";
+
+        var reading = LabelTextParser.Parse(ocr.Replace(" | ", "\n"));
+
+        Assert.Equal("John Deere", reading.Manufacturer);
+
+        Assert.Equal("4066R", reading.Model);
+
+        Assert.Equal("1LV4066RLPN415746", reading.SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_StrayLetterAfterTheKeyword_FallsBackToTheNextLine()
+    {
+        Assert.Equal("1LV4066RLPN415746", LabelTextParser.Parse("Product Identification Number a\n+ 1LV4066RLPN415746 *").SerialNumber);
+    }
+
+    [Fact]
+    public void Parse_RealOcrOfJohnDeereEngineSerialPlate_JoinsTheSplitSerial()
+    {
+        const string ocr = "JOHN DEERE | X: Engine Serial Number 1 | 9» ii] | 3 6068HFC09 i | ~ DEERE & COMPANY MOLINE, ILLINOIS Made In Mexico | JOHN DEERE | Engine Serial Number | ® : PE6068U1 23456» ® | NTE RTO ET ERS | DEERE & OMPANY MOLINE, ILLINOIS Made In Mexico | JOHN DEERE ~~ ® | Engine Serjal Number k | ’ Eo + PE6068U 123456 » ®";
+
+        var reading = LabelTextParser.Parse(ocr.Replace(" | ", "\n"));
+
+        Assert.Equal("John Deere", reading.Manufacturer);
+
+        Assert.Equal("PE6068U123456", reading.SerialNumber);
+    }
+
+    [Theory]
+    [InlineData("SERIAL NO. PE6068U 123456", "PE6068U123456")]
+    [InlineData("SERIAL NO. 1LV4066R LPN415746", "1LV4066RLPN415746")]
+    [InlineData("SERIAL NO. 1234567 2019", "1234567")]
+    [InlineData("SERIAL NO. 408123456 MADE IN USA", "408123456")]
+    public void Parse_SerialSplitBySpaces_JoinsOnlyRealFragments(string text, string expected)
+    {
+        Assert.Equal(expected, LabelTextParser.Parse(text).SerialNumber);
+    }
 }
