@@ -5,8 +5,10 @@ namespace MowTrackr.Core.Contracts.Assets;
 /// </summary>
 /// <param name="Id">The mower key.</param>
 /// <param name="Name">The friendly name.</param>
-/// <param name="Manufacturer">The manufacturer.</param>
-/// <param name="Model">The model.</param>
+/// <param name="ManufacturerId">The manufacturer key.</param>
+/// <param name="Manufacturer">The manufacturer name.</param>
+/// <param name="ManufacturerModelId">The model key.</param>
+/// <param name="Model">The model name.</param>
 /// <param name="SerialNumber">The serial number.</param>
 /// <param name="PurchaseDate">The purchase date.</param>
 /// <param name="EngineHours">The current engine hours.</param>
@@ -17,7 +19,9 @@ namespace MowTrackr.Core.Contracts.Assets;
 public sealed record MowerResponse(
     Guid Id,
     string Name,
+    Guid ManufacturerId,
     string Manufacturer,
+    Guid ManufacturerModelId,
     string Model,
     string SerialNumber,
     DateOnly PurchaseDate,

@@ -265,4 +265,8 @@
   <data name="We could not find a manufacturer, model or serial number. Try again with the label flat, well lit and filling the photo." xml:space="preserve"><value>No encontramos fabricante, modelo ni número de serie. Inténtalo de nuevo con la etiqueta plana, bien iluminada y que llene la foto.</value></data>
   <data name="Could not read the label." xml:space="preserve"><value>No se pudo leer la etiqueta.</value></data>
   <data name="What the camera read" xml:space="preserve"><value>Lo que leyó la cámara</value></data>
+  <data name="Select a manufacturer" xml:space="preserve"><value>Selecciona un fabricante</value></data>
+  <data name="Select a model" xml:space="preserve"><value>Selecciona un modelo</value></data>
+  <data name="Add manufacturer" xml:space="preserve"><value>Agregar fabricante</value></data>
+  <data name="Add model" xml:space="preserve"><value>Agregar modelo</value></data>
 </root>

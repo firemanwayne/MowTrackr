@@ -16,9 +16,9 @@ internal sealed class MowerConfiguration : IEntityTypeConfiguration<Mower>
 
         builder.Property(m => m.Name).HasMaxLength(100).IsRequired();
 
-        builder.Property(m => m.Manufacturer).HasMaxLength(100).IsRequired();
+        builder.HasOne(m => m.Manufacturer).WithMany().HasForeignKey(m => m.ManufacturerId).OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(m => m.Model).HasMaxLength(100).IsRequired();
+        builder.HasOne(m => m.Model).WithMany().HasForeignKey(m => m.ManufacturerModelId).OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(m => m.SerialNumber).HasMaxLength(100).IsRequired();
 

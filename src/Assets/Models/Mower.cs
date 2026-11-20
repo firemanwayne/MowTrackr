@@ -8,11 +8,17 @@ public sealed class Mower : EntityBase
     /// <summary>Gets or sets the friendly name.</summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the manufacturer key.</summary>
+    public Guid ManufacturerId { get; set; }
+
     /// <summary>Gets or sets the manufacturer.</summary>
-    public string Manufacturer { get; set; } = string.Empty;
+    public Manufacturer? Manufacturer { get; set; }
+
+    /// <summary>Gets or sets the model key.</summary>
+    public Guid ManufacturerModelId { get; set; }
 
     /// <summary>Gets or sets the model.</summary>
-    public string Model { get; set; } = string.Empty;
+    public ManufacturerModel? Model { get; set; }
 
     /// <summary>Gets or sets the serial number.</summary>
     public string SerialNumber { get; set; } = string.Empty;

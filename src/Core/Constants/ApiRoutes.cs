@@ -11,6 +11,9 @@ public static class ApiRoutes
     /// <summary>Mower endpoints.</summary>
     public const string Mowers = "api/mowers";
 
+    /// <summary>Manufacturer and model lookup endpoints.</summary>
+    public const string Manufacturers = "api/manufacturers";
+
     /// <summary>Service template endpoints.</summary>
     public const string ServiceTemplates = "api/service-templates";
 
