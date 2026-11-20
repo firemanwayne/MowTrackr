@@ -12,6 +12,10 @@ internal static partial class LabelTextParser
 
     private const int MinimumModelLength = 3;
 
+    private const int MaximumJoinedPieces = 2;
+
+    private const int MaximumSerialLength = 20;
+
     private static readonly string[] Brands =
     [
         "Briggs & Stratton", "John Deere", "Cub Cadet", "Troy-Bilt", "Dixie Chopper", "Bad Boy", "Billy Goat",
@@ -50,6 +54,8 @@ internal static partial class LabelTextParser
     /// <returns>The value, or <see langword="null"/>.</returns>
     private static string? FindValue(List<string> lines, Regex key, int minimumLength, bool requireDigit, bool allowEngine)
     {
+        var joined = new List<string>();
+
         for (var i = 0; i < lines.Count; i++)
         {
             var match = key.Match(lines[i]);
@@ -64,20 +70,65 @@ internal static partial class LabelTextParser
                 continue;
             }
 
-            var candidate = FirstToken(lines[i][(match.Index + match.Length)..]);
+            var candidate = FirstToken(lines[i][(match.Index + match.Length)..], out var rest);
 
-            if (candidate is null && i + 1 < lines.Count)
+            if (!IsAcceptable(candidate, minimumLength, requireDigit) && i + 1 < lines.Count)
             {
-                candidate = FirstToken(lines[i + 1]);
+                candidate = FirstToken(lines[i + 1], out rest);
             }
 
-            if (candidate is not null && candidate.Length >= minimumLength && (!requireDigit || candidate.Any(char.IsDigit)))
+            if (candidate is null || !IsAcceptable(candidate, minimumLength, requireDigit))
             {
-                return candidate;
+                continue;
             }
+
+            joined.Add(requireDigit ? JoinFragments(candidate, rest) : candidate);
         }
 
-        return null;
+        // OCR often splits one serial into pieces with a space ("PE6068U 123456"). A scan reads the label several times,
+        // so when two or more readings agree on the same joined value it is trusted over the first piece alone.
+        var agreed = joined
+            .GroupBy(value => value, StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault(group => group.Count() >= 2);
+
+        return agreed?.Key ?? joined.FirstOrDefault();
+    }
+
+    /// <summary>Appends the pieces that follow a serial on the same line when OCR split it with spaces.</summary>
+    /// <param name="token">The first piece.</param>
+    /// <param name="rest">The text after it.</param>
+    /// <returns>The pieces joined together (or the token alone if nothing joinable follows).</returns>
+    private static string JoinFragments(string token, string rest)
+    {
+        var result = token;
+
+        var joinedPieces = 0;
+
+        foreach (var piece in rest.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var fragment = FragmentPattern().Match(piece);
+
+            if (!fragment.Success || !fragment.Groups[1].Value.Any(char.IsDigit) || joinedPieces == MaximumJoinedPieces || result.Length + fragment.Groups[1].Length > MaximumSerialLength)
+            {
+                break;
+            }
+
+            result += fragment.Groups[1].Value;
+
+            joinedPieces++;
+        }
+
+        return result;
+    }
+
+    /// <summary>Checks that a candidate value is long enough (and has a digit when required).</summary>
+    /// <param name="candidate">The candidate, if any.</param>
+    /// <param name="minimumLength">The shortest acceptable value.</param>
+    /// <param name="requireDigit">Whether the value must contain a digit.</param>
+    /// <returns><see langword="true"/> if the candidate can be used.</returns>
+    private static bool IsAcceptable(string? candidate, int minimumLength, bool requireDigit)
+    {
+        return candidate is not null && candidate.Length >= minimumLength && (!requireDigit || candidate.Any(char.IsDigit));
     }
 
     /// <summary>Looks for a bare 17-character identification number (the VIN-style PIN on tractors and zero-turns) anywhere on the label.</summary>
@@ -101,9 +152,12 @@ internal static partial class LabelTextParser
 
     /// <summary>Takes the first value-like word, skipping separators and a leading "no." or "#".</summary>
     /// <param name="text">The text after a keyword.</param>
+    /// <param name="rest">The text that follows the word.</param>
     /// <returns>The word, or <see langword="null"/>.</returns>
-    private static string? FirstToken(string text)
+    private static string? FirstToken(string text, out string rest)
     {
+        rest = string.Empty;
+
         var stripped = LeadingNoisePattern().Replace(text, string.Empty);
 
         var match = TokenPattern().Match(stripped);
@@ -112,6 +166,8 @@ internal static partial class LabelTextParser
         {
             return null;
         }
+
+        rest = stripped[(match.Index + match.Length)..];
 
         var token = match.Value.TrimEnd('.', '-', '/');
 
@@ -163,7 +219,7 @@ internal static partial class LabelTextParser
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespacePattern();
 
-    [GeneratedRegex(@"\b(?:serial|ser\.?|s/n|s\.n\.|sn|(?:product\s+)?identification|pin)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"\b(?:ser[ij]al|ser\.?|s/n|s\.n\.|sn|(?:product\s+)?identification|pin)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex SerialKeyPattern();
 
     [GeneratedRegex(@"\b(?:model|mod\.?|m/n|tractor)(?=$|[\s:#.\-]|no)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
@@ -171,6 +227,9 @@ internal static partial class LabelTextParser
 
     [GeneratedRegex(@"^[^A-Za-z0-9]*(?:(?:no|number|num)\b\.?[^A-Za-z0-9]*)?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LeadingNoisePattern();
+
+    [GeneratedRegex(@"^[^A-Za-z0-9]*([A-Za-z0-9]{5,})[^A-Za-z0-9]*$")]
+    private static partial Regex FragmentPattern();
 
     [GeneratedRegex(@"(?<![A-Za-z0-9])[A-Za-z0-9]{17}(?![A-Za-z0-9])")]
     private static partial Regex IdentificationNumberPattern();
