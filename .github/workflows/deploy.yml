@@ -1,8 +1,9 @@
 name: Deploy
 
 # Provisions an environment from infra/ (Bicep), then publishes the API and the client.
-#   push to main      -> dev
-#   manual run        -> dev or prod, optionally as a what-if only
+#   push to dev       -> dev   (feature branches merge into dev by pull request; dev holds what is deployed to the dev site)
+#   manual run        -> dev or prod, optionally as a what-if only. prod can only be run from main,
+#                        which receives dev through a pull request once the dev site has been checked.
 # Sign-in to Azure uses OpenID Connect (no stored Azure credentials). Run infra/bootstrap.ps1 once to set it up;
 # until the AZURE_* variables exist the deploy jobs are skipped, and CI still runs on every push.
 #
@@ -13,7 +14,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths-ignore:
       - 'README.md'
       - 'docs/**'
@@ -50,6 +51,12 @@ jobs:
     name: Build and validate
     runs-on: ubuntu-latest
     steps:
+      - name: Require main for prod
+        if: ${{ github.event.inputs.environment == 'prod' && github.ref != 'refs/heads/main' }}
+        run: |
+          echo "::error::prod can only be deployed from main (this run is on ${{ github.ref_name }})."
+          exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-dotnet@v4

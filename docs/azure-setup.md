@@ -84,9 +84,14 @@ Register each provider's OAuth redirect URI as `https://<your-api>.azurewebsites
 
 ## Deploying
 
-- **Push to `main`** deploys **dev**.
-- **Run Deploy from the Actions tab** to pick `dev` or `prod`. Tick *what-if* to preview the infrastructure changes
-  without deploying anything.
+Branches: work happens on feature branches, which merge into `dev` by pull request. `dev` holds what is deployed to
+the dev site. When dev looks right, open a pull request from `dev` into `main`. Both branches are protected: changes
+arrive by pull request only, and the `build` check must pass.
+
+- **Push (merge) to `dev`** deploys **dev**.
+- **Run Deploy from the Actions tab** to pick `dev` or `prod`. `prod` can only be run from `main`. Tick *what-if* to
+  preview the infrastructure changes without deploying anything.
+- Merging to `main` does not deploy anything by itself.
 
 Each run: builds and validates, deploys `infra/main.bicep` with that environment's parameter file (idempotent), then
 publishes the API to App Service and the client to the Static Web App with the client pointed at the API URL. The API
