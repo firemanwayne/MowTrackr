@@ -47,6 +47,8 @@ internal static class ServiceRegistryExtensions
 
         AddApiClient<IServiceTemplateApiService, ServiceTemplateApiService>(services, apiBaseAddress);
 
+        AddApiClient<IInspectionTemplateApiService, InspectionTemplateApiService>(services, apiBaseAddress);
+
         AddApiClient<IMaintenanceApiService, MaintenanceApiService>(services, apiBaseAddress);
 
         AddApiClient<IUserApiService, UserApiService>(services, apiBaseAddress);

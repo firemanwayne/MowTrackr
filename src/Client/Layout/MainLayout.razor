@@ -44,6 +44,7 @@
                     <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
                         <RadzenPanelMenuItem Text="@L["Due maintenance"]" Path="maintenance" Icon="build" />
                         <RadzenPanelMenuItem Text="@L["Service templates"]" Path="service-templates" Icon="checklist" />
+                        <RadzenPanelMenuItem Text="@L["Inspection templates"]" Path="inspection-templates" Icon="fact_check" />
                     </AuthorizeView>
                     <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
                         <RadzenPanelMenuItem Text="@L["Users & roles"]" Path="users" Icon="group" />

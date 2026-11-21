@@ -8,6 +8,9 @@ public sealed class WorkOrderTask : EntityBase
     /// <summary>Gets or sets the owning work order key.</summary>
     public Guid WorkOrderId { get; set; }
 
+    /// <summary>Gets or sets where the task came from: the inspection's name, or <see langword="null"/> for the service's own checklist.</summary>
+    public string? Source { get; set; }
+
     /// <summary>Gets or sets the task description.</summary>
     public string Description { get; set; } = string.Empty;
 

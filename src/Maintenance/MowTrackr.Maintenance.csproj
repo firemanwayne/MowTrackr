@@ -9,6 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Maintenance.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Core\MowTrackr.Core.csproj" />
     <ProjectReference Include="..\Assets\MowTrackr.Assets.csproj" />
   </ItemGroup>

@@ -11,12 +11,14 @@ namespace MowTrackr.Maintenance.Services;
 /// <param name="mowers">The mower repository.</param>
 /// <param name="templates">The template repository.</param>
 /// <param name="workOrders">The work order repository.</param>
+/// <param name="inspections">The inspection template repository.</param>
 /// <param name="options">The due-check defaults.</param>
 /// <param name="logger">The logger.</param>
 internal sealed class MaintenanceService(
     IRepository<Mower> mowers,
     IRepository<ServiceTemplate> templates,
     IRepository<WorkOrder> workOrders,
+    IRepository<InspectionTemplate> inspections,
     IOptions<MaintenanceOptions> options,
     ILogger<MaintenanceService> logger) : IMaintenanceService
 {
@@ -113,6 +115,8 @@ internal sealed class MaintenanceService(
             order.Tasks.Add(new WorkOrderTask { WorkOrderId = order.Id, Description = task.Description, SortOrder = task.SortOrder, IsRequired = task.IsRequired });
         }
 
+        await AddInspectionTasksAsync(order, mower, cancellationToken).ConfigureAwait(false);
+
         await workOrders.AddAsync(order, cancellationToken).ConfigureAwait(false);
 
         await workOrders.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -120,6 +124,44 @@ internal sealed class MaintenanceService(
         logger.LogInformation("Scheduled work order {WorkOrderId} for mower {MowerId} using template {TemplateId}", order.Id, mower.Id, template.Id);
 
         return Result<WorkOrderResponse>.Ok(order.ToResponse());
+    }
+
+    /// <summary>Appends the steps of every inspection that applies to this equipment (by age or engine hours) after the service's own steps.</summary>
+    /// <param name="order">The work order being built.</param>
+    /// <param name="mower">The equipment the order is for.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task.</returns>
+    private async Task AddInspectionTasksAsync(WorkOrder order, Mower mower, CancellationToken cancellationToken)
+    {
+        var typeId = mower.AssetTypeId;
+
+        var spec = new QuerySpec<InspectionTemplate>
+        {
+            Filter = t => t.IsActive && t.AssetTypeId == typeId,
+            Includes = [nameof(InspectionTemplate.Tasks), nameof(InspectionTemplate.AssetType)],
+            OrderBy = t => t.Name,
+        };
+
+        var candidates = await inspections.ListAsync(spec, cancellationToken).ConfigureAwait(false);
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var nextOrder = order.Tasks.Count == 0 ? 0 : order.Tasks.Max(t => t.SortOrder) + 1;
+
+        foreach (var inspection in candidates.Where(t => t.AppliesTo(mower, today)))
+        {
+            foreach (var task in inspection.Tasks.OrderBy(t => t.SortOrder))
+            {
+                order.Tasks.Add(new WorkOrderTask
+                {
+                    WorkOrderId = order.Id,
+                    Source = inspection.DisplayName(),
+                    Description = task.Description,
+                    SortOrder = nextOrder++,
+                    IsRequired = task.IsRequired,
+                });
+            }
+        }
     }
 
     /// <inheritdoc />
