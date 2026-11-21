@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -193,7 +193,7 @@ jobs:
       - name: Publish
         run: dotnet publish src/Api/MowTrackr.Api.csproj --configuration Release --output ./publish/api
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
@@ -225,7 +225,7 @@ jobs:
       - name: Publish
         run: dotnet publish src/Blazor/MowTrackr.Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
