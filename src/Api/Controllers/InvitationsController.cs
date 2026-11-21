@@ -18,7 +18,9 @@ public sealed class InvitationsController(IInvitationService invitations) : Cont
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await invitations.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -30,7 +32,9 @@ public sealed class InvitationsController(IInvitationService invitations) : Cont
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] CreateInvitationRequest request, CancellationToken cancellationToken)
     {
-        var result = await invitations.CreateAsync(request, User.GetUserId(), cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .CreateAsync(request, User.GetUserId(), cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -42,7 +46,9 @@ public sealed class InvitationsController(IInvitationService invitations) : Cont
     [HttpPost("{id:guid}/resend")]
     public async Task<IActionResult> ResendAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await invitations.ResendAsync(id, User.GetUserId(), cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .ResendAsync(id, User.GetUserId(), cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -54,7 +60,9 @@ public sealed class InvitationsController(IInvitationService invitations) : Cont
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> RevokeAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await invitations.RevokeAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .RevokeAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }

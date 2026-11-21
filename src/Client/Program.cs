@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MowTrackr.Application;
 using MowTrackr.Client;
-using MowTrackr.Client.Interfaces;
+using MowTrackr.Application.Interfaces;
 using Radzen;
 
 const string ApiBaseUrlKey = "ApiBaseUrl";
@@ -14,7 +15,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseUrl = builder.Configuration[ApiBaseUrlKey] ?? throw new InvalidOperationException($"Configuration value '{ApiBaseUrlKey}' is missing from wwwroot/appsettings.json.");
 
-builder.Services.AddClientServices(new Uri(apiBaseUrl));
+builder.Services.AddApplicationServices(options => options.BaseAddress = new Uri(apiBaseUrl));
 
 builder.Services.AddRadzenComponents();
 

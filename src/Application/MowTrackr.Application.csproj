@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>MowTrackr.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.JSInterop" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Client" />
+    <InternalsVisibleTo Include="MowTrackr.Application.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Abstractions\MowTrackr.Core\MowTrackr.Core.csproj" />
+    <ProjectReference Include="..\Infrastructure\MowTrackr.Localization\MowTrackr.Localization.csproj" />
+  </ItemGroup>
+
+</Project>

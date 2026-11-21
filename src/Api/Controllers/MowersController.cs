@@ -18,7 +18,9 @@ public sealed class MowersController(IMowerService mowers) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await mowers.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await mowers
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -30,7 +32,9 @@ public sealed class MowersController(IMowerService mowers) : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await mowers.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await mowers
+            .GetAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -43,7 +47,9 @@ public sealed class MowersController(IMowerService mowers) : ControllerBase
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CreateAsync([FromBody] MowerRequest request, CancellationToken cancellationToken)
     {
-        var result = await mowers.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await mowers
+            .CreateAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -57,7 +63,9 @@ public sealed class MowersController(IMowerService mowers) : ControllerBase
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] MowerRequest request, CancellationToken cancellationToken)
     {
-        var result = await mowers.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await mowers
+            .UpdateAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -70,7 +78,9 @@ public sealed class MowersController(IMowerService mowers) : ControllerBase
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await mowers.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await mowers
+            .DeleteAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToNoContentResult();
     }

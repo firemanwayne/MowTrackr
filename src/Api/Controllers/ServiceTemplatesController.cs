@@ -18,7 +18,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await templates.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -30,7 +32,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await templates.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .GetAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -43,7 +47,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CreateAsync([FromBody] ServiceTemplateRequest request, CancellationToken cancellationToken)
     {
-        var result = await templates.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .CreateAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -57,7 +63,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] ServiceTemplateRequest request, CancellationToken cancellationToken)
     {
-        var result = await templates.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .UpdateAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -70,7 +78,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await templates.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .DeleteAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToNoContentResult();
     }
@@ -83,7 +93,9 @@ public sealed class ServiceTemplatesController(IServiceTemplateService templates
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CheckIntervalsAsync([FromBody] IntervalCheckRequest request, CancellationToken cancellationToken)
     {
-        var result = await templates.CheckIntervalsAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .CheckIntervalsAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }

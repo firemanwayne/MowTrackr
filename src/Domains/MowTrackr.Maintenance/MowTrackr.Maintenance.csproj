@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>MowTrackr.Maintenance</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Maintenance.UnitTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Abstractions\MowTrackr.Core\MowTrackr.Core.csproj" />
+    <ProjectReference Include="..\MowTrackr.Assets\MowTrackr.Assets.csproj" />
+  </ItemGroup>
+
+</Project>

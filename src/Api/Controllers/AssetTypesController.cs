@@ -18,7 +18,9 @@ public sealed class AssetTypesController(IAssetTypeService assetTypes) : Control
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await assetTypes.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await assetTypes
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -31,7 +33,9 @@ public sealed class AssetTypesController(IAssetTypeService assetTypes) : Control
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> CreateAsync([FromBody] AssetTypeRequest request, CancellationToken cancellationToken)
     {
-        var result = await assetTypes.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await assetTypes
+            .CreateAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
