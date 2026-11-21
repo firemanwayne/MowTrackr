@@ -44,7 +44,7 @@ jobs:
           echo "::error::prod can only be deployed from main (this run is on ${{ github.ref_name }})."
           exit 1
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -80,7 +80,7 @@ jobs:
       clientName: ${{ steps.deploy.outputs.clientName }}
       clientUrl: ${{ steps.deploy.outputs.clientUrl }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: azure/login@v2
         with:
@@ -171,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -199,7 +199,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
