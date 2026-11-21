@@ -56,4 +56,10 @@ internal interface IMaintenanceApiService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The new repair work order.</returns>
     Task<ApiResult<WorkOrderResponse>> CreateRepairAsync(Guid workOrderId, Guid taskId, CancellationToken cancellationToken);
+
+    /// <summary>Permanently deletes a work order (admins only).</summary>
+    /// <param name="id">The work order key.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The outcome.</returns>
+    Task<ApiResult<bool>> DeleteWorkOrderAsync(Guid id, CancellationToken cancellationToken);
 }

@@ -133,6 +133,21 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
         return result.ToActionResult();
     }
 
+    /// <summary>Permanently deletes a work order (admins only).</summary>
+    /// <param name="id">The work order key.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>No content when deleted.</returns>
+    [HttpDelete("work-orders/{id:guid}")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> DeleteWorkOrderAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await maintenance
+            .DeleteWorkOrderAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.ToNoContentResult();
+    }
+
     /// <summary>Completes a work order once every task is checked off.</summary>
     /// <param name="id">The work order key.</param>
     /// <param name="request">Completion details.</param>

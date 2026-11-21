@@ -2,6 +2,8 @@
 @attribute [Authorize]
 @inherits PageBase
 @inject IMaintenanceApiService MaintenanceApi
+@inject NavigationManager Navigation
+@inject DialogService Dialogs
 
 <div class="page">
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
@@ -29,6 +31,11 @@
                 <span>&middot; <a href="work-orders/@parent">@L["Found during another work order"]</a></span>
             }
         </RadzenText>
+        <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
+            <div class="rz-my-2">
+                <RadzenButton Text="@L["Delete work order"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Outlined" Size="ButtonSize.Small" Disabled="@IsRunning("delete")" Click="@(() => RunOnceAsync("delete", DeleteAsync))" />
+            </div>
+        </AuthorizeView>
         <div class="rz-my-4" style="max-width: 20rem">
             <RadzenLabel Text="@L["Engine hours at start"]" Component="HoursStart" />
             <RadzenNumeric TValue="decimal?" Value="_order.EngineHoursAtStart" ReadOnly="true" Name="HoursStart" Style="width: 100%" />
@@ -257,6 +264,31 @@
         {
             Show(refreshed.Value);
         }
+    }
+
+    /// <summary>Deletes this work order after confirmation (admins only) and goes back to the list.</summary>
+    /// <returns>A task.</returns>
+    private async Task DeleteAsync()
+    {
+        var confirmed = await Dialogs.Confirm(L["Delete {0}? This cannot be undone.", $"{_order!.TemplateName} - {_order.MowerName}"], L["Delete work order"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
+
+        if (confirmed is not true)
+        {
+            return;
+        }
+
+        var result = await MaintenanceApi.DeleteWorkOrderAsync(Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? L["Could not delete the work order."]);
+
+            return;
+        }
+
+        NotifySuccess(L["Work order deleted."]);
+
+        Navigation.NavigateTo("work-orders");
     }
 
     /// <summary>Completes the work order.</summary>

@@ -324,9 +324,82 @@ public sealed class MaintenanceServiceTests
         Assert.Contains(order.MowerId, needing);
     }
 
+    [Fact]
+    public async Task DeleteWorkOrderAsync_ExistingOrder_RemovesIt()
+    {
+        var order = await CreateAnnualAsync(_pushMower);
+
+        var result = await Service().DeleteWorkOrderAsync(order.Id, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+
+        Assert.Empty(_workOrders.Items);
+    }
+
+    [Fact]
+    public async Task DeleteWorkOrderAsync_UnknownOrder_IsNotFound()
+    {
+        var result = await Service().DeleteWorkOrderAsync(Guid.NewGuid(), CancellationToken.None);
+
+        Assert.Equal(ResultStatus.NotFound, result.Status);
+    }
+
+    [Fact]
+    public async Task DeleteWorkOrderAsync_ServiceOrderThatRaisedARepair_KeepsTheRepairWithoutALink()
+    {
+        var (order, repair) = await CreateOrderWithRepairAsync();
+
+        await Service().DeleteWorkOrderAsync(order.Id, CancellationToken.None);
+
+        var remaining = Assert.Single(_workOrders.Items);
+
+        Assert.Equal(repair.Id, remaining.Id);
+
+        Assert.Null(remaining.ParentWorkOrderId);
+    }
+
+    [Fact]
+    public async Task DeleteWorkOrderAsync_RepairRaisedFromAFinding_FreesTheFindingForANewRepair()
+    {
+        var (order, repair) = await CreateOrderWithRepairAsync();
+
+        await Service().DeleteWorkOrderAsync(repair.Id, CancellationToken.None);
+
+        var finding = _workOrders.Items.Single().Tasks.Single(t => t.Description == "No existing damage");
+
+        Assert.Null(finding.RepairWorkOrderId);
+
+        var again = await Service().CreateRepairAsync(new RepairCommand(order.Id, finding.Id, _technician, true), CancellationToken.None);
+
+        Assert.True(again.IsSuccess);
+    }
+
+    [Fact]
+    public async Task DeleteWorkOrderAsync_OpenRepair_MowerNoLongerNeedsRepair()
+    {
+        var (order, repair) = await CreateOrderWithRepairAsync();
+
+        await Service().DeleteWorkOrderAsync(repair.Id, CancellationToken.None);
+
+        var needing = await new OpenRepairLookup(_workOrders).GetMowerIdsNeedingRepairAsync(CancellationToken.None);
+
+        Assert.DoesNotContain(order.MowerId, needing);
+    }
+
     private IMaintenanceService Service()
     {
         return new MaintenanceService(_mowers, _templates, _workOrders, _inspections, new OptionsWrapper<MaintenanceOptions>(new MaintenanceOptions()), NullLogger<MaintenanceService>.Instance);
+    }
+
+    private async Task<(WorkOrderResponse Order, WorkOrderResponse Repair)> CreateOrderWithRepairAsync()
+    {
+        var order = await CreateAnnualAsync(_pushMower);
+
+        var finding = (await SubmitAsync(order, InspectionTiming.Before, PreCheckAnswers(damage: "No"))).Value!.Tasks.First(t => t.IsFinding);
+
+        var repair = (await Service().CreateRepairAsync(new RepairCommand(order.Id, finding.Id, _technician, true), CancellationToken.None)).Value!;
+
+        return (order, repair);
     }
 
     private async Task<WorkOrderResponse> CreateAnnualAsync(AssetType type, decimal hours = 0m)

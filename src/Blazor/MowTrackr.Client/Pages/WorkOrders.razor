@@ -3,6 +3,7 @@
 @inherits PageBase
 @inject IMaintenanceApiService MaintenanceApi
 @inject NavigationManager Navigation
+@inject DialogService Dialogs
 
 <div class="page">
     <h1>@L["Work orders"]</h1>
@@ -32,6 +33,15 @@
                     }
                 </Template>
             </RadzenDataGridColumn>
+            <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
+                <RadzenDataGridColumn TItem="WorkOrderResponse" Title="" Sortable="false" Width="70px">
+                    <Template Context="order">
+                        <div @onclick:stopPropagation="true">
+                            <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{order.Id}")" Click="@(() => RunOnceAsync($"delete-{order.Id}", () => DeleteAsync(order)))" />
+                        </div>
+                    </Template>
+                </RadzenDataGridColumn>
+            </AuthorizeView>
         </Columns>
     </RadzenDataGrid>
 </div>
@@ -80,6 +90,34 @@
     protected override void OnParametersSet()
     {
         _status = _statuses.Any(s => s.Value == Status) ? Status! : "all";
+
+        ApplyFilter();
+    }
+
+    /// <summary>Deletes a work order after confirmation (admins only).</summary>
+    /// <param name="order">The work order.</param>
+    /// <returns>A task.</returns>
+    private async Task DeleteAsync(WorkOrderResponse order)
+    {
+        var confirmed = await Dialogs.Confirm(L["Delete {0}? This cannot be undone.", $"{order.TemplateName} - {order.MowerName}"], L["Delete work order"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
+
+        if (confirmed is not true)
+        {
+            return;
+        }
+
+        var result = await MaintenanceApi.DeleteWorkOrderAsync(order.Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? L["Could not delete the work order."]);
+
+            return;
+        }
+
+        NotifySuccess(L["Work order deleted."]);
+
+        _orders.Remove(order);
 
         ApplyFilter();
     }

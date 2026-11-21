@@ -474,6 +474,54 @@ internal sealed class MaintenanceService(
     }
 
     /// <inheritdoc />
+    public async Task<Result<bool>> DeleteWorkOrderAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var order = await workOrders
+            .GetByIdAsync(id, new QuerySpec<WorkOrder> { Includes = TaskIncludes, Track = true }, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (order is null)
+        {
+            return Result<bool>.NotFound("Work order not found.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        // Repairs raised from this work order stay, but no longer point at it.
+        var repairs = await workOrders
+            .ListAsync(new QuerySpec<WorkOrder> { Filter = w => w.ParentWorkOrderId == id, Track = true }, cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var repair in repairs)
+        {
+            repair.ParentWorkOrderId = null;
+
+            repair.UpdatedAt = now;
+        }
+
+        // If this was a repair, the finding that raised it can offer a new one.
+        if (order.ParentWorkOrderId is { } parentId)
+        {
+            var parent = await workOrders
+                .GetByIdAsync(parentId, new QuerySpec<WorkOrder> { Includes = TaskIncludes, Track = true }, cancellationToken)
+                .ConfigureAwait(false);
+
+            foreach (var finding in parent?.Tasks.Where(t => t.RepairWorkOrderId == id) ?? [])
+            {
+                finding.RepairWorkOrderId = null;
+            }
+        }
+
+        workOrders.Remove(order);
+
+        await workOrders.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation("Deleted work order {WorkOrderId}", id);
+
+        return Result<bool>.Ok(true);
+    }
+
+    /// <inheritdoc />
     public async Task<Result<WorkOrderResponse>> CompleteWorkOrderAsync(Guid id, CompleteWorkOrderRequest request, CancellationToken cancellationToken)
     {
         var order = await workOrders
