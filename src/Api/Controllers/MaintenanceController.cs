@@ -98,6 +98,41 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
         return result.ToActionResult();
     }
 
+    /// <summary>Submits the pre-check or post-check of a work order. Any technician on the order may submit it.</summary>
+    /// <param name="id">The work order key.</param>
+    /// <param name="timing">Which check: <c>Before</c> (pre-check) or <c>After</c> (post-check).</param>
+    /// <param name="request">The answers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated work order.</returns>
+    [HttpPost("work-orders/{id:guid}/checks/{timing}")]
+    public async Task<IActionResult> SubmitCheckAsync(Guid id, InspectionTiming timing, [FromBody] SubmitCheckRequest request, CancellationToken cancellationToken)
+    {
+        var command = new CheckSubmissionCommand(id, timing, request.Answers, User.GetUserId(), User.IsManagerOrAdmin());
+
+        var result = await maintenance
+            .SubmitCheckAsync(command, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
+    /// <summary>Creates a repair work order for a problem found by a check item. The technician confirms each one.</summary>
+    /// <param name="id">The work order the finding is on.</param>
+    /// <param name="taskId">The check item that found the problem.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new repair work order.</returns>
+    [HttpPost("work-orders/{id:guid}/tasks/{taskId:guid}/repair")]
+    public async Task<IActionResult> CreateRepairAsync(Guid id, Guid taskId, CancellationToken cancellationToken)
+    {
+        var command = new RepairCommand(id, taskId, User.GetUserId(), User.IsManagerOrAdmin());
+
+        var result = await maintenance
+            .CreateRepairAsync(command, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.ToActionResult();
+    }
+
     /// <summary>Completes a work order once every task is checked off.</summary>
     /// <param name="id">The work order key.</param>
     /// <param name="request">Completion details.</param>

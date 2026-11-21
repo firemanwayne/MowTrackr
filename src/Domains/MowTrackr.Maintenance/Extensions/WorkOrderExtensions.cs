@@ -1,4 +1,5 @@
 using MowTrackr.Maintenance.Models;
+using MowTrackr.Maintenance.Validators;
 
 namespace MowTrackr.Maintenance.Extensions;
 
@@ -14,7 +15,21 @@ internal static class WorkOrderExtensions
     {
         var tasks = order.Tasks
             .OrderBy(t => t.SortOrder)
-            .Select(t => new WorkOrderTaskResponse(t.Id, t.Source, t.Description, t.SortOrder, t.IsRequired, t.IsComplete, t.CompletedAt, t.CompletedByUserId))
+            .Select(t => new WorkOrderTaskResponse(
+                t.Id,
+                t.Source,
+                t.Description,
+                t.SortOrder,
+                t.IsRequired,
+                t.IsComplete,
+                t.CompletedAt,
+                t.CompletedByUserId,
+                t.Phase,
+                t.ItemType,
+                t.Choices,
+                t.Answer,
+                CheckAnswerValidator.IsFinding(t),
+                t.RepairWorkOrderId))
             .ToList();
 
         return new WorkOrderResponse(
@@ -30,7 +45,11 @@ internal static class WorkOrderExtensions
             order.EngineHoursAtStart,
             order.EngineHoursAtService,
             order.Notes,
-            tasks);
+            tasks,
+            order.Kind,
+            order.ParentWorkOrderId,
+            order.PreCheckSubmittedAt,
+            order.PostCheckSubmittedAt);
     }
 
     /// <summary>Gets a value indicating whether the order is still open (scheduled or in progress).</summary>

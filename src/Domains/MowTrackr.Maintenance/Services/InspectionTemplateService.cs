@@ -1,11 +1,12 @@
 using MowTrackr.Assets.Models;
 using MowTrackr.Maintenance.Extensions;
 using MowTrackr.Maintenance.Models;
+using MowTrackr.Maintenance.Validators;
 
 namespace MowTrackr.Maintenance.Services;
 
 /// <summary>
-/// Default <see cref="IInspectionTemplateService"/>.
+/// Default <see cref="IInspectionTemplateService"/>: CRUD for inspection (check) templates.
 /// </summary>
 /// <param name="templates">The inspection template repository.</param>
 /// <param name="assetTypes">The asset type repository.</param>
@@ -20,7 +21,9 @@ internal sealed class InspectionTemplateService(
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<InspectionTemplateResponse>>> ListAsync(CancellationToken cancellationToken)
     {
-        var items = await templates.ListAsync(new QuerySpec<InspectionTemplate> { Includes = _includes, OrderBy = t => t.Name }, cancellationToken).ConfigureAwait(false);
+        var items = await templates
+            .ListAsync(new QuerySpec<InspectionTemplate> { Includes = _includes, OrderBy = t => t.Name }, cancellationToken)
+            .ConfigureAwait(false);
 
         return Result<IReadOnlyList<InspectionTemplateResponse>>.Ok(items.Select(t => t.ToResponse()).ToList());
     }
@@ -28,7 +31,9 @@ internal sealed class InspectionTemplateService(
     /// <inheritdoc />
     public async Task<Result<InspectionTemplateResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var template = await templates.GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Includes = _includes }, cancellationToken).ConfigureAwait(false);
+        var template = await templates
+            .GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Includes = _includes }, cancellationToken)
+            .ConfigureAwait(false);
 
         if (template is null)
         {
@@ -64,7 +69,9 @@ internal sealed class InspectionTemplateService(
     /// <inheritdoc />
     public async Task<Result<InspectionTemplateResponse>> UpdateAsync(Guid id, InspectionTemplateRequest request, CancellationToken cancellationToken)
     {
-        var template = await templates.GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Includes = [nameof(InspectionTemplate.Tasks)], Track = true }, cancellationToken).ConfigureAwait(false);
+        var template = await templates
+            .GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Includes = [nameof(InspectionTemplate.Tasks)], Track = true }, cancellationToken)
+            .ConfigureAwait(false);
 
         if (template is null)
         {
@@ -90,11 +97,18 @@ internal sealed class InspectionTemplateService(
     /// <inheritdoc />
     public async Task<Result<bool>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var template = await templates.GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Track = true }, cancellationToken).ConfigureAwait(false);
+        var template = await templates
+            .GetByIdAsync(id, new QuerySpec<InspectionTemplate> { Includes = [nameof(InspectionTemplate.ServiceTemplates)], Track = true }, cancellationToken)
+            .ConfigureAwait(false);
 
         if (template is null)
         {
             return Result<bool>.NotFound("Inspection template not found.");
+        }
+
+        if (template.ServiceTemplates.Count > 0)
+        {
+            return Result<bool>.Conflict($"This inspection is assigned to {template.ServiceTemplates.Count} service template(s). Remove it from them first, or mark it inactive.");
         }
 
         templates.Remove(template);
@@ -106,26 +120,45 @@ internal sealed class InspectionTemplateService(
         return Result<bool>.Ok(true);
     }
 
-    /// <summary>Checks the rules the request attributes cannot: a trigger, a checklist and a real asset type.</summary>
+    /// <summary>Checks a request: it has items, choice items have choices, and the asset type (if any) exists.</summary>
     /// <param name="request">The request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An error message, or <see langword="null"/> when the request is acceptable.</returns>
+    /// <returns>An error message, or <see langword="null"/> when the request is valid.</returns>
     private async Task<string?> ValidateAsync(InspectionTemplateRequest request, CancellationToken cancellationToken)
     {
-        if (request.MinEngineHours is null && request.MinAgeMonths is null)
+        var items = request.Tasks.Where(t => !string.IsNullOrWhiteSpace(t.Description)).ToList();
+
+        if (items.Count == 0)
         {
-            return "Set the engine hours, the age in months, or both, at which this inspection applies.";
+            return "Add at least one item.";
         }
 
-        if (request.Tasks.All(t => string.IsNullOrWhiteSpace(t.Description)))
+        foreach (var item in items.Where(i => i.ItemType == CheckItemType.Choice))
         {
-            return "Add at least one checklist task.";
+            var choices = CheckAnswerValidator.SplitList(item.Choices);
+
+            if (choices.Count < 2)
+            {
+                return $"\"{item.Description}\": list at least two choices, separated by commas.";
+            }
+
+            var unknown = CheckAnswerValidator.SplitList(item.RepairOn).FirstOrDefault(r => !choices.Contains(r, StringComparer.OrdinalIgnoreCase));
+
+            if (unknown is not null)
+            {
+                return $"\"{item.Description}\": '{unknown}' is not one of the choices.";
+            }
         }
 
-        var typeId = request.AssetTypeId;
+        if (request.AssetTypeId is not { } typeId)
+        {
+            return null;
+        }
 
-        var types = await assetTypes.ListAsync(new QuerySpec<AssetType> { Filter = t => t.Id == typeId }, cancellationToken).ConfigureAwait(false);
+        var types = await assetTypes
+            .ListAsync(new QuerySpec<AssetType> { Filter = t => t.Id == typeId }, cancellationToken)
+            .ConfigureAwait(false);
 
-        return types.Count == 0 ? "Choose an asset type." : null;
+        return types.Count == 0 ? "Choose an asset type, or leave it empty for any type." : null;
     }
 }

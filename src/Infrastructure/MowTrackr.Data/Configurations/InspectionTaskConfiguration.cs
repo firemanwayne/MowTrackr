@@ -17,5 +17,11 @@ internal sealed class InspectionTaskConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(t => t.Description).HasMaxLength(300).IsRequired();
 
         builder.Property(t => t.IsRequired).HasDefaultValue(true);
+
+        builder.Property(t => t.ItemType).HasConversion<string>().HasMaxLength(30).HasDefaultValue(CheckItemType.YesNo);
+
+        builder.Property(t => t.Choices).HasMaxLength(300);
+
+        builder.Property(t => t.RepairOn).HasMaxLength(300);
     }
 }

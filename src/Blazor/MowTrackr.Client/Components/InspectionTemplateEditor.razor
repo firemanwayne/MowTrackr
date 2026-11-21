@@ -10,54 +10,79 @@
             @_error
         </RadzenAlert>
         <div>
-            <RadzenLabel Text="@L["Type"]" Component="AssetType" />
-            <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssetTypeId" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
-            <ValidationMessage For="@(() => _model.AssetTypeId)" />
-        </div>
-        <div>
             <RadzenLabel Text="@L["Name"]" Component="Name" />
-            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. 500 Hour Inspection"]" Style="width: 100%" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. Annual Pre-Check"]" Style="width: 100%" />
             <ValidationMessage For="@(() => _model.Name)" />
         </div>
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["When"]" Component="Timing" />
+                <RadzenDropDown TValue="InspectionTiming" @bind-Value="_model.Timing" Data="_timings" TextProperty="Text" ValueProperty="Value" Name="Timing" Style="width: 100%" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Type"]" Component="AssetType" />
+                <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssetTypeId" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowClear="true" AllowFiltering="true" Placeholder="@L["Any type"]" Style="width: 100%" />
+            </RadzenColumn>
+        </RadzenRow>
         <div>
             <RadzenLabel Text="@L["Description"]" Component="Description" />
             <RadzenTextArea @bind-Value="_model.Description" Name="Description" Rows="2" Style="width: 100%" />
         </div>
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="@L["Applies from (engine hours)"]" Component="MinEngineHours" />
+                <RadzenLabel Text="@L["Added automatically from (engine hours)"]" Component="MinEngineHours" />
                 <RadzenNumeric TValue="decimal?" Value="_model.MinEngineHours" ValueChanged="@(value => _model.MinEngineHours = value is > 0 ? value : null)" Name="MinEngineHours" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.MinEngineHours)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="@L["Applies from (age in months)"]" Component="MinAgeMonths" />
+                <RadzenLabel Text="@L["Added automatically from (age in months)"]" Component="MinAgeMonths" />
                 <RadzenNumeric TValue="int?" Value="_model.MinAgeMonths" ValueChanged="@(value => _model.MinAgeMonths = value is > 0 ? value : null)" Name="MinAgeMonths" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.MinAgeMonths)" />
             </RadzenColumn>
         </RadzenRow>
         <RadzenText TextStyle="TextStyle.Caption">
-            @L["Set hours, age, or both. Reaching either one adds these steps to the work order. Age is counted from the purchase date."]
+            @L["Leave both empty to use this check only where a service template includes it. Set hours, age, or both to also add it automatically once the equipment reaches either one. Age is counted from the purchase date."]
         </RadzenText>
         <div>
             <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
             <RadzenLabel Text="@L["Active (added to work orders)"]" Component="IsActive" class="rz-ms-2" />
         </div>
         <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
-            @L["Checklist"]
+            @L["Items"]
         </RadzenText>
         @for (var i = 0; i < _model.Tasks.Count; i++)
         {
             var index = i;
 
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                <RadzenTextBox @bind-Value="_model.Tasks[index].Description" Placeholder="@L["Task description"]" Style="flex: 1" />
-                <RadzenCheckBox TValue="bool" @bind-Value="_model.Tasks[index].IsRequired" Name="@($"required-{index}")" />
-                <RadzenLabel Text="@L["Required"]" Component="@($"required-{index}")" />
-                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+            var task = _model.Tasks[index];
+
+            <RadzenStack Gap="0.25rem" class="rz-p-2" Style="border: 1px solid var(--rz-base-300); border-radius: 6px">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenTextBox @bind-Value="task.Description" Placeholder="@L["Item, e.g. Oil level"]" Style="flex: 1; min-width: 200px" />
+                    <RadzenDropDown TValue="CheckItemType" Value="task.ItemType" ValueChanged="@(value => ChangeType(task, value))" Data="_itemTypes" TextProperty="Text" ValueProperty="Value" Style="width: 200px" />
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    @if (task.ItemType == CheckItemType.Choice)
+                    {
+                        <RadzenTextBox @bind-Value="task.Choices" Placeholder="@L["Choices, separated by commas (Full, Half, None)"]" Style="flex: 1; min-width: 200px" />
+                        <RadzenTextBox @bind-Value="task.RepairOn" Placeholder="@L["Needs repair if (e.g. None)"]" Style="width: 200px" />
+                    }
+                    else if (task.ItemType == CheckItemType.YesNo)
+                    {
+                        <RadzenCheckBox TValue="bool" Value="@(task.RepairOn == "No")" Change="@(value => task.RepairOn = value ? "No" : null)" Name="@($"repair-{index}")" />
+                        <RadzenLabel Text="@L["Offer a repair work order if the answer is No"]" Component="@($"repair-{index}")" />
+                    }
+                    @if (task.ItemType != CheckItemType.ServiceStepsComplete)
+                    {
+                        <RadzenCheckBox TValue="bool" @bind-Value="task.IsRequired" Name="@($"required-{index}")" />
+                        <RadzenLabel Text="@L["Required"]" Component="@($"required-{index}")" />
+                    }
+                </RadzenStack>
             </RadzenStack>
         }
         <div>
-            <RadzenButton Text="@L["Add task"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
+            <RadzenButton Text="@L["Add item"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new InspectionTaskRequest()))" />
         </div>
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
             <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
@@ -67,9 +92,17 @@
 </EditForm>
 
 @code {
+    private sealed record TimingOption(InspectionTiming Value, string Text);
+
+    private sealed record ItemTypeOption(CheckItemType Value, string Text);
+
     private InspectionTemplateRequest _model = new();
 
     private List<AssetTypeResponse> _assetTypes = [];
+
+    private List<TimingOption> _timings = [];
+
+    private List<ItemTypeOption> _itemTypes = [];
 
     private string? _error;
 
@@ -80,6 +113,21 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        _timings =
+        [
+            new TimingOption(InspectionTiming.Before, L["Pre-check (before the work starts)"]),
+            new TimingOption(InspectionTiming.After, L["Post-check (after the work is done)"]),
+        ];
+
+        _itemTypes =
+        [
+            new ItemTypeOption(CheckItemType.YesNo, L["Yes / No"]),
+            new ItemTypeOption(CheckItemType.Choice, L["Choice"]),
+            new ItemTypeOption(CheckItemType.EngineHours, L["Engine hours"]),
+            new ItemTypeOption(CheckItemType.Text, L["Notes"]),
+            new ItemTypeOption(CheckItemType.ServiceStepsComplete, L["All service steps done (automatic)"]),
+        ];
+
         var types = await AssetTypeApi.ListAsync(Cancellation);
 
         _assetTypes = types.Value ?? [];
@@ -88,7 +136,7 @@
 
         if (Existing is null)
         {
-            _model.Tasks.Add(new ServiceTaskRequest());
+            _model.Tasks.Add(new InspectionTaskRequest());
 
             return;
         }
@@ -97,12 +145,43 @@
         {
             Name = Existing.Name,
             AssetTypeId = Existing.AssetTypeId,
+            Timing = Existing.Timing,
             Description = Existing.Description,
             MinEngineHours = Existing.MinEngineHours,
             MinAgeMonths = Existing.MinAgeMonths,
             IsActive = Existing.IsActive,
-            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired }).ToList(),
+            Tasks = Existing.Tasks.Select(t => new InspectionTaskRequest
+            {
+                Description = t.Description,
+                IsRequired = t.IsRequired,
+                ItemType = t.ItemType,
+                Choices = t.Choices,
+                RepairOn = t.RepairOn,
+            }).ToList(),
         };
+    }
+
+    /// <summary>Changes an item's kind of answer, clearing settings that no longer apply.</summary>
+    /// <param name="task">The item.</param>
+    /// <param name="type">The new kind.</param>
+    private static void ChangeType(InspectionTaskRequest task, CheckItemType type)
+    {
+        task.ItemType = type;
+
+        if (type != CheckItemType.Choice)
+        {
+            task.Choices = null;
+        }
+
+        if (type is not (CheckItemType.Choice or CheckItemType.YesNo))
+        {
+            task.RepairOn = null;
+        }
+
+        if (type == CheckItemType.ServiceStepsComplete)
+        {
+            task.IsRequired = true;
+        }
     }
 
     /// <summary>Saves the template; problems are shown inline.</summary>

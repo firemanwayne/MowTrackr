@@ -19,5 +19,15 @@ internal sealed class WorkOrderTaskConfiguration : IEntityTypeConfiguration<Work
         builder.Property(t => t.Description).HasMaxLength(300).IsRequired();
 
         builder.Property(t => t.IsRequired).HasDefaultValue(true);
+
+        builder.Property(t => t.Phase).HasConversion<string>().HasMaxLength(20).HasDefaultValue(TaskPhase.Service);
+
+        builder.Property(t => t.ItemType).HasConversion<string>().HasMaxLength(30).HasDefaultValue(CheckItemType.YesNo);
+
+        builder.Property(t => t.Choices).HasMaxLength(300);
+
+        builder.Property(t => t.RepairOn).HasMaxLength(300);
+
+        builder.Property(t => t.Answer).HasMaxLength(1000);
     }
 }

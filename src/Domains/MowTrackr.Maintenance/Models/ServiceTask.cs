@@ -16,4 +16,7 @@ public sealed class ServiceTask : EntityBase
 
     /// <summary>Gets or sets a value indicating whether the task must be checked off to complete a work order.</summary>
     public bool IsRequired { get; set; } = true;
+
+    /// <summary>Gets or sets when the step applies, for example only to asset types that have tires.</summary>
+    public ServiceTaskCondition Condition { get; set; } = ServiceTaskCondition.Always;
 }

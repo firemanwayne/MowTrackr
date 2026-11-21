@@ -16,6 +16,8 @@ internal sealed class AssetTypeConfiguration : IEntityTypeConfiguration<AssetTyp
 
         builder.Property(t => t.Name).HasMaxLength(100).IsRequired();
 
+        builder.Property(t => t.HasTires).HasDefaultValue(false);
+
         builder.HasIndex(t => t.Name).IsUnique();
     }
 }

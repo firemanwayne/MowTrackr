@@ -26,6 +26,10 @@
             <RadzenDataGridColumn TItem="WorkOrderResponse" Property="Status" Title="@L["Status"]">
                 <Template Context="order">
                     <RadzenBadge Text="@StatusText(order.Status)" BadgeStyle="@StatusStyle(order.Status)" />
+                    @if (order.Kind == WorkOrderKind.Repair)
+                    {
+                        <RadzenBadge Text="@L["Repair"]" BadgeStyle="BadgeStyle.Warning" class="rz-ms-1" />
+                    }
                 </Template>
             </RadzenDataGridColumn>
         </Columns>

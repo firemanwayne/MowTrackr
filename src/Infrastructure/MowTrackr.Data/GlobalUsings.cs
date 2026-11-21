@@ -13,6 +13,7 @@ global using MowTrackr.Core.Abstractions;
 global using MowTrackr.Core.Attributes;
 global using MowTrackr.Core.Interfaces;
 global using MowTrackr.Core.Contracts.History;
+global using MowTrackr.Core.Enums;
 global using MowTrackr.Core.Models;
 global using MowTrackr.Data.Models;
 global using MowTrackr.Data.Recorders;

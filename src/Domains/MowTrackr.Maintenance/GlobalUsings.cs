@@ -7,3 +7,4 @@ global using MowTrackr.Core.Contracts.Maintenance;
 global using MowTrackr.Core.Enums;
 global using MowTrackr.Core.Interfaces;
 global using MowTrackr.Core.Models;
+global using System.Globalization;

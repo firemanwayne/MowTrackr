@@ -18,6 +18,11 @@
     <RadzenDataGrid class="app-grid" Responsive="true" Data="_types" TItem="AssetTypeResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
             <RadzenDataGridColumn TItem="AssetTypeResponse" Property="Name" Title="@L["Name"]" />
+            <RadzenDataGridColumn TItem="AssetTypeResponse" Property="HasTires" Title="@L["Tires"]" Width="100px">
+                <Template Context="type">
+                    @(type.HasTires ? L["Yes"] : L["No"])
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="AssetTypeResponse" Title="" Sortable="false" Width="110px">
                 <Template Context="type">
                     <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{type.Id}")" Click="@(() => RunOnceAsync($"edit-{type.Id}", () => EditAsync(type)))" />
@@ -56,31 +61,16 @@
         _loading = false;
     }
 
-    /// <summary>Prompts for a name and adds or renames a type, then reloads.</summary>
+    /// <summary>Prompts for a name and whether the type has tires, adds or edits the type, then reloads.</summary>
     /// <param name="type">The type to rename, or <see langword="null"/> to add one.</param>
     /// <returns>A task.</returns>
     private async Task EditAsync(AssetTypeResponse? type)
     {
-        Func<ManufacturerRequest, CancellationToken, Task<(Guid? Id, string? Error)>> save = async (request, token) =>
-        {
-            var body = new AssetTypeRequest { Name = request.Name };
+        var parameters = new Dictionary<string, object?> { [nameof(AssetTypeEditor.Existing)] = type };
 
-            var result = type is null
-                ? await AssetTypeApi.CreateAsync(body, token)
-                : await AssetTypeApi.UpdateAsync(type.Id, body, token);
+        var saved = await Dialogs.OpenAsync<AssetTypeEditor>(type is null ? L["Add type"] : L["Edit type"], parameters, new DialogOptions { Width = "400px" });
 
-            return (result.IsSuccess ? result.Value?.Id : null, result.Error);
-        };
-
-        var parameters = new Dictionary<string, object?>
-        {
-            [nameof(LookupNameEditor.OnSave)] = save,
-            [nameof(LookupNameEditor.InitialName)] = type?.Name,
-        };
-
-        var saved = await Dialogs.OpenAsync<LookupNameEditor>(type is null ? L["Add type"] : L["Edit type"], parameters, new DialogOptions { Width = "400px" });
-
-        if (saved is Guid)
+        if (saved is true)
         {
             await LoadAsync();
         }

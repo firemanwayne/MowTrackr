@@ -1,5 +1,6 @@
 using MowTrackr.Assets.Models;
 using MowTrackr.Maintenance.Models;
+using MowTrackr.Maintenance.Validators;
 
 namespace MowTrackr.Maintenance.Extensions;
 
@@ -8,7 +9,7 @@ namespace MowTrackr.Maintenance.Extensions;
 /// </summary>
 internal static class InspectionTemplateExtensions
 {
-    /// <summary>Gets the name shown to people: the asset type followed by the template name ("Chain Saw 500 Hour Inspection").</summary>
+    /// <summary>Gets the name shown to people: the asset type followed by the template name, or just the name for any type.</summary>
     /// <param name="template">The entity (asset type loaded).</param>
     /// <returns>The display name.</returns>
     public static string DisplayName(this InspectionTemplate template)
@@ -17,17 +18,16 @@ internal static class InspectionTemplateExtensions
     }
 
     /// <summary>
-    /// Decides whether an inspection belongs on a work order for a piece of equipment: it must be active, for the
-    /// equipment's asset type, and the equipment must have reached the engine hours or the age (whichever is set;
-    /// reaching either is enough).
+    /// Checks whether the inspection is added automatically for a piece of equipment: it is active, it is for this type (or any
+    /// type), and the equipment has reached the engine hours or the age, whichever is set.
     /// </summary>
     /// <param name="template">The inspection template.</param>
     /// <param name="mower">The equipment.</param>
-    /// <param name="today">Today's date, used to work out the age.</param>
-    /// <returns><see langword="true"/> if the inspection's steps should be added.</returns>
+    /// <param name="today">Today's date.</param>
+    /// <returns><see langword="true"/> if the inspection applies automatically.</returns>
     public static bool AppliesTo(this InspectionTemplate template, Mower mower, DateOnly today)
     {
-        if (!template.IsActive || template.AssetTypeId != mower.AssetTypeId)
+        if (!template.IsActive || (template.AssetTypeId is not null && template.AssetTypeId != mower.AssetTypeId))
         {
             return false;
         }
@@ -39,10 +39,10 @@ internal static class InspectionTemplateExtensions
         return hoursReached || ageReached;
     }
 
-    /// <summary>Counts the whole months between two dates.</summary>
-    /// <param name="from">The earlier date (the purchase date).</param>
+    /// <summary>Counts whole months between two dates.</summary>
+    /// <param name="from">The earlier date.</param>
     /// <param name="to">The later date.</param>
-    /// <returns>Whole months elapsed; zero if <paramref name="to"/> is not after <paramref name="from"/>.</returns>
+    /// <returns>The whole months, never negative.</returns>
     public static int AgeInMonths(DateOnly from, DateOnly to)
     {
         var months = ((to.Year - from.Year) * 12) + to.Month - from.Month;
@@ -56,13 +56,13 @@ internal static class InspectionTemplateExtensions
     }
 
     /// <summary>Maps a template to its API response.</summary>
-    /// <param name="template">The entity (tasks and asset type loaded).</param>
+    /// <param name="template">The entity (tasks and asset type must be loaded).</param>
     /// <returns>The response.</returns>
     public static InspectionTemplateResponse ToResponse(this InspectionTemplate template)
     {
         var tasks = template.Tasks
             .OrderBy(t => t.SortOrder)
-            .Select(t => new ServiceTaskResponse(t.Id, t.Description, t.SortOrder, t.IsRequired))
+            .Select(t => new InspectionTaskResponse(t.Id, t.Description, t.SortOrder, t.IsRequired, t.ItemType, t.Choices, t.RepairOn))
             .ToList();
 
         return new InspectionTemplateResponse(
@@ -70,6 +70,7 @@ internal static class InspectionTemplateExtensions
             template.Name,
             template.AssetTypeId,
             template.AssetType?.Name ?? string.Empty,
+            template.Timing,
             template.DisplayName(),
             template.Description,
             template.MinEngineHours,
@@ -78,23 +79,18 @@ internal static class InspectionTemplateExtensions
             tasks);
     }
 
-    /// <summary>Copies request values onto an entity, replacing its checklist.</summary>
+    /// <summary>Copies request values onto an entity, replacing its items.</summary>
     /// <param name="template">The entity to modify.</param>
     /// <param name="request">The new values.</param>
     public static void Apply(this InspectionTemplate template, InspectionTemplateRequest request)
     {
         template.Name = request.Name.Trim();
-
-        template.AssetTypeId = request.AssetTypeId ?? Guid.Empty;
-
+        template.AssetTypeId = request.AssetTypeId;
+        template.Timing = request.Timing;
         template.Description = request.Description?.Trim();
-
         template.MinEngineHours = request.MinEngineHours;
-
         template.MinAgeMonths = request.MinAgeMonths;
-
         template.IsActive = request.IsActive;
-
         template.UpdatedAt = DateTimeOffset.UtcNow;
 
         template.Tasks.Clear();
@@ -103,12 +99,19 @@ internal static class InspectionTemplateExtensions
 
         foreach (var task in request.Tasks.Where(t => !string.IsNullOrWhiteSpace(t.Description)))
         {
+            var choices = task.ItemType == CheckItemType.Choice ? string.Join(", ", CheckAnswerValidator.SplitList(task.Choices)) : null;
+
+            var repairOn = task.ItemType is CheckItemType.YesNo or CheckItemType.Choice ? string.Join(", ", CheckAnswerValidator.SplitList(task.RepairOn)) : null;
+
             template.Tasks.Add(new InspectionTask
             {
                 InspectionTemplateId = template.Id,
                 Description = task.Description.Trim(),
                 SortOrder = order++,
-                IsRequired = task.IsRequired,
+                IsRequired = task.ItemType == CheckItemType.ServiceStepsComplete || task.IsRequired,
+                ItemType = task.ItemType,
+                Choices = string.IsNullOrEmpty(choices) ? null : choices,
+                RepairOn = string.IsNullOrEmpty(repairOn) ? null : repairOn,
             });
         }
     }

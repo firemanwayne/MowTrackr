@@ -22,6 +22,8 @@ internal sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrde
 
         builder.Property(w => w.Status).HasConversion<string>().HasMaxLength(20);
 
+        builder.Property(w => w.Kind).HasConversion<string>().HasMaxLength(20).HasDefaultValue(WorkOrderKind.Service);
+
         builder.Property(w => w.EngineHoursAtStart).HasPrecision(10, 2);
 
         builder.Property(w => w.EngineHoursAtService).HasPrecision(10, 2);
@@ -29,6 +31,8 @@ internal sealed class WorkOrderConfiguration : IEntityTypeConfiguration<WorkOrde
         builder.HasIndex(w => new { w.MowerId, w.ServiceTemplateId, w.Status });
 
         builder.HasIndex(w => w.AssignedToUserId);
+
+        builder.HasIndex(w => w.ParentWorkOrderId);
 
         builder.HasMany(w => w.Tasks).WithOne().HasForeignKey(t => t.WorkOrderId).OnDelete(DeleteBehavior.Cascade);
     }
