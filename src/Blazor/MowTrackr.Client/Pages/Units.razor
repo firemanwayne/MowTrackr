@@ -1,0 +1,100 @@
+@page "/units"
+@attribute [Authorize(Roles = AppRoles.Admin)]
+@inherits PageBase
+@inject IUnitApiService UnitApi
+@inject DialogService Dialogs
+
+<div class="page">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+        <h1>@L["Units"]</h1>
+        <RadzenButton Text="@L["Add unit"]" Icon="add" Disabled="@IsRunning("add")" Click="@(() => RunOnceAsync("add", () => EditAsync(null)))" />
+    </RadzenStack>
+    <RadzenText TextStyle="TextStyle.Body2">
+        @L["The units quantities are measured in (quart, ounce, gallon, each, ...). Each piece of equipment has an oil unit, and a service step can ask for a quantity in a unit."]
+    </RadzenText>
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid class="app-grid" Responsive="true" Data="_units" TItem="UnitOfMeasureResponse" IsLoading="_loading" AllowSorting="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Property="Name" Title="@L["Name"]" />
+            <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Property="Abbreviation" Title="@L["Label"]" Width="120px" />
+            <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Title="" Sortable="false" Width="110px">
+                <Template Context="type">
+                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{type.Id}")" Click="@(() => RunOnceAsync($"edit-{type.Id}", () => EditAsync(type)))" />
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{type.Id}")" Click="@(() => RunOnceAsync($"delete-{type.Id}", () => DeleteAsync(type)))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</div>
+
+@code {
+    private List<UnitOfMeasureResponse> _units = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <inheritdoc />
+    protected override Task OnInitializedAsync()
+    {
+        return LoadAsync();
+    }
+
+    /// <summary>Loads the units.</summary>
+    /// <returns>A task.</returns>
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        var result = await UnitApi.ListAsync(Cancellation);
+
+        _units = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+
+    /// <summary>Prompts for a name and a short label, adds or edits the unit, then reloads.</summary>
+    /// <param name="type">The type to rename, or <see langword="null"/> to add one.</param>
+    /// <returns>A task.</returns>
+    private async Task EditAsync(UnitOfMeasureResponse? type)
+    {
+        var parameters = new Dictionary<string, object?> { [nameof(UnitEditor.Existing)] = type };
+
+        var saved = await Dialogs.OpenAsync<UnitEditor>(type is null ? L["Add unit"] : L["Edit unit"], parameters, new DialogOptions { Width = "400px" });
+
+        if (saved is true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    /// <summary>Deletes a type after confirmation; the API refuses while it is in use.</summary>
+    /// <param name="type">The type.</param>
+    /// <returns>A task.</returns>
+    private async Task DeleteAsync(UnitOfMeasureResponse type)
+    {
+        var confirmed = await Dialogs.Confirm(L["Delete {0}?", type.Name], L["Delete unit"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
+
+        if (confirmed is not true)
+        {
+            return;
+        }
+
+        var result = await UnitApi.DeleteAsync(type.Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? L["Could not delete the unit."]);
+
+            return;
+        }
+
+        NotifySuccess(L["Unit deleted."]);
+
+        await LoadAsync();
+    }
+}

@@ -16,6 +16,12 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the asset types.</summary>
     public DbSet<AssetType> AssetTypes => Set<AssetType>();
 
+    /// <summary>Gets the oil types.</summary>
+    public DbSet<OilType> OilTypes => Set<OilType>();
+
+    /// <summary>Gets the units of measure.</summary>
+    public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
+
     /// <summary>Gets the equipment manufacturers.</summary>
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
 

@@ -29,7 +29,15 @@ internal static class WorkOrderExtensions
                 t.Choices,
                 t.Answer,
                 CheckAnswerValidator.IsFinding(t),
-                t.RepairWorkOrderId))
+                t.RepairWorkOrderId,
+                t.QuantityRequirement,
+                t.PartNumberRequirement,
+                t.NotesRequirement,
+                t.Quantity,
+                t.QuantityUnit,
+                t.PartNumber,
+                t.StepNotes,
+                t.Product))
             .ToList();
 
         return new WorkOrderResponse(

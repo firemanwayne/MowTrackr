@@ -2,6 +2,7 @@
 @inject IServiceTemplateApiService TemplateApi
 @inject IInspectionTemplateApiService InspectionApi
 @inject IAssetTypeApiService AssetTypeApi
+@inject IUnitApiService UnitApi
 @inject DialogService Dialogs
 
 <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
@@ -71,6 +72,22 @@
                 <RadzenLabel Text="@L["Only if the type has tires"]" Component="@($"tires-{index}")" />
                 <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
             </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-ms-4">
+                <RadzenLabel Text="@L["Quantity"]" />
+                <RadzenDropDown TValue="DetailRequirement" @bind-Value="task.QuantityRequirement" Data="_requirements" TextProperty="Text" ValueProperty="Value" Style="width: 120px" />
+                @if (task.QuantityRequirement != DetailRequirement.None)
+                {
+                    <RadzenDropDown TValue="QuantityUnitSource" @bind-Value="task.QuantityUnitSource" Data="_unitSources" TextProperty="Text" ValueProperty="Value" Style="width: 230px" />
+                    @if (task.QuantityUnitSource == QuantityUnitSource.StepUnit)
+                    {
+                        <RadzenDropDown TValue="Guid?" @bind-Value="task.UnitId" Data="_units" TextProperty="Name" ValueProperty="Id" Placeholder="@L["Unit"]" Style="width: 130px" />
+                    }
+                }
+                <RadzenLabel Text="@L["Part number"]" />
+                <RadzenDropDown TValue="DetailRequirement" @bind-Value="task.PartNumberRequirement" Data="_requirements" TextProperty="Text" ValueProperty="Value" Style="width: 120px" />
+                <RadzenLabel Text="@L["Notes"]" />
+                <RadzenDropDown TValue="DetailRequirement" @bind-Value="task.NotesRequirement" Data="_requirements" TextProperty="Text" ValueProperty="Value" Style="width: 120px" />
+            </RadzenStack>
         }
         <div>
             <RadzenButton Text="@L["Add task"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
@@ -89,7 +106,17 @@
 
     private List<AssetTypeResponse> _assetTypes = [];
 
+    private sealed record RequirementOption(DetailRequirement Value, string Text);
+
+    private sealed record UnitSourceOption(QuantityUnitSource Value, string Text);
+
     private List<InspectionTemplateResponse> _inspections = [];
+
+    private List<UnitOfMeasureResponse> _units = [];
+
+    private List<RequirementOption> _requirements = [];
+
+    private List<UnitSourceOption> _unitSources = [];
 
     private string? _error;
 
@@ -105,6 +132,23 @@
         _assetTypes = types.Value ?? [];
 
         _error = types.IsSuccess ? null : types.Error;
+
+        _requirements =
+        [
+            new RequirementOption(DetailRequirement.None, L["Not asked"]),
+            new RequirementOption(DetailRequirement.Optional, L["Optional"]),
+            new RequirementOption(DetailRequirement.Required, L["Required"]),
+        ];
+
+        _unitSources =
+        [
+            new UnitSourceOption(QuantityUnitSource.StepUnit, L["Unit chosen here"]),
+            new UnitSourceOption(QuantityUnitSource.AssetOil, L["The equipment's oil unit"]),
+        ];
+
+        var unitList = await UnitApi.ListAsync(Cancellation);
+
+        _units = unitList.Value ?? [];
 
         var checks = await InspectionApi.ListAsync(Cancellation);
 
@@ -126,7 +170,17 @@
             IntervalHours = Existing.IntervalHours,
             IntervalDays = Existing.IntervalDays,
             IsActive = Existing.IsActive,
-            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired, Condition = t.Condition }).ToList(),
+            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest
+            {
+                Description = t.Description,
+                IsRequired = t.IsRequired,
+                Condition = t.Condition,
+                QuantityRequirement = t.QuantityRequirement,
+                QuantityUnitSource = t.QuantityUnitSource,
+                UnitId = t.UnitId,
+                PartNumberRequirement = t.PartNumberRequirement,
+                NotesRequirement = t.NotesRequirement,
+            }).ToList(),
         };
     }
 

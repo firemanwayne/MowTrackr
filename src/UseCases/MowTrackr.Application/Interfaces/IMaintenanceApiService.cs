@@ -30,10 +30,10 @@ internal interface IMaintenanceApiService
     /// <summary>Checks or unchecks a task.</summary>
     /// <param name="workOrderId">The work order key.</param>
     /// <param name="taskId">The task key.</param>
-    /// <param name="isComplete">The desired state.</param>
+    /// <param name="request">The desired state, and the details to save with the step.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The updated work order.</returns>
-    Task<ApiResult<WorkOrderResponse>> SetTaskAsync(Guid workOrderId, Guid taskId, bool isComplete, CancellationToken cancellationToken);
+    Task<ApiResult<WorkOrderResponse>> SetTaskAsync(Guid workOrderId, Guid taskId, WorkOrderTaskUpdateRequest request, CancellationToken cancellationToken);
 
     /// <summary>Completes a work order.</summary>
     /// <param name="id">The work order key.</param>

@@ -1,0 +1,64 @@
+@inherits PageBase
+@inject IUnitApiService UnitApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Name"]" Component="UnitName" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="UnitName" Placeholder="@L["e.g. Quart"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.Name)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Label"]" Component="UnitLabel" />
+            <RadzenTextBox @bind-Value="_model.Abbreviation" Name="UnitLabel" Placeholder="@L["e.g. qt"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.Abbreviation)" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private readonly UnitOfMeasureRequest _model = new();
+
+    private string? _error;
+
+    /// <summary>Gets or sets the unit being edited; <see langword="null"/> adds a new one.</summary>
+    [Parameter]
+    public UnitOfMeasureResponse? Existing { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _model.Name = Existing?.Name ?? string.Empty;
+
+        _model.Abbreviation = Existing?.Abbreviation ?? string.Empty;
+    }
+
+    /// <summary>Saves the unit and closes the dialog.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        var result = Existing is null
+            ? await UnitApi.CreateAsync(_model, Cancellation)
+            : await UnitApi.UpdateAsync(Existing.Id, _model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+    }
+}

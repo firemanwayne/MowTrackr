@@ -34,17 +34,20 @@ public sealed class MowerRequest
     [Range(0, 1_000_000)]
     public decimal EngineHours { get; set; }
 
-    /// <summary>Gets or sets the oil type (e.g. "SAE 10W-30").</summary>
+    /// <summary>Gets or sets the oil type this engine requires (for example SAE 10W-30).</summary>
     [Required]
-    [StringLength(50)]
-    public string OilType { get; set; } = string.Empty;
+    public Guid? OilTypeId { get; set; }
 
     /// <summary>Gets or sets the date of the last oil change.</summary>
     public DateOnly? LastOilChange { get; set; }
 
-    /// <summary>Gets or sets the oil capacity in quarts.</summary>
-    [Range(0, 100)]
-    public decimal OilQuantityQuarts { get; set; }
+    /// <summary>Gets or sets the oil capacity, measured in <see cref="OilUnitId"/>.</summary>
+    [Range(0, 1000)]
+    public decimal OilQuantity { get; set; }
+
+    /// <summary>Gets or sets the unit the oil quantity is measured in (quarts for one engine, ounces for another).</summary>
+    [Required]
+    public Guid? OilUnitId { get; set; }
 
     /// <summary>Gets or sets a value indicating whether the mower is in service.</summary>
     public bool IsActive { get; set; } = true;

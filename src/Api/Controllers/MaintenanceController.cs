@@ -89,7 +89,7 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     [HttpPut("work-orders/{id:guid}/tasks/{taskId:guid}")]
     public async Task<IActionResult> SetTaskAsync(Guid id, Guid taskId, [FromBody] WorkOrderTaskUpdateRequest request, CancellationToken cancellationToken)
     {
-        var command = new TaskCompletionCommand(id, taskId, request.IsComplete, User.GetUserId(), User.IsManagerOrAdmin());
+        var command = new TaskCompletionCommand(id, taskId, request.IsComplete, User.GetUserId(), User.IsManagerOrAdmin(), request.Details);
 
         var result = await maintenance
             .SetTaskCompletionAsync(command, cancellationToken)

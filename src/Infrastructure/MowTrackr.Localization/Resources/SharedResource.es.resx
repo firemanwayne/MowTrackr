@@ -361,4 +361,33 @@
   <data name="Delete work order" xml:space="preserve"><value>Eliminar orden de trabajo</value></data>
   <data name="Work order deleted." xml:space="preserve"><value>Orden de trabajo eliminada.</value></data>
   <data name="Could not delete the work order." xml:space="preserve"><value>No se pudo eliminar la orden de trabajo.</value></data>
+  <data name="Units" xml:space="preserve"><value>Unidades</value></data>
+  <data name="Add unit" xml:space="preserve"><value>Agregar unidad</value></data>
+  <data name="Edit unit" xml:space="preserve"><value>Editar unidad</value></data>
+  <data name="Delete unit" xml:space="preserve"><value>Eliminar unidad</value></data>
+  <data name="Could not delete the unit." xml:space="preserve"><value>No se pudo eliminar la unidad.</value></data>
+  <data name="Unit deleted." xml:space="preserve"><value>Unidad eliminada.</value></data>
+  <data name="Label" xml:space="preserve"><value>Etiqueta</value></data>
+  <data name="e.g. Quart" xml:space="preserve"><value>p. ej., Cuarto</value></data>
+  <data name="e.g. qt" xml:space="preserve"><value>p. ej., ct</value></data>
+  <data name="The units quantities are measured in (quart, ounce, gallon, each, ...). Each piece of equipment has an oil unit, and a service step can ask for a quantity in a unit." xml:space="preserve"><value>Las unidades en que se miden las cantidades (cuarto, onza, galón, pieza, ...). Cada equipo tiene una unidad de aceite, y un paso de servicio puede pedir una cantidad en una unidad.</value></data>
+  <data name="Oil quantity" xml:space="preserve"><value>Cantidad de aceite</value></data>
+  <data name="Oil qty" xml:space="preserve"><value>Aceite</value></data>
+  <data name="Unit" xml:space="preserve"><value>Unidad</value></data>
+  <data name="Quantity" xml:space="preserve"><value>Cantidad</value></data>
+  <data name="Part number" xml:space="preserve"><value>Número de parte</value></data>
+  <data name="Not asked" xml:space="preserve"><value>No se pide</value></data>
+  <data name="Optional" xml:space="preserve"><value>Opcional</value></data>
+  <data name="Unit chosen here" xml:space="preserve"><value>Unidad elegida aquí</value></data>
+  <data name="The equipment's oil unit" xml:space="preserve"><value>La unidad de aceite del equipo</value></data>
+  <data name="Save details" xml:space="preserve"><value>Guardar detalles</value></data>
+  <data name="Oil types" xml:space="preserve"><value>Tipos de aceite</value></data>
+  <data name="Add oil type" xml:space="preserve"><value>Agregar tipo de aceite</value></data>
+  <data name="Edit oil type" xml:space="preserve"><value>Editar tipo de aceite</value></data>
+  <data name="Delete oil type" xml:space="preserve"><value>Eliminar tipo de aceite</value></data>
+  <data name="Could not delete the oil type." xml:space="preserve"><value>No se pudo eliminar el tipo de aceite.</value></data>
+  <data name="Oil type deleted." xml:space="preserve"><value>Tipo de aceite eliminado.</value></data>
+  <data name="Select an oil type" xml:space="preserve"><value>Seleccione un tipo de aceite</value></data>
+  <data name="Use" xml:space="preserve"><value>Usar</value></data>
+  <data name="The oil types your equipment can require (SAE 10W-30, synthetic 5W-30, 2-cycle mix, ...). Each piece of equipment requires one, and its oil change steps show which to use." xml:space="preserve"><value>Los tipos de aceite que puede requerir su equipo (SAE 10W-30, sintético 5W-30, mezcla 2 tiempos, ...). Cada equipo requiere uno, y sus pasos de cambio de aceite muestran cuál usar.</value></data>
 </root>

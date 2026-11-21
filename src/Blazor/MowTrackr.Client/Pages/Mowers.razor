@@ -24,7 +24,11 @@
             <RadzenDataGridColumn TItem="MowerResponse" Property="PurchaseDate" CssClass="hide-sm" Title="@L["Purchased"]" FormatString="{0:d}" MinWidth="120px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="EngineHours" Title="@L["Engine hrs"]" FormatString="{0:0.#}" Width="95px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="OilType" CssClass="hide-sm" Title="@L["Oil"]" Width="110px" />
-            <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantityQuarts" CssClass="hide-sm" Title="@L["Qts"]" Width="70px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantity" CssClass="hide-sm" Title="@L["Oil qty"]" Width="100px">
+                <Template Context="mower">
+                    @($"{mower.OilQuantity:0.##} {mower.OilUnit}")
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" CssClass="hide-sm" Title="@L["Last oil change"]" FormatString="{0:d}" MinWidth="150px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Status" Title="@L["Status"]" Filterable="false" Width="130px">
                 <Template Context="mower">

@@ -32,11 +32,9 @@ internal sealed class MaintenanceApiService(HttpClient http, IStringLocalizer<Sh
     }
 
     /// <inheritdoc />
-    public Task<ApiResult<WorkOrderResponse>> SetTaskAsync(Guid workOrderId, Guid taskId, bool isComplete, CancellationToken cancellationToken)
+    public Task<ApiResult<WorkOrderResponse>> SetTaskAsync(Guid workOrderId, Guid taskId, WorkOrderTaskUpdateRequest request, CancellationToken cancellationToken)
     {
-        var body = new WorkOrderTaskUpdateRequest { IsComplete = isComplete };
-
-        return SendAsync<WorkOrderTaskUpdateRequest, WorkOrderResponse>(HttpMethod.Put, $"{ApiRoutes.Maintenance}/work-orders/{workOrderId}/tasks/{taskId}", body, cancellationToken);
+        return SendAsync<WorkOrderTaskUpdateRequest, WorkOrderResponse>(HttpMethod.Put, $"{ApiRoutes.Maintenance}/work-orders/{workOrderId}/tasks/{taskId}", request, cancellationToken);
     }
 
     /// <inheritdoc />

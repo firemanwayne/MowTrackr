@@ -28,6 +28,8 @@ public static class ServiceRegistryExtensions
 
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, InspectionTemplateAssetTypeUsage>());
 
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IUnitOfMeasureUsage, ServiceTemplateUnitUsage>());
+
         services.TryAddScoped<IMaintenanceService, MaintenanceService>();
 
         services.TryAddScoped<IOpenRepairLookup, OpenRepairLookup>();

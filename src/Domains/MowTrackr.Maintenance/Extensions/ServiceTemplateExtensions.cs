@@ -16,7 +16,18 @@ internal static class ServiceTemplateExtensions
     {
         var tasks = template.Tasks
             .OrderBy(t => t.SortOrder)
-            .Select(t => new ServiceTaskResponse(t.Id, t.Description, t.SortOrder, t.IsRequired, t.Condition))
+            .Select(t => new ServiceTaskResponse(
+                t.Id,
+                t.Description,
+                t.SortOrder,
+                t.IsRequired,
+                t.Condition,
+                t.QuantityRequirement,
+                t.QuantityUnitSource,
+                t.UnitId,
+                t.Unit?.Abbreviation,
+                t.PartNumberRequirement,
+                t.NotesRequirement))
             .ToList();
 
         var types = template.AssetTypes
@@ -98,6 +109,11 @@ internal static class ServiceTemplateExtensions
                 SortOrder = order++,
                 IsRequired = task.IsRequired,
                 Condition = task.Condition,
+                QuantityRequirement = task.QuantityRequirement,
+                QuantityUnitSource = task.QuantityUnitSource,
+                UnitId = task.QuantityRequirement != DetailRequirement.None && task.QuantityUnitSource == QuantityUnitSource.StepUnit ? task.UnitId : null,
+                PartNumberRequirement = task.PartNumberRequirement,
+                NotesRequirement = task.NotesRequirement,
             });
         }
     }
