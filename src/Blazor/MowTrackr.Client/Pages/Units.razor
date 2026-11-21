@@ -4,6 +4,8 @@
 @inject IUnitApiService UnitApi
 @inject DialogService Dialogs
 
+<PageTitle>@L["Units"] - MowTrackr</PageTitle>
+
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Units"]</h1>
@@ -16,13 +18,16 @@
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" Data="_units" TItem="UnitOfMeasureResponse" IsLoading="_loading" AllowSorting="true">
+        <EmptyTemplate>
+            <p class="empty-state">@L["No units yet."]</p>
+        </EmptyTemplate>
         <Columns>
             <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Property="Name" Title="@L["Name"]" />
             <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Property="Abbreviation" Title="@L["Label"]" Width="120px" />
             <RadzenDataGridColumn TItem="UnitOfMeasureResponse" Title="" Sortable="false" Width="110px">
                 <Template Context="type">
-                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{type.Id}")" Click="@(() => RunOnceAsync($"edit-{type.Id}", () => EditAsync(type)))" />
-                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{type.Id}")" Click="@(() => RunOnceAsync($"delete-{type.Id}", () => DeleteAsync(type)))" />
+                    <RadzenButton Icon="edit" title="@L["Edit"]" aria-label="@L["Edit"]" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{type.Id}")" Click="@(() => RunOnceAsync($"edit-{type.Id}", () => EditAsync(type)))" />
+                    <RadzenButton Icon="delete" title="@L["Delete"]" aria-label="@L["Delete"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{type.Id}")" Click="@(() => RunOnceAsync($"delete-{type.Id}", () => DeleteAsync(type)))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>

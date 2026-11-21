@@ -27,12 +27,19 @@ window.mowtrackr = (function () {
         return prefersDark ? 'Dark' : 'Light';
     }
 
+    // The page language follows the chosen language, so screen readers pronounce it correctly.
+    function applyLanguage(language) {
+        var code = String(language || 'en').toLowerCase().indexOf('es') === 0 ? 'es' : 'en';
+        document.documentElement.setAttribute('lang', code);
+    }
+
     applyTheme(storedTheme());
+    applyLanguage(read(LANG_KEY) || navigator.language);
 
     return {
         applyTheme: function (theme) { write(THEME_KEY, theme); applyTheme(theme); },
         getTheme: function () { return storedTheme(); },
         getLanguage: function () { return read(LANG_KEY) || (navigator.language || 'en'); },
-        setLanguage: function (language) { write(LANG_KEY, language); }
+        setLanguage: function (language) { write(LANG_KEY, language); applyLanguage(language); }
     };
 })();

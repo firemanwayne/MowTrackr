@@ -4,6 +4,8 @@
 @inject IMaintenanceApiService MaintenanceApi
 @inject DialogService Dialogs
 
+<PageTitle>@L["Due maintenance"] - MowTrackr</PageTitle>
+
 <div class="page">
     <h1>@L["Due maintenance"]</h1>
     <RadzenText TextStyle="TextStyle.Body2">
@@ -17,6 +19,9 @@
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_view" TItem="MaintenanceDueResponse" IsLoading="_loading" AllowSorting="true">
+        <EmptyTemplate>
+            <p class="empty-state">@L["Nothing is due. Every unit is up to date."]</p>
+        </EmptyTemplate>
         <Columns>
             <RadzenDataGridColumn TItem="MaintenanceDueResponse" Property="MowerName" Title="@L["Mower"]" />
             <RadzenDataGridColumn TItem="MaintenanceDueResponse" Property="TemplateName" Title="@L["Service"]" />

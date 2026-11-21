@@ -390,4 +390,15 @@
   <data name="Select an oil type" xml:space="preserve"><value>Seleccione un tipo de aceite</value></data>
   <data name="Use" xml:space="preserve"><value>Usar</value></data>
   <data name="The oil types your equipment can require (SAE 10W-30, synthetic 5W-30, 2-cycle mix, ...). Each piece of equipment requires one, and its oil change steps show which to use." xml:space="preserve"><value>Los tipos de aceite que puede requerir su equipo (SAE 10W-30, sintético 5W-30, mezcla 2 tiempos, ...). Cada equipo requiere uno, y sus pasos de cambio de aceite muestran cuál usar.</value></data>
+  <data name="Edit" xml:space="preserve"><value>Editar</value></data>
+  <data name="Work order" xml:space="preserve"><value>Orden de trabajo</value></data>
+  <data name="No equipment yet. Add a mower, blower or saw to start tracking its hours and service." xml:space="preserve"><value>Aún no hay equipos. Agregue una podadora, sopladora o motosierra para seguir sus horas y servicio.</value></data>
+  <data name="No work orders in this view." xml:space="preserve"><value>No hay órdenes de trabajo en esta vista.</value></data>
+  <data name="No service templates yet. A template defines a service: its steps, and when it is due." xml:space="preserve"><value>Aún no hay plantillas de servicio. Una plantilla define un servicio: sus pasos y cuándo vence.</value></data>
+  <data name="No inspection templates yet. A template defines a pre-check or post-check for a service." xml:space="preserve"><value>Aún no hay plantillas de inspección. Una plantilla define una revisión previa o posterior de un servicio.</value></data>
+  <data name="No asset types yet." xml:space="preserve"><value>Aún no hay tipos de activo.</value></data>
+  <data name="No units yet." xml:space="preserve"><value>Aún no hay unidades.</value></data>
+  <data name="No oil types yet." xml:space="preserve"><value>Aún no hay tipos de aceite.</value></data>
+  <data name="No invitations sent yet." xml:space="preserve"><value>Aún no se han enviado invitaciones.</value></data>
+  <data name="Nothing is due. Every unit is up to date." xml:space="preserve"><value>Nada vence. Todos los equipos están al día.</value></data>
 </root>

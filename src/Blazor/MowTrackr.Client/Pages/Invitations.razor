@@ -4,6 +4,8 @@
 @inject IInvitationApiService InvitationApi
 @inject DialogService Dialogs
 
+<PageTitle>@L["Invitations"] - MowTrackr</PageTitle>
+
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Invitations"]</h1>
@@ -16,6 +18,9 @@
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_invitations" TItem="InvitationResponse" IsLoading="_loading" AllowSorting="true" AllowPaging="true" PageSize="15">
+        <EmptyTemplate>
+            <p class="empty-state">@L["No invitations sent yet."]</p>
+        </EmptyTemplate>
         <Columns>
             <RadzenDataGridColumn TItem="InvitationResponse" Property="Email" Title="@L["Email"]" MinWidth="220px" />
             <RadzenDataGridColumn TItem="InvitationResponse" Property="Role" Title="@L["Role"]" />

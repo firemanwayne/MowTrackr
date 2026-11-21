@@ -68,7 +68,7 @@
                 <RadzenStack Gap="0.75rem">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenTextBox @bind-Value="task.Description" Placeholder="@L["Task description"]" Style="flex: 1; min-width: 0" />
-                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+                        <RadzenButton Icon="delete" title="@L["Delete"]" aria-label="@L["Delete"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1.5rem" Wrap="FlexWrap.Wrap">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">

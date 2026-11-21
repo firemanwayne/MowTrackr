@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 @inject DialogService Dialogs
 
+<PageTitle>@L["Work orders"] - MowTrackr</PageTitle>
+
 <div class="page">
     <h1>@L["Work orders"]</h1>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="rz-my-2">
@@ -15,6 +17,9 @@
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_view" TItem="WorkOrderResponse" IsLoading="_loading" AllowSorting="true" RowClick="@(args => Navigation.NavigateTo($"work-orders/{args.Data?.Id}"))">
+        <EmptyTemplate>
+            <p class="empty-state">@L["No work orders in this view."]</p>
+        </EmptyTemplate>
         <Columns>
             <RadzenDataGridColumn TItem="WorkOrderResponse" Property="MowerName" Title="@L["Mower"]" />
             <RadzenDataGridColumn TItem="WorkOrderResponse" Property="TemplateName" Title="@L["Service"]" />
@@ -37,7 +42,7 @@
                 <RadzenDataGridColumn TItem="WorkOrderResponse" Title="" Sortable="false" Width="70px">
                     <Template Context="order">
                         <div @onclick:stopPropagation="true">
-                            <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{order.Id}")" Click="@(() => RunOnceAsync($"delete-{order.Id}", () => DeleteAsync(order)))" />
+                            <RadzenButton Icon="delete" title="@L["Delete"]" aria-label="@L["Delete"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{order.Id}")" Click="@(() => RunOnceAsync($"delete-{order.Id}", () => DeleteAsync(order)))" />
                         </div>
                     </Template>
                 </RadzenDataGridColumn>
