@@ -20,4 +20,14 @@ public abstract class EntityBase
     /// not made by a signed-in user (for example a startup migration or an anonymous sign-up).
     /// </summary>
     public Guid? UpdatedBy { get; set; }
+
+    /// <summary>Records when the row was changed and by whom. Called automatically on every save.</summary>
+    /// <param name="at">When the change was made.</param>
+    /// <param name="by">The signed-in user, or <see langword="null"/> when there is none.</param>
+    public void MarkUpdated(DateTimeOffset at, Guid? by)
+    {
+        UpdatedAt = at;
+
+        UpdatedBy = by;
+    }
 }

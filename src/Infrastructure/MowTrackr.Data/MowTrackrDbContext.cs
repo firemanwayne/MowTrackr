@@ -43,6 +43,9 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the user invitations.</summary>
     public DbSet<UserInvitation> UserInvitations => Set<UserInvitation>();
 
+    /// <summary>Gets the change history: one row per create, update or delete of an entity.</summary>
+    public DbSet<ChangeRecord> ChangeHistory => Set<ChangeRecord>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {
