@@ -26,8 +26,20 @@
             <RadzenNumeric TValue="decimal?" Value="_order.EngineHoursAtStart" ReadOnly="true" Name="HoursStart" Style="width: 100%" />
         </div>
         <RadzenStack Gap="0.5rem" class="rz-my-4">
+            @{
+                string? previousSource = null;
+            }
             @foreach (var task in _order.Tasks)
             {
+                @if (task.Source is not null && task.Source != previousSource)
+                {
+                    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-3 rz-mb-0">
+                        @task.Source
+                    </RadzenText>
+                }
+
+                previousSource = task.Source;
+
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
                     <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
                     <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />

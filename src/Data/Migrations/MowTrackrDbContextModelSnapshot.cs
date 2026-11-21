@@ -470,6 +470,80 @@ namespace MowTrackr.Data.Migrations
                     b.ToTable("UserInvitations", (string)null);
                 });
 
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.InspectionTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("InspectionTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRequired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InspectionTemplateId");
+
+                    b.ToTable("InspectionTasks", (string)null);
+                });
+
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.InspectionTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssetTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MinAgeMonths")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinEngineHours")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetTypeId");
+
+                    b.ToTable("InspectionTemplates", (string)null);
+                });
+
             modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -636,6 +710,10 @@ namespace MowTrackr.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
+                    b.Property<string>("Source")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -738,6 +816,26 @@ namespace MowTrackr.Data.Migrations
                     b.Navigation("Model");
                 });
 
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.InspectionTask", b =>
+                {
+                    b.HasOne("MowTrackr.Maintenance.Models.InspectionTemplate", null)
+                        .WithMany("Tasks")
+                        .HasForeignKey("InspectionTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.InspectionTemplate", b =>
+                {
+                    b.HasOne("MowTrackr.Assets.Models.AssetType", "AssetType")
+                        .WithMany()
+                        .HasForeignKey("AssetTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssetType");
+                });
+
             modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTask", b =>
                 {
                     b.HasOne("MowTrackr.Maintenance.Models.ServiceTemplate", null)
@@ -770,6 +868,11 @@ namespace MowTrackr.Data.Migrations
             modelBuilder.Entity("MowTrackr.Assets.Models.Manufacturer", b =>
                 {
                     b.Navigation("Models");
+                });
+
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.InspectionTemplate", b =>
+                {
+                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTemplate", b =>

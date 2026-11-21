@@ -25,6 +25,12 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the service templates.</summary>
     public DbSet<ServiceTemplate> ServiceTemplates => Set<ServiceTemplate>();
 
+    /// <summary>Gets the inspection templates.</summary>
+    public DbSet<InspectionTemplate> InspectionTemplates => Set<InspectionTemplate>();
+
+    /// <summary>Gets the inspection template checklist tasks.</summary>
+    public DbSet<InspectionTask> InspectionTasks => Set<InspectionTask>();
+
     /// <summary>Gets the service template checklist tasks.</summary>
     public DbSet<ServiceTask> ServiceTasks => Set<ServiceTask>();
 

@@ -20,6 +20,8 @@ public static class ServiceRegistryExtensions
 
         services.TryAddScoped<IServiceTemplateService, ServiceTemplateService>();
 
+        services.TryAddScoped<IInspectionTemplateService, InspectionTemplateService>();
+
         services.TryAddScoped<IMaintenanceService, MaintenanceService>();
 
         return services;

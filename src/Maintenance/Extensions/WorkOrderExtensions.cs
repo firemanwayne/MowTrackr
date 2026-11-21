@@ -14,7 +14,7 @@ internal static class WorkOrderExtensions
     {
         var tasks = order.Tasks
             .OrderBy(t => t.SortOrder)
-            .Select(t => new WorkOrderTaskResponse(t.Id, t.Description, t.SortOrder, t.IsRequired, t.IsComplete, t.CompletedAt, t.CompletedByUserId))
+            .Select(t => new WorkOrderTaskResponse(t.Id, t.Source, t.Description, t.SortOrder, t.IsRequired, t.IsComplete, t.CompletedAt, t.CompletedByUserId))
             .ToList();
 
         return new WorkOrderResponse(

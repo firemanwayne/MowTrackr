@@ -271,5 +271,21 @@
   <data name="Type" xml:space="preserve"><value>Tipo</value></data>
   <data name="Select a type" xml:space="preserve"><value>Selecciona un tipo</value></data>
   <data name="Add type" xml:space="preserve"><value>Agregar tipo</value></data>
+  <data name="Inspection templates" xml:space="preserve"><value>Plantillas de inspección</value></data>
+  <data name="New inspection" xml:space="preserve"><value>Nueva inspección</value></data>
+  <data name="New inspection template" xml:space="preserve"><value>Nueva plantilla de inspección</value></data>
+  <data name="Edit inspection template" xml:space="preserve"><value>Editar plantilla de inspección</value></data>
+  <data name="Extra steps added to a work order once the equipment reaches an age or engine hours." xml:space="preserve"><value>Pasos adicionales que se agregan a una orden de trabajo cuando el equipo alcanza cierta edad u horas de motor.</value></data>
+  <data name="Applies at" xml:space="preserve"><value>Se aplica a partir de</value></data>
+  <data name="months" xml:space="preserve"><value>meses</value></data>
+  <data name="Delete inspection" xml:space="preserve"><value>Eliminar inspección</value></data>
+  <data name="Could not delete the inspection." xml:space="preserve"><value>No se pudo eliminar la inspección.</value></data>
+  <data name="Inspection deleted." xml:space="preserve"><value>Inspección eliminada.</value></data>
+  <data name="Inspection saved." xml:space="preserve"><value>Inspección guardada.</value></data>
+  <data name="e.g. 500 Hour Inspection" xml:space="preserve"><value>p. ej. Inspección de 500 horas</value></data>
+  <data name="Applies from (engine hours)" xml:space="preserve"><value>Se aplica desde (horas de motor)</value></data>
+  <data name="Applies from (age in months)" xml:space="preserve"><value>Se aplica desde (edad en meses)</value></data>
+  <data name="Set hours, age, or both. Reaching either one adds these steps to the work order. Age is counted from the purchase date." xml:space="preserve"><value>Indica horas, edad o ambas. Al alcanzar cualquiera de las dos se agregan estos pasos a la orden de trabajo. La edad se cuenta desde la fecha de compra.</value></data>
+  <data name="Active (added to work orders)" xml:space="preserve"><value>Activa (se agrega a las órdenes de trabajo)</value></data>
   <data name="Add model" xml:space="preserve"><value>Agregar modelo</value></data>
 </root>

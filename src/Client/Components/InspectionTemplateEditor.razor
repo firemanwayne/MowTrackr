@@ -1,0 +1,129 @@
+@inherits PageBase
+@inject IInspectionTemplateApiService TemplateApi
+@inject IAssetTypeApiService AssetTypeApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Type"]" Component="AssetType" />
+            <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssetTypeId" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.AssetTypeId)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Name"]" Component="Name" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. 500 Hour Inspection"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.Name)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Description"]" Component="Description" />
+            <RadzenTextArea @bind-Value="_model.Description" Name="Description" Rows="2" Style="width: 100%" />
+        </div>
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Applies from (engine hours)"]" Component="MinEngineHours" />
+                <RadzenNumeric TValue="decimal?" Value="_model.MinEngineHours" ValueChanged="@(value => _model.MinEngineHours = value is > 0 ? value : null)" Name="MinEngineHours" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.MinEngineHours)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Applies from (age in months)"]" Component="MinAgeMonths" />
+                <RadzenNumeric TValue="int?" Value="_model.MinAgeMonths" ValueChanged="@(value => _model.MinAgeMonths = value is > 0 ? value : null)" Name="MinAgeMonths" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.MinAgeMonths)" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenText TextStyle="TextStyle.Caption">
+            @L["Set hours, age, or both. Reaching either one adds these steps to the work order. Age is counted from the purchase date."]
+        </RadzenText>
+        <div>
+            <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
+            <RadzenLabel Text="@L["Active (added to work orders)"]" Component="IsActive" class="rz-ms-2" />
+        </div>
+        <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
+            @L["Checklist"]
+        </RadzenText>
+        @for (var i = 0; i < _model.Tasks.Count; i++)
+        {
+            var index = i;
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenTextBox @bind-Value="_model.Tasks[index].Description" Placeholder="@L["Task description"]" Style="flex: 1" />
+                <RadzenCheckBox TValue="bool" @bind-Value="_model.Tasks[index].IsRequired" Name="@($"required-{index}")" />
+                <RadzenLabel Text="@L["Required"]" Component="@($"required-{index}")" />
+                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+            </RadzenStack>
+        }
+        <div>
+            <RadzenButton Text="@L["Add task"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private InspectionTemplateRequest _model = new();
+
+    private List<AssetTypeResponse> _assetTypes = [];
+
+    private string? _error;
+
+    /// <summary>Gets or sets the template being edited; <see langword="null"/> creates a new one.</summary>
+    [Parameter]
+    public InspectionTemplateResponse? Existing { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var types = await AssetTypeApi.ListAsync(Cancellation);
+
+        _assetTypes = types.Value ?? [];
+
+        _error = types.IsSuccess ? null : types.Error;
+
+        if (Existing is null)
+        {
+            _model.Tasks.Add(new ServiceTaskRequest());
+
+            return;
+        }
+
+        _model = new InspectionTemplateRequest
+        {
+            Name = Existing.Name,
+            AssetTypeId = Existing.AssetTypeId,
+            Description = Existing.Description,
+            MinEngineHours = Existing.MinEngineHours,
+            MinAgeMonths = Existing.MinAgeMonths,
+            IsActive = Existing.IsActive,
+            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired }).ToList(),
+        };
+    }
+
+    /// <summary>Saves the template; problems are shown inline.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        var result = Existing is null
+            ? await TemplateApi.CreateAsync(_model, Cancellation)
+            : await TemplateApi.UpdateAsync(Existing.Id, _model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess(L["Inspection saved."]);
+
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+    }
+}

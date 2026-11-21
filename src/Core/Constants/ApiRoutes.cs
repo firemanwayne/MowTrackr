@@ -17,6 +17,9 @@ public static class ApiRoutes
     /// <summary>Manufacturer and model lookup endpoints.</summary>
     public const string Manufacturers = "api/manufacturers";
 
+    /// <summary>Inspection template endpoints.</summary>
+    public const string InspectionTemplates = "api/inspection-templates";
+
     /// <summary>Service template endpoints.</summary>
     public const string ServiceTemplates = "api/service-templates";
 
