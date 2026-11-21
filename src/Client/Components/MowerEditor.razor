@@ -26,7 +26,7 @@
                 <RadzenLabel Text="@L["Type"]" Component="AssetType" />
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                     <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssetTypeId" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
-                    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
+                    <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
                         <RadzenButton Icon="add" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" title="@L["Add type"]" Click="@(() => RunOnceAsync("add-type", AddAssetTypeAsync))" />
                     </AuthorizeView>
                 </RadzenStack>

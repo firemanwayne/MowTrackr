@@ -271,6 +271,12 @@
   <data name="Type" xml:space="preserve"><value>Tipo</value></data>
   <data name="Select a type" xml:space="preserve"><value>Selecciona un tipo</value></data>
   <data name="Add type" xml:space="preserve"><value>Agregar tipo</value></data>
+  <data name="Asset types" xml:space="preserve"><value>Tipos de equipo</value></data>
+  <data name="Edit type" xml:space="preserve"><value>Editar tipo</value></data>
+  <data name="Delete type" xml:space="preserve"><value>Eliminar tipo</value></data>
+  <data name="Type deleted." xml:space="preserve"><value>Tipo eliminado.</value></data>
+  <data name="Could not delete the type." xml:space="preserve"><value>No se pudo eliminar el tipo.</value></data>
+  <data name="The kinds of equipment you track. Each piece of equipment, service template and inspection template belongs to one." xml:space="preserve"><value>Los tipos de equipo que administras. Cada equipo, plantilla de servicio y plantilla de inspección pertenece a uno.</value></data>
   <data name="Inspection templates" xml:space="preserve"><value>Plantillas de inspección</value></data>
   <data name="New inspection" xml:space="preserve"><value>Nueva inspección</value></data>
   <data name="New inspection template" xml:space="preserve"><value>Nueva plantilla de inspección</value></data>

@@ -24,6 +24,16 @@
 
     private string? _error;
 
+    /// <summary>Gets or sets the name to start with (when renaming).</summary>
+    [Parameter]
+    public string? InitialName { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _model.Name = InitialName ?? string.Empty;
+    }
+
     /// <summary>Gets or sets the save action: given the entered name, returns the new key or an error message.</summary>
     [Parameter, EditorRequired]
     public Func<ManufacturerRequest, CancellationToken, Task<(Guid? Id, string? Error)>> OnSave { get; set; } = default!;

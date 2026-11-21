@@ -1,4 +1,5 @@
 using MowTrackr.Assets.Services;
+using MowTrackr.Assets.Usages;
 
 namespace MowTrackr.Assets;
 
@@ -17,6 +18,8 @@ public static class ServiceRegistryExtensions
         services.TryAddScoped<IManufacturerService, ManufacturerService>();
 
         services.TryAddScoped<IAssetTypeService, AssetTypeService>();
+
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, MowerAssetTypeUsage>());
 
         return services;
     }

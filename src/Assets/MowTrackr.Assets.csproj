@@ -12,4 +12,8 @@
     <ProjectReference Include="..\Core\MowTrackr.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Assets.UnitTests" />
+  </ItemGroup>
+
 </Project>

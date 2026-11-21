@@ -1,5 +1,6 @@
 using MowTrackr.Maintenance.Options;
 using MowTrackr.Maintenance.Services;
+using MowTrackr.Maintenance.Usages;
 using MowTrackr.Maintenance.Validators;
 
 namespace MowTrackr.Maintenance;
@@ -21,6 +22,10 @@ public static class ServiceRegistryExtensions
         services.TryAddScoped<IServiceTemplateService, ServiceTemplateService>();
 
         services.TryAddScoped<IInspectionTemplateService, InspectionTemplateService>();
+
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, ServiceTemplateAssetTypeUsage>());
+
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, InspectionTemplateAssetTypeUsage>());
 
         services.TryAddScoped<IMaintenanceService, MaintenanceService>();
 

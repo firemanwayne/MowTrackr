@@ -21,6 +21,7 @@
     <Project Path="src/Localization/MowTrackr.Localization.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="tests/Assets/MowTrackr.Assets.UnitTests.csproj" />
     <Project Path="tests/Client/MowTrackr.Client.UnitTests.csproj" />
     <Project Path="tests/Communications/MowTrackr.Communications.UnitTests.csproj" />
     <Project Path="tests/Core/MowTrackr.Core.UnitTests.csproj" />
