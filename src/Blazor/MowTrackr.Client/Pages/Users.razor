@@ -3,6 +3,8 @@
 @inherits PageBase
 @inject IUserApiService UserApi
 
+<PageTitle>@L["Users & roles"] - MowTrackr</PageTitle>
+
 <div class="page">
     <h1>@L["Users & roles"]</h1>
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">

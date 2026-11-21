@@ -60,7 +60,7 @@
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                     <RadzenTextBox @bind-Value="task.Description" Placeholder="@L["Item, e.g. Oil level"]" Style="flex: 1; min-width: 200px" />
                     <RadzenDropDown TValue="CheckItemType" Value="task.ItemType" ValueChanged="@(value => ChangeType(task, value))" Data="_itemTypes" TextProperty="Text" ValueProperty="Value" Style="width: 200px" />
-                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+                    <RadzenButton Icon="delete" title="@L["Delete"]" aria-label="@L["Delete"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                     @if (task.ItemType == CheckItemType.Choice)

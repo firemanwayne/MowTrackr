@@ -8,7 +8,7 @@ html, body {
     place-items: center;
     height: 100vh;
     font-family: system-ui, sans-serif;
-    color: #555;
+    color: var(--rz-text-secondary-color, #555);
 }
 
 .page {
@@ -37,9 +37,13 @@ html, body {
 }
 
 #blazor-error-ui {
-    background: #fff3cd;
+    /* An opaque surface with a warning edge: Radzen's warning tint is translucent, so the bar floated over the page and
+       its text was unreadable in the dark theme. */
+    background: var(--rz-base-background-color, #fff3cd);
+    color: var(--rz-text-color, #212529);
+    border-top: 3px solid var(--rz-warning, #ffae11);
     bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
     display: none;
     left: 0;
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
@@ -350,4 +354,19 @@ html, body {
     word-break: break-word;
     border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
     border-radius: 6px;
+}
+
+/* Empty list: say what the list is for, quietly. */
+.empty-state {
+    margin: 0;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--rz-text-secondary-color);
+}
+
+/* The mobile navigation drawer slides; with reduced motion it just appears. */
+@media (prefers-reduced-motion: reduce) {
+    .rz-sidebar {
+        transition: none !important;
+    }
 }

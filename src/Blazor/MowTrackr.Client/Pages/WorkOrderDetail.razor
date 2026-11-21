@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 @inject DialogService Dialogs
 
+<PageTitle>@(_order is null ? L["Work order"] : $"{_order.TemplateName} - {_order.MowerName}") - MowTrackr</PageTitle>
+
 <div class="page">
     <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
         @_error

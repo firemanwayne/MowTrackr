@@ -4,6 +4,8 @@
 @inject IServiceTemplateApiService TemplateApi
 @inject DialogService Dialogs
 
+<PageTitle>@L["Service templates"] - MowTrackr</PageTitle>
+
 <div class="page">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <h1>@L["Service templates"]</h1>
@@ -13,6 +15,9 @@
         @_error
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
+        <EmptyTemplate>
+            <p class="empty-state">@L["No service templates yet. A template defines a service: its steps, and when it is due."]</p>
+        </EmptyTemplate>
         <Columns>
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="@L["Name"]" MinWidth="200px" />
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="AssetTypeNames" Title="@L["Applies to"]" MinWidth="200px" />
@@ -33,8 +38,8 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="" Sortable="false" Width="110px">
                 <Template Context="template">
-                    <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{template.Id}")" Click="@(() => RunOnceAsync($"edit-{template.Id}", () => EditAsync(template)))" />
-                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{template.Id}")" Click="@(() => RunOnceAsync($"delete-{template.Id}", () => DeleteAsync(template)))" />
+                    <RadzenButton Icon="edit" title="@L["Edit"]" aria-label="@L["Edit"]" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{template.Id}")" Click="@(() => RunOnceAsync($"edit-{template.Id}", () => EditAsync(template)))" />
+                    <RadzenButton Icon="delete" title="@L["Delete"]" aria-label="@L["Delete"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{template.Id}")" Click="@(() => RunOnceAsync($"delete-{template.Id}", () => DeleteAsync(template)))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
