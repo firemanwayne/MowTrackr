@@ -12,6 +12,12 @@ public abstract class PageBase : ComponentBase, IDisposable
 {
     private const int CooldownMilliseconds = 400;
 
+    /// <summary>How long an error message stays up. Long enough to read, and a click closes it sooner.</summary>
+    private const int ErrorMilliseconds = 60_000;
+
+    /// <summary>How long a warning stays up.</summary>
+    private const int WarningMilliseconds = 20_000;
+
     private readonly CancellationTokenSource _cancellation = new();
 
     private readonly HashSet<string> _running = [];
@@ -136,14 +142,14 @@ public abstract class PageBase : ComponentBase, IDisposable
     /// <param name="message">The message.</param>
     protected void NotifyWarning(string message)
     {
-        Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = message, Duration = 8000 });
+        Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = message, Duration = WarningMilliseconds, CloseOnClick = true });
     }
 
     /// <summary>Shows an error toast.</summary>
     /// <param name="message">The message.</param>
     protected void NotifyError(string message)
     {
-        Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = message, Duration = 6000 });
+        Notifications.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = message, Duration = ErrorMilliseconds, CloseOnClick = true });
     }
 
     /// <summary>Waits out the cooldown, then lets the action run again.</summary>
