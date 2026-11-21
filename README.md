@@ -27,7 +27,9 @@ src/
   Communications/   Email sending (Azure Communication Services, or the log locally)
   Data/             EF Core context, migrations, repositories
   Localization/     UI strings (resx): English text is the key, SharedResource.es.resx holds Spanish
-tests/              Unit tests (Identity, Communications): dotnet test
+tests/              Unit tests (Client, Communications, Core, Identity): dotnet test
+infra/              Bicep templates and deploy scripts (Azure)
+docs/               Azure setup, security review, phase 2 plan
 ```
 
 ## Run locally
