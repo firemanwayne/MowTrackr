@@ -21,7 +21,11 @@ namespace MowTrackr.Api.Controllers;
 [AllowAnonymous]
 [EnableRateLimiting(RateLimitPolicies.Auth)]
 [Route(ApiRoutes.Auth)]
-public sealed class AuthController(IAuthService auth, IInvitationService invitations, IAuthenticationSchemeProvider schemes, IOptions<ClientOptions> client) : ControllerBase
+public sealed class AuthController(
+    IAuthService auth,
+    IInvitationService invitations,
+    IAuthenticationSchemeProvider schemes,
+    IOptions<ClientOptions> client) : ControllerBase
 {
     private const string LoginProviderKey = "LoginProvider";
 
@@ -169,7 +173,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     {
         var baseUrl = client.Value.BaseUrl.TrimEnd('/');
 
-        var external = await HttpContext.AuthenticateAsync(ExternalAuthenticationExtensions.ExternalScheme).ConfigureAwait(false);
+        var external = await HttpContext
+            .AuthenticateAsync(ExternalAuthenticationExtensions.ExternalScheme)
+            .ConfigureAwait(false);
 
         if (!external.Succeeded || external.Principal is null)
         {
@@ -191,9 +197,13 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
             principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
             principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty);
 
-        await HttpContext.SignOutAsync(ExternalAuthenticationExtensions.ExternalScheme).ConfigureAwait(false);
+        await HttpContext
+            .SignOutAsync(ExternalAuthenticationExtensions.ExternalScheme)
+            .ConfigureAwait(false);
 
-        var result = await auth.ExternalLoginAsync(command, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .ExternalLoginAsync(command, cancellationToken)
+            .ConfigureAwait(false);
 
         if (!result.IsSuccess || result.Value is null)
         {

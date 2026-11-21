@@ -57,20 +57,17 @@ internal static class ChangeRecorder
 
         var changes = CollectChanges(entry, action.Value);
 
-        if (action == ChangeAction.Updated && changes.Count == 0)
-        {
-            return null;
-        }
-
-        return new ChangeRecord
-        {
-            EntityType = entry.Metadata.ClrType.Name,
-            EntityId = entry.Entity.Id,
-            Action = action.Value,
-            ChangedAt = at,
-            ChangedBy = by,
-            Changes = changes.Count == 0 ? null : JsonSerializer.Serialize(changes, JsonSerializerOptions.Web),
-        };
+        return action == ChangeAction.Updated && changes.Count == 0
+            ? null
+            : new ChangeRecord
+            {
+                EntityType = entry.Metadata.ClrType.Name,
+                EntityId = entry.Entity.Id,
+                Action = action.Value,
+                ChangedAt = at,
+                ChangedBy = by,
+                Changes = changes.Count == 0 ? null : JsonSerializer.Serialize(changes, JsonSerializerOptions.Web),
+            };
     }
 
     /// <summary>Lists the audited values that differ for one entity.</summary>

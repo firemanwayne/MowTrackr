@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.RateLimiting;
+
 using MowTrackr.Api.Extensions;
 using MowTrackr.Core.Contracts.Identity;
 
@@ -19,7 +20,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMeAsync(CancellationToken cancellationToken)
     {
-        var result = await users.GetAsync(User.GetUserId(), cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .GetAsync(User.GetUserId(), cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -31,7 +34,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [HttpPut("me")]
     public async Task<IActionResult> UpdateMeAsync([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
-        var result = await users.UpdateProfileAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .UpdateProfileAsync(User.GetUserId(), request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -44,7 +49,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [EnableRateLimiting(RateLimitPolicies.Sms)]
     public async Task<IActionResult> StartPhoneVerificationAsync([FromBody] StartPhoneVerificationRequest request, CancellationToken cancellationToken)
     {
-        var result = await users.StartPhoneVerificationAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .StartPhoneVerificationAsync(User.GetUserId(), request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -57,7 +64,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [EnableRateLimiting(RateLimitPolicies.PhoneVerify)]
     public async Task<IActionResult> VerifyPhoneAsync([FromBody] VerifyPhoneRequest request, CancellationToken cancellationToken)
     {
-        var result = await users.VerifyPhoneAsync(User.GetUserId(), request, cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .VerifyPhoneAsync(User.GetUserId(), request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -69,7 +78,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await users.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -83,7 +94,9 @@ public sealed class UsersController(IUserService users) : ControllerBase
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> SetRolesAsync(Guid id, [FromBody] SetRolesRequest request, CancellationToken cancellationToken)
     {
-        var result = await users.SetRolesAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await users
+            .SetRolesAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
