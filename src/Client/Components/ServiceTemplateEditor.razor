@@ -1,5 +1,6 @@
 @inherits PageBase
 @inject IServiceTemplateApiService TemplateApi
+@inject IAssetTypeApiService AssetTypeApi
 @inject DialogService Dialogs
 
 <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
@@ -8,6 +9,11 @@
         <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
             @_error
         </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Type"]" Component="AssetType" />
+            <RadzenDropDown TValue="Guid?" Value="_model.AssetTypeId" ValueChanged="OnAssetTypeChangedAsync" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.AssetTypeId)" />
+        </div>
         <div>
             <RadzenLabel Text="@L["Name"]" Component="Name" />
             <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. Quarterly Maintenance"]" Style="width: 100%" />
@@ -69,14 +75,22 @@
 
     private IReadOnlyList<IntervalIssue> _issues = [];
 
+    private List<AssetTypeResponse> _assetTypes = [];
+
     private string? _error;
     /// <summary>Gets or sets the template being edited; <see langword="null"/> creates a new one.</summary>
     [Parameter]
     public ServiceTemplateResponse? Existing { get; set; }
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var types = await AssetTypeApi.ListAsync(Cancellation);
+
+        _assetTypes = types.Value ?? [];
+
+        _error = types.IsSuccess ? null : types.Error;
+
         if (Existing is null)
         {
             _model.Tasks.Add(new ServiceTaskRequest());
@@ -87,12 +101,23 @@
         _model = new ServiceTemplateRequest
         {
             Name = Existing.Name,
+            AssetTypeId = Existing.AssetTypeId,
             Description = Existing.Description,
             IntervalHours = Existing.IntervalHours,
             IntervalDays = Existing.IntervalDays,
             IsActive = Existing.IsActive,
             Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired }).ToList(),
         };
+    }
+
+    /// <summary>Handles a change to the asset type and re-validates, since intervals are compared within one type.</summary>
+    /// <param name="value">The new type key.</param>
+    /// <returns>A task.</returns>
+    private Task OnAssetTypeChangedAsync(Guid? value)
+    {
+        _model.AssetTypeId = value;
+
+        return CheckAsync();
     }
 
     /// <summary>Handles a change to the hours interval and re-validates.</summary>
@@ -123,6 +148,7 @@
         {
             IntervalHours = _model.IntervalHours,
             IntervalDays = _model.IntervalDays,
+            AssetTypeId = _model.AssetTypeId,
             ExcludeTemplateId = Existing?.Id,
         };
 

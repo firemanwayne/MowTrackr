@@ -5,6 +5,8 @@ namespace MowTrackr.Core.Contracts.Assets;
 /// </summary>
 /// <param name="Id">The mower key.</param>
 /// <param name="Name">The friendly name.</param>
+/// <param name="AssetTypeId">The asset type key.</param>
+/// <param name="AssetType">The asset type name.</param>
 /// <param name="ManufacturerId">The manufacturer key.</param>
 /// <param name="Manufacturer">The manufacturer name.</param>
 /// <param name="ManufacturerModelId">The model key.</param>
@@ -19,6 +21,8 @@ namespace MowTrackr.Core.Contracts.Assets;
 public sealed record MowerResponse(
     Guid Id,
     string Name,
+    Guid AssetTypeId,
+    string AssetType,
     Guid ManufacturerId,
     string Manufacturer,
     Guid ManufacturerModelId,

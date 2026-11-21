@@ -31,7 +31,7 @@ internal sealed class MaintenanceService(
 
         var activeMowers = await mowers.ListAsync(new QuerySpec<Mower> { Filter = m => m.IsActive }, cancellationToken).ConfigureAwait(false);
 
-        var activeTemplates = await templates.ListAsync(new QuerySpec<ServiceTemplate> { Filter = t => t.IsActive }, cancellationToken).ConfigureAwait(false);
+        var activeTemplates = await templates.ListAsync(new QuerySpec<ServiceTemplate> { Filter = t => t.IsActive, Includes = [nameof(ServiceTemplate.AssetType)] }, cancellationToken).ConfigureAwait(false);
 
         var orders = await workOrders.ListAsync(new QuerySpec<WorkOrder> { Filter = w => w.Status != WorkOrderStatus.Cancelled }, cancellationToken).ConfigureAwait(false);
 
@@ -41,7 +41,7 @@ internal sealed class MaintenanceService(
 
         foreach (var mower in activeMowers)
         {
-            foreach (var template in activeTemplates.Where(t => t.IntervalHours is not null || t.IntervalDays is not null))
+            foreach (var template in activeTemplates.Where(t => t.AssetTypeId == mower.AssetTypeId && (t.IntervalHours is not null || t.IntervalDays is not null)))
             {
                 var pairOrders = orders.Where(o => o.MowerId == mower.Id && o.ServiceTemplateId == template.Id).ToList();
 
@@ -75,13 +75,18 @@ internal sealed class MaintenanceService(
             return Result<WorkOrderResponse>.NotFound("Mower not found.");
         }
 
-        var templateSpec = new QuerySpec<ServiceTemplate> { Includes = [nameof(ServiceTemplate.Tasks)] };
+        var templateSpec = new QuerySpec<ServiceTemplate> { Includes = [nameof(ServiceTemplate.Tasks), nameof(ServiceTemplate.AssetType)] };
 
         var template = await templates.GetByIdAsync(request.ServiceTemplateId, templateSpec, cancellationToken).ConfigureAwait(false);
 
         if (template is null)
         {
             return Result<WorkOrderResponse>.NotFound("Service template not found.");
+        }
+
+        if (template.AssetTypeId != mower.AssetTypeId)
+        {
+            return Result<WorkOrderResponse>.Invalid("That service is for a different type of equipment.");
         }
 
         var existing = await workOrders.ListAsync(new QuerySpec<WorkOrder> { Filter = w => w.MowerId == mower.Id && w.ServiceTemplateId == template.Id }, cancellationToken).ConfigureAwait(false);
@@ -96,7 +101,7 @@ internal sealed class MaintenanceService(
             MowerId = mower.Id,
             MowerName = mower.Name,
             ServiceTemplateId = template.Id,
-            TemplateName = template.Name,
+            TemplateName = template.DisplayName(),
             ScheduledFor = request.ScheduledFor,
             AssignedToUserId = request.AssignedToUserId,
             EngineHoursAtStart = mower.EngineHours,
@@ -287,6 +292,6 @@ internal sealed class MaintenanceService(
 
         var hasOpen = pairOrders.Any(o => o.IsOpen());
 
-        return new MaintenanceDueResponse(mower.Id, mower.Name, template.Id, template.Name, hoursUntil, daysUntil, isOverdue, hasOpen);
+        return new MaintenanceDueResponse(mower.Id, mower.Name, template.Id, template.DisplayName(), hoursUntil, daysUntil, isOverdue, hasOpen);
     }
 }

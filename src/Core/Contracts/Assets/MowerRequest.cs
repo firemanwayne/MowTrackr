@@ -10,6 +10,10 @@ public sealed class MowerRequest
     [StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the asset type key (chosen from the asset type list).</summary>
+    [Required]
+    public Guid? AssetTypeId { get; set; }
+
     /// <summary>Gets or sets the manufacturer key (chosen from the manufacturer list).</summary>
     [Required]
     public Guid? ManufacturerId { get; set; }

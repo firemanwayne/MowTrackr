@@ -16,6 +16,8 @@ public static class ServiceRegistryExtensions
 
         services.TryAddScoped<IManufacturerService, ManufacturerService>();
 
+        services.TryAddScoped<IAssetTypeService, AssetTypeService>();
+
         return services;
     }
 }

@@ -1,3 +1,5 @@
+using MowTrackr.Assets.Models;
+
 namespace MowTrackr.Maintenance.Models;
 
 /// <summary>
@@ -7,6 +9,12 @@ public sealed class ServiceTemplate : EntityBase
 {
     /// <summary>Gets or sets the template name.</summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the asset type key this template applies to.</summary>
+    public Guid AssetTypeId { get; set; }
+
+    /// <summary>Gets or sets the asset type this template applies to.</summary>
+    public AssetType? AssetType { get; set; }
 
     /// <summary>Gets or sets an optional description.</summary>
     public string? Description { get; set; }

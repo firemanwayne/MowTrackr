@@ -144,6 +144,30 @@ namespace MowTrackr.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("MowTrackr.Assets.Models.AssetType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("AssetTypes", (string)null);
+                });
+
             modelBuilder.Entity("MowTrackr.Assets.Models.Manufacturer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -200,6 +224,9 @@ namespace MowTrackr.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("AssetTypeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -245,6 +272,8 @@ namespace MowTrackr.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssetTypeId");
 
                     b.HasIndex("ManufacturerId");
 
@@ -480,6 +509,9 @@ namespace MowTrackr.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("AssetTypeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -506,6 +538,8 @@ namespace MowTrackr.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssetTypeId");
 
                     b.ToTable("ServiceTemplates", (string)null);
                 });
@@ -679,6 +713,12 @@ namespace MowTrackr.Data.Migrations
 
             modelBuilder.Entity("MowTrackr.Assets.Models.Mower", b =>
                 {
+                    b.HasOne("MowTrackr.Assets.Models.AssetType", "AssetType")
+                        .WithMany()
+                        .HasForeignKey("AssetTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MowTrackr.Assets.Models.Manufacturer", "Manufacturer")
                         .WithMany()
                         .HasForeignKey("ManufacturerId")
@@ -690,6 +730,8 @@ namespace MowTrackr.Data.Migrations
                         .HasForeignKey("ManufacturerModelId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("AssetType");
 
                     b.Navigation("Manufacturer");
 
@@ -703,6 +745,17 @@ namespace MowTrackr.Data.Migrations
                         .HasForeignKey("ServiceTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTemplate", b =>
+                {
+                    b.HasOne("MowTrackr.Assets.Models.AssetType", "AssetType")
+                        .WithMany()
+                        .HasForeignKey("AssetTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssetType");
                 });
 
             modelBuilder.Entity("MowTrackr.Maintenance.Models.WorkOrderTask", b =>

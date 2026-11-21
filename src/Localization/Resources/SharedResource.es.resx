@@ -268,5 +268,8 @@
   <data name="Select a manufacturer" xml:space="preserve"><value>Selecciona un fabricante</value></data>
   <data name="Select a model" xml:space="preserve"><value>Selecciona un modelo</value></data>
   <data name="Add manufacturer" xml:space="preserve"><value>Agregar fabricante</value></data>
+  <data name="Type" xml:space="preserve"><value>Tipo</value></data>
+  <data name="Select a type" xml:space="preserve"><value>Selecciona un tipo</value></data>
+  <data name="Add type" xml:space="preserve"><value>Agregar tipo</value></data>
   <data name="Add model" xml:space="preserve"><value>Agregar modelo</value></data>
 </root>
