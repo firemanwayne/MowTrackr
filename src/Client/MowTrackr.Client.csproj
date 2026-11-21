@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Application\MowTrackr.Application.csproj" />
+    <ProjectReference Include="..\UseCases\MowTrackr.Application\MowTrackr.Application.csproj" />
     <ProjectReference Include="..\Abstractions\MowTrackr.Core\MowTrackr.Core.csproj" />
     <ProjectReference Include="..\Infrastructure\MowTrackr.Localization\MowTrackr.Localization.csproj" />
   </ItemGroup>

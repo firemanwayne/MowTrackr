@@ -26,7 +26,8 @@ src/
   ServiceDefaults/  Shared Aspire defaults (telemetry, health checks, resilience)
   Api/              HTTP API (controllers, JWT, external providers)
   Client/           Blazor WebAssembly UI (pages, components, layout)
-  Application/      Client-side services: typed API clients, session, token store, handlers
+  UseCases/
+    MowTrackr.Application/     Client-side services: typed API clients, session, token store, handlers
   Abstractions/
     MowTrackr.Core/            Contracts (request/response models), interfaces, constants, Result<T>
   Domains/
