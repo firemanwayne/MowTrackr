@@ -13,10 +13,12 @@ internal static class ServiceRegistryExtensions
 {
     /// <summary>Adds authentication and the API clients, all pointed at the configured API base address.</summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="apiBaseAddress">The API base address.</param>
+    /// <param name="configure">Sets the <see cref="ApiClientOptions"/>; <see cref="ApiClientOptions.BaseAddress"/> is required.</param>
     /// <returns>The same collection, for chaining.</returns>
-    public static IServiceCollection AddClientServices(this IServiceCollection services, Uri apiBaseAddress)
+    public static IServiceCollection AddClientServices(this IServiceCollection services, Action<ApiClientOptions> configure)
     {
+        services.Configure(configure);
+
         services.AddLocalizationServices();
 
         services.AddAuthorizationCore();
@@ -37,23 +39,15 @@ internal static class ServiceRegistryExtensions
 
         services.TryAddTransient<BearerTokenHandler>();
 
-        AddApiClient<IAuthApiService, AuthApiService>(services, apiBaseAddress);
-
-        AddApiClient<IMowerApiService, MowerApiService>(services, apiBaseAddress);
-
-        AddApiClient<IManufacturerApiService, ManufacturerApiService>(services, apiBaseAddress);
-
-        AddApiClient<IAssetTypeApiService, AssetTypeApiService>(services, apiBaseAddress);
-
-        AddApiClient<IServiceTemplateApiService, ServiceTemplateApiService>(services, apiBaseAddress);
-
-        AddApiClient<IInspectionTemplateApiService, InspectionTemplateApiService>(services, apiBaseAddress);
-
-        AddApiClient<IMaintenanceApiService, MaintenanceApiService>(services, apiBaseAddress);
-
-        AddApiClient<IUserApiService, UserApiService>(services, apiBaseAddress);
-
-        AddApiClient<IInvitationApiService, InvitationApiService>(services, apiBaseAddress);
+        services
+            .AddApiClient<IAuthApiService, AuthApiService>()
+            .AddApiClient<IMowerApiService, MowerApiService>()
+            .AddApiClient<IManufacturerApiService, ManufacturerApiService>()
+            .AddApiClient<IAssetTypeApiService, AssetTypeApiService>()
+            .AddApiClient<IServiceTemplateApiService, ServiceTemplateApiService>()
+            .AddApiClient<IMaintenanceApiService, MaintenanceApiService>()
+            .AddApiClient<IUserApiService, UserApiService>()
+            .AddApiClient<IInvitationApiService, InvitationApiService>();
 
         return services;
     }
@@ -62,13 +56,26 @@ internal static class ServiceRegistryExtensions
     /// <typeparam name="TInterface">The service interface.</typeparam>
     /// <typeparam name="TImplementation">The implementation.</typeparam>
     /// <param name="services">The service collection.</param>
-    /// <param name="apiBaseAddress">The API base address.</param>
-    private static void AddApiClient<TInterface, TImplementation>(IServiceCollection services, Uri apiBaseAddress)
+    private static IServiceCollection AddApiClient<TInterface, TImplementation>(this IServiceCollection services)
         where TInterface : class
         where TImplementation : class, TInterface
     {
         services
-            .AddHttpClient<TInterface, TImplementation>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpClient<TInterface, TImplementation>((provider, client) => client.BaseAddress = ResolveBaseAddress(provider))
             .AddHttpMessageHandler<BearerTokenHandler>();
+
+        return services;
+    }
+
+    /// <summary>Reads the configured API base address, failing loudly if the host never set one.</summary>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The API base address.</returns>
+    private static Uri ResolveBaseAddress(IServiceProvider provider)
+    {
+        var options = provider
+            .GetRequiredService<IOptions<ApiClientOptions>>()
+            .Value;
+
+        return options.BaseAddress ?? throw new InvalidOperationException($"{nameof(ApiClientOptions)}.{nameof(ApiClientOptions.BaseAddress)} was not set in the {nameof(AddClientServices)} callback.");
     }
 }

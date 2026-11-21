@@ -6,6 +6,8 @@ global using Microsoft.AspNetCore.Authorization;
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Authorization;
 global using Microsoft.Extensions.Localization;
+global using Microsoft.Extensions.Options;
+global using MowTrackr.Client.Options;
 global using MowTrackr.Client.Abstractions;
 global using MowTrackr.Client.Interfaces;
 global using MowTrackr.Client.Models;

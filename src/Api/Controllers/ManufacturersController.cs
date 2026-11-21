@@ -18,7 +18,9 @@ public sealed class ManufacturersController(IManufacturerService manufacturers) 
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await manufacturers.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await manufacturers
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -31,7 +33,9 @@ public sealed class ManufacturersController(IManufacturerService manufacturers) 
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CreateAsync([FromBody] ManufacturerRequest request, CancellationToken cancellationToken)
     {
-        var result = await manufacturers.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await manufacturers
+            .CreateAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -45,7 +49,9 @@ public sealed class ManufacturersController(IManufacturerService manufacturers) 
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CreateModelAsync(Guid id, [FromBody] ManufacturerRequest request, CancellationToken cancellationToken)
     {
-        var result = await manufacturers.CreateModelAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await manufacturers
+            .CreateModelAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }

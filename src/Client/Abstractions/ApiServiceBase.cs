@@ -1,5 +1,7 @@
 namespace MowTrackr.Client.Abstractions;
 
+using System.Text.Json;
+
 /// <summary>
 /// Shared HTTP plumbing for the typed API services: JSON in/out and uniform error handling.
 /// </summary>
@@ -92,13 +94,13 @@ internal abstract class ApiServiceBase(HttpClient http, IStringLocalizer<SharedR
         {
             try
             {
-                var problem = System.Text.Json.JsonSerializer.Deserialize<ProblemResponse>(text, System.Text.Json.JsonSerializerOptions.Web);
+                var problem = JsonSerializer.Deserialize<ProblemResponse>(text, JsonSerializerOptions.Web);
 
                 error = problem?.Detail ?? problem?.Title;
 
                 if (response.StatusCode == HttpStatusCode.Conflict && problem?.Title is null)
                 {
-                    detail = System.Text.Json.JsonSerializer.Deserialize<T>(text, System.Text.Json.JsonSerializerOptions.Web);
+                    detail = JsonSerializer.Deserialize<T>(text, JsonSerializerOptions.Web);
                 }
             }
             catch (System.Text.Json.JsonException)

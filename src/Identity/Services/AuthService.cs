@@ -1,10 +1,12 @@
-using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
+
 using MowTrackr.Core.Constants;
 using MowTrackr.Core.Options;
 using MowTrackr.Identity.Extensions;
 using MowTrackr.Identity.Interfaces;
 using MowTrackr.Identity.Models;
+
+using System.Text;
 
 namespace MowTrackr.Identity.Services;
 
@@ -18,7 +20,7 @@ namespace MowTrackr.Identity.Services;
 /// <param name="client">Where the client lives (for the confirmation link).</param>
 /// <param name="time">The clock.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class AuthService(
+internal sealed partial class AuthService(
     UserManager<ApplicationUser> userManager,
     ITokenService tokens,
     IRepository<UserInvitation> invitations,
@@ -38,7 +40,10 @@ internal sealed class AuthService(
     /// <inheritdoc />
     public async Task<Result<RegistrationStatusResponse>> GetRegistrationStatusAsync(CancellationToken cancellationToken)
     {
-        var anyUsers = await userManager.Users.AnyAsync(cancellationToken).ConfigureAwait(false);
+        var anyUsers = await userManager
+            .Users
+            .AnyAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return Result<RegistrationStatusResponse>.Ok(new RegistrationStatusResponse(!anyUsers));
     }
@@ -51,7 +56,9 @@ internal sealed class AuthService(
             return Result<RegisterResponse>.Forbidden(InvitationRequiredMessage);
         }
 
-        var existing = await userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+        var existing = await userManager
+            .FindByEmailAsync(request.Email)
+            .ConfigureAwait(false);
 
         if (existing is not null)
         {
@@ -74,7 +81,8 @@ internal sealed class AuthService(
             return Result<RegisterResponse>.Invalid(string.Join(" ", created.Errors.Select(e => e.Description)));
         }
 
-        await AssignInitialRoleAsync(user).ConfigureAwait(false);
+        await AssignInitialRoleAsync(user)
+            .ConfigureAwait(false);
 
         logger.LogInformation("Registered user {UserId}; confirmation email pending", user.Id);
 
@@ -86,7 +94,9 @@ internal sealed class AuthService(
     /// <inheritdoc />
     public async Task<Result<MessageResponse>> ConfirmEmailAsync(ConfirmEmailRequest request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByIdAsync(request.UserId.ToString()).ConfigureAwait(false);
+        var user = await userManager
+            .FindByIdAsync(request.UserId.ToString())
+            .ConfigureAwait(false);
 
         if (user is null)
         {
@@ -102,33 +112,42 @@ internal sealed class AuthService(
 
         try
         {
-            token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
+            token = Encoding
+                .UTF8
+                .GetString(WebEncoders.Base64UrlDecode(request.Token));
         }
         catch (FormatException)
         {
             return Result<MessageResponse>.Invalid(InvalidConfirmationMessage);
         }
 
-        var confirmed = await userManager.ConfirmEmailAsync(user, token).ConfigureAwait(false);
+        var confirmed = await userManager
+            .ConfirmEmailAsync(user, token)
+            .ConfigureAwait(false);
 
         if (!confirmed.Succeeded)
         {
             return Result<MessageResponse>.Invalid(InvalidConfirmationMessage);
         }
 
-        logger.LogInformation("Email confirmed for user {UserId}", user.Id);
+        LogEmailConfirmationInformation(user.Id);
 
         return Result<MessageResponse>.Ok(new MessageResponse("Your email address is confirmed. You can sign in now."));
     }
 
+
+
     /// <inheritdoc />
     public async Task<Result<MessageResponse>> ResendConfirmationAsync(ResendConfirmationRequest request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+        var user = await userManager
+            .FindByEmailAsync(request.Email)
+            .ConfigureAwait(false);
 
         if (user is not null && !user.EmailConfirmed)
         {
-            await SendConfirmationAsync(user, cancellationToken).ConfigureAwait(false);
+            await SendConfirmationAsync(user, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         // The same answer whether or not the account exists, so this cannot be used to discover accounts.
@@ -138,7 +157,9 @@ internal sealed class AuthService(
     /// <inheritdoc />
     public async Task<Result<AuthResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByEmailAsync(request.Email).ConfigureAwait(false);
+        var user = await userManager
+            .FindByEmailAsync(request.Email)
+            .ConfigureAwait(false);
 
         // One message for unknown account, wrong password and locked account, so none of them can be told apart.
         if (user is null || await userManager.IsLockedOutAsync(user).ConfigureAwait(false))
@@ -146,34 +167,40 @@ internal sealed class AuthService(
             return Result<AuthResponse>.Unauthorized(BadCredentialsMessage);
         }
 
-        var valid = await userManager.CheckPasswordAsync(user, request.Password).ConfigureAwait(false);
+        var valid = await userManager
+            .CheckPasswordAsync(user, request.Password)
+            .ConfigureAwait(false);
 
         if (!valid)
         {
-            await userManager.AccessFailedAsync(user).ConfigureAwait(false);
+            await userManager
+                .AccessFailedAsync(user)
+                .ConfigureAwait(false);
 
             return Result<AuthResponse>.Unauthorized(BadCredentialsMessage);
         }
 
-        await userManager.ResetAccessFailedCountAsync(user).ConfigureAwait(false);
+        await userManager
+            .ResetAccessFailedCountAsync(user)
+            .ConfigureAwait(false);
 
         // Only someone who knows the password learns the account is unconfirmed.
-        if (!user.EmailConfirmed)
-        {
-            return Result<AuthResponse>.Forbidden(EmailNotConfirmedMessage);
-        }
-
-        return await CreateSessionAsync(user).ConfigureAwait(false);
+        return !user.EmailConfirmed
+            ? Result<AuthResponse>.Forbidden(EmailNotConfirmedMessage)
+            : await CreateSessionAsync(user).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<Result<AuthResponse>> ExternalLoginAsync(ExternalLoginCommand command, CancellationToken cancellationToken)
     {
-        var user = await userManager.FindByLoginAsync(command.Provider, command.ProviderKey).ConfigureAwait(false);
+        var user = await userManager
+            .FindByLoginAsync(command.Provider, command.ProviderKey)
+            .ConfigureAwait(false);
 
         if (user is null)
         {
-            var linked = await LinkOrCreateAsync(command, cancellationToken).ConfigureAwait(false);
+            var linked = await LinkOrCreateAsync(command, cancellationToken)
+                .ConfigureAwait(false);
 
             if (!linked.IsSuccess || linked.Value is null)
             {
@@ -183,7 +210,8 @@ internal sealed class AuthService(
             user = linked.Value;
         }
 
-        return await CreateSessionAsync(user).ConfigureAwait(false);
+        return await CreateSessionAsync(user)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -200,7 +228,9 @@ internal sealed class AuthService(
             return Result<ApplicationUser>.Invalid($"{command.Provider} did not share an email address, which MowTrackr requires.");
         }
 
-        var user = await userManager.FindByEmailAsync(command.Email).ConfigureAwait(false);
+        var user = await userManager
+            .FindByEmailAsync(command.Email)
+            .ConfigureAwait(false);
 
         // Never attach a provider identity to an account whose email nobody has verified: whoever controls that
         // address at the provider (or merely claims it) would take the account over.
@@ -211,7 +241,10 @@ internal sealed class AuthService(
 
         if (user is null)
         {
-            var firstAccount = !await userManager.Users.AnyAsync(cancellationToken).ConfigureAwait(false);
+            var firstAccount = !await userManager
+                .Users
+                .AnyAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             var invitation = firstAccount ? null : await FindPendingInvitationAsync(command.Email, cancellationToken).ConfigureAwait(false);
 
@@ -229,7 +262,9 @@ internal sealed class AuthService(
                 Language = invitation?.Language ?? AppLanguages.Default,
             };
 
-            var created = await userManager.CreateAsync(user).ConfigureAwait(false);
+            var created = await userManager
+                .CreateAsync(user)
+                .ConfigureAwait(false);
 
             if (!created.Succeeded)
             {
@@ -242,26 +277,32 @@ internal sealed class AuthService(
             }
             else
             {
-                await userManager.AddToRoleAsync(user, invitation.Role).ConfigureAwait(false);
+                await userManager
+                    .AddToRoleAsync(user, invitation.Role)
+                    .ConfigureAwait(false);
 
                 invitation.AcceptedAt = time.GetUtcNow();
 
                 invitation.UpdatedAt = invitation.AcceptedAt.Value;
 
-                await invitations.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                await invitations
+                    .SaveChangesAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
         var login = new UserLoginInfo(command.Provider, command.ProviderKey, command.Provider);
 
-        var added = await userManager.AddLoginAsync(user, login).ConfigureAwait(false);
+        var added = await userManager
+            .AddLoginAsync(user, login)
+            .ConfigureAwait(false);
 
         if (!added.Succeeded)
         {
             return Result<ApplicationUser>.Invalid(string.Join(" ", added.Errors.Select(e => e.Description)));
         }
 
-        logger.LogInformation("Linked {Provider} login to user {UserId}", command.Provider, user.Id);
+        LogProviderInformation(command.Provider, user.Id);
 
         return Result<ApplicationUser>.Ok(user);
     }
@@ -272,7 +313,9 @@ internal sealed class AuthService(
     /// <returns><see langword="true"/> if the mail service accepted the message.</returns>
     private async Task<bool> SendConfirmationAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user).ConfigureAwait(false);
+        var token = await userManager
+            .GenerateEmailConfirmationTokenAsync(user)
+            .ConfigureAwait(false);
 
         var encoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
@@ -282,7 +325,9 @@ internal sealed class AuthService(
 
         try
         {
-            return await email.SendEmailConfirmationAsync(message, cancellationToken).ConfigureAwait(false);
+            return await email
+                .SendEmailConfirmationAsync(message, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -304,7 +349,8 @@ internal sealed class AuthService(
 
         var open = await invitations.ListAsync(
             new QuerySpec<UserInvitation> { Filter = i => i.NormalizedEmail == normalized && i.AcceptedAt == null && i.RevokedAt == null && i.ExpiresAt > now, Track = true },
-            cancellationToken).ConfigureAwait(false);
+            cancellationToken)
+            .ConfigureAwait(false);
 
         return open.OrderByDescending(i => i.InvitedAt).FirstOrDefault();
     }
@@ -314,11 +360,15 @@ internal sealed class AuthService(
     /// <returns>A task.</returns>
     private async Task AssignInitialRoleAsync(ApplicationUser user)
     {
-        var admins = await userManager.GetUsersInRoleAsync(AppRoles.Admin).ConfigureAwait(false);
+        var admins = await userManager
+            .GetUsersInRoleAsync(AppRoles.Admin)
+            .ConfigureAwait(false);
 
         var role = admins.Count == 0 ? AppRoles.Admin : AppRoles.Technician;
 
-        await userManager.AddToRoleAsync(user, role).ConfigureAwait(false);
+        await userManager
+            .AddToRoleAsync(user, role)
+            .ConfigureAwait(false);
     }
 
     /// <summary>Builds the signed-in session (token plus profile) for a user.</summary>
@@ -332,4 +382,10 @@ internal sealed class AuthService(
 
         return Result<AuthResponse>.Ok(new AuthResponse(token, expiresAt, user.ToResponse(roles)));
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Linked {provider} login to user {id}")]
+    private partial void LogProviderInformation(string provider, Guid id);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email confirmed for user {userId}")]
+    private partial void LogEmailConfirmationInformation(Guid userId);
 }

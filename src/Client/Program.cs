@@ -14,7 +14,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseUrl = builder.Configuration[ApiBaseUrlKey] ?? throw new InvalidOperationException($"Configuration value '{ApiBaseUrlKey}' is missing from wwwroot/appsettings.json.");
 
-builder.Services.AddClientServices(new Uri(apiBaseUrl));
+builder.Services.AddClientServices(options => options.BaseAddress = new Uri(apiBaseUrl));
 
 builder.Services.AddRadzenComponents();
 
