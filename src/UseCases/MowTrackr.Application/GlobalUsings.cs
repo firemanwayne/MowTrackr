@@ -11,6 +11,7 @@ global using MowTrackr.Application.Models;
 global using MowTrackr.Application.Options;
 global using MowTrackr.Core.Constants;
 global using MowTrackr.Core.Contracts.Assets;
+global using MowTrackr.Core.Contracts.History;
 global using MowTrackr.Core.Contracts.Identity;
 global using MowTrackr.Core.Contracts.Maintenance;
 global using MowTrackr.Core.Enums;

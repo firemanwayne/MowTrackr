@@ -1,0 +1,106 @@
+@inherits PageBase
+@inject IHistoryApiService HistoryApi
+@inject DialogService Dialogs
+
+<RadzenStack Gap="0.75rem">
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    <RadzenDataGrid class="app-grid" Responsive="true" Data="_entries" TItem="ChangeHistoryResponse" IsLoading="_loading" AllowPaging="true" PageSize="10">
+        <EmptyTemplate>
+            <p>@L["No changes have been recorded for this item yet."]</p>
+        </EmptyTemplate>
+        <Columns>
+            <RadzenDataGridColumn TItem="ChangeHistoryResponse" Title="@L["When"]" Width="150px">
+                <Template Context="entry">
+                    @entry.ChangedAt.ToLocalTime().ToString("g")
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ChangeHistoryResponse" Title="@L["Who"]" Width="140px">
+                <Template Context="entry">
+                    @(entry.ChangedByName ?? L["System"])
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ChangeHistoryResponse" Title="@L["Action"]" Width="100px">
+                <Template Context="entry">
+                    @L[entry.Action]
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ChangeHistoryResponse" Title="@L["Changes"]" MinWidth="260px">
+                <Template Context="entry">
+                    @foreach (var change in entry.Changes)
+                    {
+                        <div>
+                            <strong>@Humanize(change.Property)</strong>: @Describe(entry.Action, change)
+                        </div>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="@L["Close"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close())" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    private List<ChangeHistoryResponse> _entries = [];
+
+    private string? _error;
+
+    private bool _loading = true;
+
+    /// <summary>Gets or sets the entity name the history is filed under, such as "Mower".</summary>
+    [Parameter]
+    [EditorRequired]
+    public string EntityType { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the key of the item whose history is shown.</summary>
+    [Parameter]
+    [EditorRequired]
+    public Guid EntityId { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await HistoryApi.ListAsync(EntityType, EntityId, Cancellation);
+
+        _entries = result.Value ?? [];
+
+        _error = result.IsSuccess ? null : result.Error;
+
+        _loading = false;
+    }
+
+    /// <summary>Turns a property name such as "EngineHours" into words ("Engine hours").</summary>
+    /// <param name="property">The property name.</param>
+    /// <returns>The readable name.</returns>
+    private static string Humanize(string property)
+    {
+        var words = System.Text.RegularExpressions.Regex.Replace(property, "(?<=[a-z0-9])(?=[A-Z])", " ");
+
+        return words.Length == 0 ? words : string.Concat(words[..1].ToUpperInvariant(), words[1..].ToLowerInvariant());
+    }
+
+    /// <summary>Describes one change: the value for a create or delete, "old → new" for an update.</summary>
+    /// <param name="action">What happened to the item.</param>
+    /// <param name="change">The changed value.</param>
+    /// <returns>The text to show.</returns>
+    private string Describe(string action, PropertyChangeResponse change)
+    {
+        return action switch
+        {
+            "Created" => Show(change.New),
+            "Deleted" => Show(change.Old),
+            _ => $"{Show(change.Old)} → {Show(change.New)}",
+        };
+    }
+
+    /// <summary>Shows a value, or "(empty)" when it has none.</summary>
+    /// <param name="value">The value.</param>
+    /// <returns>The text to show.</returns>
+    private string Show(string? value)
+    {
+        return string.IsNullOrEmpty(value) ? L["(empty)"].Value : value;
+    }
+}
