@@ -3,9 +3,11 @@
     <Project Path="src/AppHost/MowTrackr.AppHost.csproj" />
     <Project Path="src/ServiceDefaults/MowTrackr.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/UseCases/">
+    <Project Path="src/UseCases/MowTrackr.Application/MowTrackr.Application.csproj" />
+    <Project Path="src/UseCases/MowTrackr.Application.UnitTests/MowTrackr.Application.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Client/">
-    <Project Path="src/Application/MowTrackr.Application.csproj" />
-    <Project Path="src/Application.UnitTests/MowTrackr.Application.UnitTests.csproj" />
     <Project Path="src/Client/MowTrackr.Client.csproj" />
     <Project Path="src/Client.UnitTests/MowTrackr.Client.UnitTests.csproj" />
   </Folder>
