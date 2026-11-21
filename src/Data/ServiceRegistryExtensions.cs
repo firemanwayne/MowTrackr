@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Http;
 using MowTrackr.Data.HostedServices;
+using MowTrackr.Data.Interceptors;
 using MowTrackr.Data.Repositories;
+using MowTrackr.Data.Services;
 
 namespace MowTrackr.Data;
 
@@ -25,7 +28,15 @@ public static class ServiceRegistryExtensions
     /// <returns>The same builder, for chaining.</returns>
     public static IHostApplicationBuilder AddDataServices(this IHostApplicationBuilder builder)
     {
-        builder.AddSqlServerDbContext<MowTrackrDbContext>(DatabaseConnectionName);
+        // The context is pooled, so the audit interceptor is one shared instance that looks the user up per save. A new
+        // HttpContextAccessor sees the same current request as the registered one (the store is shared).
+        var accessor = new HttpContextAccessor();
+
+        var audit = new AuditSaveChangesInterceptor(() => CurrentUserReader.Read(accessor));
+
+        builder.Services.AddHttpContextAccessor();
+
+        builder.AddSqlServerDbContext<MowTrackrDbContext>(DatabaseConnectionName, configureDbContextOptions: options => options.AddInterceptors(audit));
 
         new IdentityBuilder(typeof(ApplicationUser), typeof(ApplicationRole), builder.Services)
             .AddEntityFrameworkStores<MowTrackrDbContext>();
