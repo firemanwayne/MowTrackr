@@ -25,15 +25,19 @@ src/
   AppHost/          Aspire host - runs SQL, API and client locally
   ServiceDefaults/  Shared Aspire defaults (telemetry, health checks, resilience)
   Api/              HTTP API (controllers, JWT, external providers)
-  Client/           Blazor WebAssembly UI
-  Core/             Contracts (request/response models), interfaces, constants, Result<T>
-  Assets/           Domain: mowers
-  Maintenance/      Domain: service templates, interval validation, due checks, work orders
-  Identity/         Domain: users, roles, invitations, JWT issuing
-  Communications/   Email sending (Azure Communication Services, or the log locally)
-  Data/             EF Core context, migrations, repositories
-  Localization/     UI strings (resx): English text is the key, SharedResource.es.resx holds Spanish
-tests/              Unit tests (Client, Communications, Core, Identity): dotnet test
+  Client/           Blazor WebAssembly UI (pages, components, layout)
+  Application/      Client-side services: typed API clients, session, token store, handlers
+  Abstractions/
+    MowTrackr.Core/            Contracts (request/response models), interfaces, constants, Result<T>
+  Domains/
+    MowTrackr.Assets/          Mowers, manufacturers, asset types
+    MowTrackr.Maintenance/     Service and inspection templates, due checks, work orders
+  Infrastructure/
+    MowTrackr.Identity/        Users, roles, invitations, JWT issuing
+    MowTrackr.Communications/  Email sending (Azure Communication Services, or the log locally)
+    MowTrackr.Data/            EF Core context, migrations, repositories
+    MowTrackr.Localization/    UI strings (resx): English text is the key, SharedResource.es.resx holds Spanish
+  *.UnitTests/      Unit tests, each next to the project it tests (dotnet test)
 infra/              Bicep templates and deploy scripts (Azure)
 docs/               Azure setup, security review, phase 2 plan
 ```
@@ -88,7 +92,7 @@ A provider with no credentials is simply hidden on the sign-in page.
 Each user picks a **language** (English / Spanish) and an **appearance** (Light / Dark) on their profile page. The choice is
 stored on the profile and re-applied at sign-in; a copy is cached in the browser so the sign-in page already uses it.
 Changing the language reloads the page so every string switches. To add a string, wrap it as `L["English text"]` and add the
-Spanish entry to `src/Localization/Resources/SharedResource.es.resx`. API validation/error messages are still English.
+Spanish entry to `src/Infrastructure/MowTrackr.Localization/Resources/SharedResource.es.resx`. API validation/error messages are still English.
 
 ## Maintenance intervals
 
@@ -101,7 +105,7 @@ The "coming due" window is configurable under `Maintenance:LookaheadHours` / `Ma
 ## Migrations
 
 ```bash
-dotnet ef migrations add <Name> --project src/Data --startup-project src/Api --output-dir Migrations
+dotnet ef migrations add <Name> --project src/Infrastructure/MowTrackr.Data --startup-project src/Api --output-dir Migrations
 ```
 
 Migrations are applied automatically when the API starts.
