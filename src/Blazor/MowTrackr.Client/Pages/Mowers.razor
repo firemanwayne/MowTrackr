@@ -32,8 +32,11 @@
                 </Template>
             </RadzenDataGridColumn>
             <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
-                <RadzenDataGridColumn TItem="MowerResponse" Title="" Sortable="false" Filterable="false" Width="110px">
+                <RadzenDataGridColumn TItem="MowerResponse" Title="" Sortable="false" Filterable="false" Width="150px">
                     <Template Context="mower">
+                        <AuthorizeView Roles="@AppRoles.Admin" Context="admin">
+                            <RadzenButton Icon="history" Variant="Variant.Text" Size="ButtonSize.Small" title="@L["History"]" Disabled="@IsRunning($"history-{mower.Id}")" Click="@(() => RunOnceAsync($"history-{mower.Id}", () => ShowHistoryAsync(mower)))" />
+                        </AuthorizeView>
                         <RadzenButton Icon="edit" Variant="Variant.Text" Size="ButtonSize.Small" Disabled="@IsRunning($"edit-{mower.Id}")" Click="@(() => RunOnceAsync($"edit-{mower.Id}", () => EditAsync(mower)))" />
                         <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="@IsRunning($"delete-{mower.Id}")" Click="@(() => RunOnceAsync($"delete-{mower.Id}", () => DeleteAsync(mower)))" />
                     </Template>
@@ -69,6 +72,20 @@
         _error = result.IsSuccess ? null : result.Error;
 
         _loading = false;
+    }
+
+    /// <summary>Opens the change history of one mower (admins only).</summary>
+    /// <param name="mower">The mower.</param>
+    /// <returns>A task.</returns>
+    private async Task ShowHistoryAsync(MowerResponse mower)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            [nameof(HistoryDialog.EntityType)] = HistoryEntityTypes.Mower,
+            [nameof(HistoryDialog.EntityId)] = mower.Id,
+        };
+
+        await Dialogs.OpenAsync<HistoryDialog>(L["History: {0}", mower.Name], parameters, new DialogOptions { Width = "760px" });
     }
 
     /// <summary>Opens the editor for a new or existing mower and reloads if it was saved.</summary>

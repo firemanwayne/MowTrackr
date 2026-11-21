@@ -48,6 +48,8 @@ public static class ServiceRegistryExtensions
 
         builder.Services.TryAddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
+        builder.Services.TryAddScoped<IChangeHistoryService, ChangeHistoryService>();
+
         builder.Services.AddHostedService<DatabaseMigrationHostedService>();
 
         return builder;

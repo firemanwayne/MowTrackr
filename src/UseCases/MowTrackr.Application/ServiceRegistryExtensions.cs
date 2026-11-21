@@ -46,6 +46,7 @@ internal static class ServiceRegistryExtensions
             .AddApiClient<IAssetTypeApiService, AssetTypeApiService>()
             .AddApiClient<IServiceTemplateApiService, ServiceTemplateApiService>()
             .AddApiClient<IInspectionTemplateApiService, InspectionTemplateApiService>()
+            .AddApiClient<IHistoryApiService, HistoryApiService>()
             .AddApiClient<IMaintenanceApiService, MaintenanceApiService>()
             .AddApiClient<IUserApiService, UserApiService>()
             .AddApiClient<IInvitationApiService, InvitationApiService>();

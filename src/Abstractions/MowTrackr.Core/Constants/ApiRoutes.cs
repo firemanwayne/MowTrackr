@@ -31,4 +31,7 @@ public static class ApiRoutes
 
     /// <summary>Invitation administration endpoints (Admin only).</summary>
     public const string Invitations = "api/invitations";
+
+    /// <summary>Change history endpoints (Admin only).</summary>
+    public const string History = "api/history";
 }
