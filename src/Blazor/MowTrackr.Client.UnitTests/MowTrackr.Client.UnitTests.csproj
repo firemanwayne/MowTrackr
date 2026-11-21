@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client\MowTrackr.Client.csproj" />
+    <ProjectReference Include="..\MowTrackr.Client\MowTrackr.Client.csproj" />
   </ItemGroup>
 
 </Project>
