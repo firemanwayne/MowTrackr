@@ -18,7 +18,9 @@ public sealed class InspectionTemplatesController(IInspectionTemplateService tem
     [HttpGet]
     public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
-        var result = await templates.ListAsync(cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .ListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -30,7 +32,9 @@ public sealed class InspectionTemplatesController(IInspectionTemplateService tem
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await templates.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .GetAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -42,7 +46,9 @@ public sealed class InspectionTemplatesController(IInspectionTemplateService tem
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] InspectionTemplateRequest request, CancellationToken cancellationToken)
     {
-        var result = await templates.CreateAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .CreateAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -55,7 +61,9 @@ public sealed class InspectionTemplatesController(IInspectionTemplateService tem
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] InspectionTemplateRequest request, CancellationToken cancellationToken)
     {
-        var result = await templates.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .UpdateAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -67,7 +75,9 @@ public sealed class InspectionTemplatesController(IInspectionTemplateService tem
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await templates.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await templates
+            .DeleteAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }

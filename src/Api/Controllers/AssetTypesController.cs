@@ -49,7 +49,9 @@ public sealed class AssetTypesController(IAssetTypeService assetTypes) : Control
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] AssetTypeRequest request, CancellationToken cancellationToken)
     {
-        var result = await assetTypes.UpdateAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await assetTypes
+            .UpdateAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -62,7 +64,9 @@ public sealed class AssetTypesController(IAssetTypeService assetTypes) : Control
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await assetTypes.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await assetTypes
+            .DeleteAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToNoContentResult();
     }
