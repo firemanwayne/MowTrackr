@@ -1,6 +1,7 @@
 @inherits PageBase
 @inject IMowerApiService MowerApi
 @inject IManufacturerApiService ManufacturerApi
+@inject IAssetTypeApiService AssetTypeApi
 @inject DialogService Dialogs
 
 <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
@@ -20,6 +21,16 @@
                 <RadzenLabel Text="@L["Serial number"]" Component="SerialNumber" />
                 <RadzenTextBox @bind-Value="_model.SerialNumber" Name="SerialNumber" Style="width: 100%" />
                 <ValidationMessage For="@(() => _model.SerialNumber)" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Type"]" Component="AssetType" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                    <RadzenDropDown TValue="Guid?" @bind-Value="_model.AssetTypeId" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
+                    <AuthorizeView Roles="@AppRoles.ManagerOrAdmin" Context="manager">
+                        <RadzenButton Icon="add" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" title="@L["Add type"]" Click="@(() => RunOnceAsync("add-type", AddAssetTypeAsync))" />
+                    </AuthorizeView>
+                </RadzenStack>
+                <ValidationMessage For="@(() => _model.AssetTypeId)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Manufacturer"]" Component="Manufacturer" />
@@ -83,6 +94,8 @@
 
     private List<ManufacturerResponse> _manufacturers = [];
 
+    private List<AssetTypeResponse> _assetTypes = [];
+
     /// <summary>Gets or sets the mower being edited; <see langword="null"/> adds a new one.</summary>
     [Parameter]
     public MowerResponse? Existing { get; set; }
@@ -103,6 +116,12 @@
             _error = result.Error;
         }
 
+        var types = await AssetTypeApi.ListAsync(Cancellation);
+
+        _assetTypes = types.Value ?? [];
+
+        _error ??= types.IsSuccess ? null : types.Error;
+
         if (Existing is null)
         {
             return;
@@ -111,6 +130,7 @@
         _model = new MowerRequest
         {
             Name = Existing.Name,
+            AssetTypeId = Existing.AssetTypeId,
             ManufacturerId = Existing.ManufacturerId,
             ManufacturerModelId = Existing.ManufacturerModelId,
             SerialNumber = Existing.SerialNumber,
@@ -156,6 +176,29 @@
         _model.ManufacturerId = manufacturerId;
 
         _model.ManufacturerModelId = null;
+    }
+
+    /// <summary>Prompts for a new asset type name, adds it and selects it.</summary>
+    /// <returns>A task.</returns>
+    private async Task AddAssetTypeAsync()
+    {
+        var saved = await PromptAsync(L["Add type"], async (request, token) =>
+        {
+            var result = await AssetTypeApi.CreateAsync(new AssetTypeRequest { Name = request.Name }, token);
+
+            return (result.IsSuccess ? result.Value?.Id : null, result.Error);
+        });
+
+        if (saved is null)
+        {
+            return;
+        }
+
+        var types = await AssetTypeApi.ListAsync(Cancellation);
+
+        _assetTypes = types.Value ?? _assetTypes;
+
+        _model.AssetTypeId = saved;
     }
 
     /// <summary>Prompts for a new manufacturer name, adds it and selects it.</summary>

@@ -15,6 +15,8 @@ internal static class MowerExtensions
         return new MowerResponse(
             mower.Id,
             mower.Name,
+            mower.AssetTypeId,
+            mower.AssetType?.Name ?? string.Empty,
             mower.ManufacturerId,
             mower.Manufacturer?.Name ?? string.Empty,
             mower.ManufacturerModelId,
@@ -34,6 +36,8 @@ internal static class MowerExtensions
     public static void Apply(this Mower mower, MowerRequest request)
     {
         mower.Name = request.Name.Trim();
+
+        mower.AssetTypeId = request.AssetTypeId ?? Guid.Empty;
 
         mower.ManufacturerId = request.ManufacturerId ?? Guid.Empty;
 

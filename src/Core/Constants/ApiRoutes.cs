@@ -11,6 +11,9 @@ public static class ApiRoutes
     /// <summary>Mower endpoints.</summary>
     public const string Mowers = "api/mowers";
 
+    /// <summary>Asset type lookup endpoints.</summary>
+    public const string AssetTypes = "api/asset-types";
+
     /// <summary>Manufacturer and model lookup endpoints.</summary>
     public const string Manufacturers = "api/manufacturers";
 

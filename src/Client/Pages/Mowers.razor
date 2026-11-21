@@ -17,6 +17,7 @@
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_mowers" TItem="MowerResponse" IsLoading="_loading" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="15">
         <Columns>
             <RadzenDataGridColumn TItem="MowerResponse" Property="Name" Title="@L["Name"]" MinWidth="160px" />
+            <RadzenDataGridColumn TItem="MowerResponse" Property="AssetType" Title="@L["Type"]" Width="120px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Manufacturer" CssClass="hide-sm" Title="@L["Manufacturer"]" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="Model" Title="@L["Model"]" Width="120px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="SerialNumber" CssClass="hide-sm" Title="@L["S/N"]" MinWidth="130px" />

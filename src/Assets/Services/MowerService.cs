@@ -8,11 +8,12 @@ namespace MowTrackr.Assets.Services;
 /// </summary>
 /// <param name="mowers">The mower repository.</param>
 /// <param name="models">The model repository, used to validate the manufacturer/model pairing.</param>
+/// <param name="assetTypes">The asset type repository, used to validate the chosen type.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, ILogger<MowerService> logger) : IMowerService
+internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, IRepository<AssetType> assetTypes, ILogger<MowerService> logger) : IMowerService
 {
     /// <summary>Navigation paths loaded so responses can carry the manufacturer and model names.</summary>
-    private static readonly string[] _lookupIncludes = [nameof(Mower.Manufacturer), nameof(Mower.Model)];
+    private static readonly string[] _lookupIncludes = [nameof(Mower.AssetType), nameof(Mower.Manufacturer), nameof(Mower.Model)];
 
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<MowerResponse>>> ListAsync(CancellationToken cancellationToken)
@@ -135,12 +136,21 @@ internal sealed class MowerService(IRepository<Mower> mowers, IRepository<Manufa
         return matches.Count > 0;
     }
 
-    /// <summary>Checks that the chosen model exists and belongs to the chosen manufacturer.</summary>
+    /// <summary>Checks that the chosen asset type exists and that the model belongs to the chosen manufacturer.</summary>
     /// <param name="request">The mower request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An error message, or <see langword="null"/> when the pairing is valid.</returns>
     private async Task<string?> ValidatePairingAsync(MowerRequest request, CancellationToken cancellationToken)
     {
+        var typeId = request.AssetTypeId;
+
+        var types = await assetTypes.ListAsync(new QuerySpec<AssetType> { Filter = t => t.Id == typeId }, cancellationToken).ConfigureAwait(false);
+
+        if (types.Count == 0)
+        {
+            return "Choose an asset type.";
+        }
+
         var modelId = request.ManufacturerModelId;
 
         var manufacturerId = request.ManufacturerId;

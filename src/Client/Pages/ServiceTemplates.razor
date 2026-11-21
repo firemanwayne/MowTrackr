@@ -14,7 +14,7 @@
     </RadzenAlert>
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_templates" TItem="ServiceTemplateResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
-            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="Name" Title="@L["Name"]" />
+            <RadzenDataGridColumn TItem="ServiceTemplateResponse" Property="DisplayName" Title="@L["Name"]" MinWidth="220px" />
             <RadzenDataGridColumn TItem="ServiceTemplateResponse" Title="@L["Due every"]">
                 <Template Context="template">
                     @DescribeInterval(template)
@@ -108,7 +108,7 @@
     /// <returns>A task.</returns>
     private async Task DeleteAsync(ServiceTemplateResponse template)
     {
-        var confirmed = await Dialogs.Confirm(L["Delete {0}?", template.Name], L["Delete template"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
+        var confirmed = await Dialogs.Confirm(L["Delete {0}?", template.DisplayName], L["Delete template"], new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
 
         if (confirmed is not true)
         {

@@ -1,3 +1,4 @@
+using MowTrackr.Assets.Models;
 using MowTrackr.Maintenance.Extensions;
 using MowTrackr.Maintenance.Models;
 
@@ -7,16 +8,18 @@ namespace MowTrackr.Maintenance.Services;
 /// Default <see cref="IServiceTemplateService"/>.
 /// </summary>
 /// <param name="templates">The template repository.</param>
+/// <param name="assetTypes">The asset type repository.</param>
 /// <param name="workOrders">The work order repository.</param>
 /// <param name="validator">The interval validator.</param>
 /// <param name="logger">The logger.</param>
 internal sealed class ServiceTemplateService(
     IRepository<ServiceTemplate> templates,
+    IRepository<AssetType> assetTypes,
     IRepository<WorkOrder> workOrders,
     IIntervalValidator validator,
     ILogger<ServiceTemplateService> logger) : IServiceTemplateService
 {
-    private static readonly string[] TaskIncludes = [nameof(ServiceTemplate.Tasks)];
+    private static readonly string[] TaskIncludes = [nameof(ServiceTemplate.Tasks), nameof(ServiceTemplate.AssetType)];
 
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<ServiceTemplateResponse>>> ListAsync(CancellationToken cancellationToken)
@@ -61,7 +64,9 @@ internal sealed class ServiceTemplateService(
 
         logger.LogInformation("Created service template {TemplateId} ({TemplateName})", template.Id, template.Name);
 
-        return Result<ServiceTemplateSaveResponse>.Ok(new ServiceTemplateSaveResponse(template.ToResponse(), issues));
+        var created = await GetAsync(template.Id, cancellationToken).ConfigureAwait(false);
+
+        return Result<ServiceTemplateSaveResponse>.Ok(new ServiceTemplateSaveResponse(created.Value, issues));
     }
 
     /// <inheritdoc />
@@ -89,7 +94,9 @@ internal sealed class ServiceTemplateService(
 
         logger.LogInformation("Updated service template {TemplateId}", template.Id);
 
-        return Result<ServiceTemplateSaveResponse>.Ok(new ServiceTemplateSaveResponse(template.ToResponse(), issues));
+        var updated = await GetAsync(template.Id, cancellationToken).ConfigureAwait(false);
+
+        return Result<ServiceTemplateSaveResponse>.Ok(new ServiceTemplateSaveResponse(updated.Value, issues));
     }
 
     /// <inheritdoc />
@@ -121,7 +128,7 @@ internal sealed class ServiceTemplateService(
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<IntervalIssue>>> CheckIntervalsAsync(IntervalCheckRequest request, CancellationToken cancellationToken)
     {
-        var existing = await LoadActiveIntervalsAsync(cancellationToken).ConfigureAwait(false);
+        var existing = await LoadActiveIntervalsAsync(request.AssetTypeId, cancellationToken).ConfigureAwait(false);
 
         return Result<IReadOnlyList<IntervalIssue>>.Ok(validator.Validate(request, existing));
     }
@@ -133,16 +140,26 @@ internal sealed class ServiceTemplateService(
     /// <returns>The findings.</returns>
     private async Task<IReadOnlyList<IntervalIssue>> ValidateAsync(ServiceTemplateRequest request, Guid? excludeId, CancellationToken cancellationToken)
     {
-        var existing = await LoadActiveIntervalsAsync(cancellationToken).ConfigureAwait(false);
+        var existing = await LoadActiveIntervalsAsync(request.AssetTypeId, cancellationToken).ConfigureAwait(false);
 
         var candidate = new IntervalCheckRequest
         {
+            AssetTypeId = request.AssetTypeId,
             IntervalHours = request.IntervalHours,
             IntervalDays = request.IntervalDays,
             ExcludeTemplateId = excludeId,
         };
 
         var issues = validator.Validate(candidate, existing).ToList();
+
+        var typeId = request.AssetTypeId;
+
+        var types = await assetTypes.ListAsync(new QuerySpec<AssetType> { Filter = t => t.Id == typeId }, cancellationToken).ConfigureAwait(false);
+
+        if (types.Count == 0)
+        {
+            issues.Add(new IntervalIssue(IssueSeverity.Error, "Choose an asset type."));
+        }
 
         if (request.Tasks.All(t => string.IsNullOrWhiteSpace(t.Description)))
         {
@@ -152,12 +169,13 @@ internal sealed class ServiceTemplateService(
         return issues;
     }
 
-    /// <summary>Loads the interval settings of every active template.</summary>
+    /// <summary>Loads the interval settings of the active templates for one asset type (a chain saw's intervals are never compared with a mower's).</summary>
+    /// <param name="assetTypeId">The asset type, or <see langword="null"/> for every type.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The interval definitions.</returns>
-    private async Task<IReadOnlyCollection<IntervalDefinition>> LoadActiveIntervalsAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyCollection<IntervalDefinition>> LoadActiveIntervalsAsync(Guid? assetTypeId, CancellationToken cancellationToken)
     {
-        var active = await templates.ListAsync(new QuerySpec<ServiceTemplate> { Filter = t => t.IsActive }, cancellationToken).ConfigureAwait(false);
+        var active = await templates.ListAsync(new QuerySpec<ServiceTemplate> { Filter = t => t.IsActive && (assetTypeId == null || t.AssetTypeId == assetTypeId) }, cancellationToken).ConfigureAwait(false);
 
         return active.Select(t => t.ToIntervalDefinition()).ToList();
     }

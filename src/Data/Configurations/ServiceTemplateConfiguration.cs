@@ -16,6 +16,8 @@ internal sealed class ServiceTemplateConfiguration : IEntityTypeConfiguration<Se
 
         builder.Property(t => t.Name).HasMaxLength(100).IsRequired();
 
+        builder.HasOne(t => t.AssetType).WithMany().HasForeignKey(t => t.AssetTypeId).OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(t => t.Description).HasMaxLength(500);
 
         builder.Property(t => t.IntervalHours).HasPrecision(10, 2);

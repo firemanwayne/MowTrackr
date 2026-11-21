@@ -13,6 +13,9 @@ internal sealed class MowTrackrDbContext(DbContextOptions<MowTrackrDbContext> op
     /// <summary>Gets the mowers.</summary>
     public DbSet<Mower> Mowers => Set<Mower>();
 
+    /// <summary>Gets the asset types.</summary>
+    public DbSet<AssetType> AssetTypes => Set<AssetType>();
+
     /// <summary>Gets the equipment manufacturers.</summary>
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
 

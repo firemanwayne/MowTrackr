@@ -10,6 +10,10 @@ public sealed class ServiceTemplateRequest
     [StringLength(100)]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the asset type this template applies to (e.g. Chain Saw).</summary>
+    [Required]
+    public Guid? AssetTypeId { get; set; }
+
     /// <summary>Gets or sets an optional description.</summary>
     [StringLength(500)]
     public string? Description { get; set; }

@@ -8,6 +8,12 @@ public sealed class Mower : EntityBase
     /// <summary>Gets or sets the friendly name.</summary>
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>Gets or sets the asset type key.</summary>
+    public Guid AssetTypeId { get; set; }
+
+    /// <summary>Gets or sets the asset type.</summary>
+    public AssetType? AssetType { get; set; }
+
     /// <summary>Gets or sets the manufacturer key.</summary>
     public Guid ManufacturerId { get; set; }
 

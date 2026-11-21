@@ -20,11 +20,22 @@ internal static class ServiceTemplateExtensions
         return new ServiceTemplateResponse(
             template.Id,
             template.Name,
+            template.AssetTypeId,
+            template.AssetType?.Name ?? string.Empty,
+            template.DisplayName(),
             template.Description,
             template.IntervalHours,
             template.IntervalDays,
             template.IsActive,
             tasks);
+    }
+
+    /// <summary>Gets the name shown to people: the asset type followed by the template name ("Chain Saw Annual Maintenance").</summary>
+    /// <param name="template">The entity (asset type loaded).</param>
+    /// <returns>The display name.</returns>
+    public static string DisplayName(this ServiceTemplate template)
+    {
+        return template.AssetType is null ? template.Name : $"{template.AssetType.Name} {template.Name}";
     }
 
     /// <summary>Maps a template to the shape the interval validator compares against.</summary>
@@ -41,6 +52,8 @@ internal static class ServiceTemplateExtensions
     public static void Apply(this ServiceTemplate template, ServiceTemplateRequest request)
     {
         template.Name = request.Name.Trim();
+
+        template.AssetTypeId = request.AssetTypeId ?? Guid.Empty;
 
         template.Description = request.Description?.Trim();
 
