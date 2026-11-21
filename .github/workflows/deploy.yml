@@ -220,10 +220,10 @@ jobs:
 
       - name: Point the client at the deployed API
         run: |
-          echo '{ "ApiBaseUrl": "${{ needs.infra.outputs.apiUrl }}" }' > src/Client/wwwroot/appsettings.json
+          echo '{ "ApiBaseUrl": "${{ needs.infra.outputs.apiUrl }}" }' > src/Blazor/MowTrackr.Client/wwwroot/appsettings.json
 
       - name: Publish
-        run: dotnet publish src/Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
+        run: dotnet publish src/Blazor/MowTrackr.Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
 
       - uses: azure/login@v2
         with:

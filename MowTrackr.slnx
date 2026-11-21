@@ -7,9 +7,9 @@
     <Project Path="src/UseCases/MowTrackr.Application/MowTrackr.Application.csproj" />
     <Project Path="src/UseCases/MowTrackr.Application.UnitTests/MowTrackr.Application.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/Client/">
-    <Project Path="src/Client/MowTrackr.Client.csproj" />
-    <Project Path="src/Client.UnitTests/MowTrackr.Client.UnitTests.csproj" />
+  <Folder Name="/Blazor/">
+    <Project Path="src/Blazor/MowTrackr.Client/MowTrackr.Client.csproj" />
+    <Project Path="src/Blazor/MowTrackr.Client.UnitTests/MowTrackr.Client.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Api/">
     <Project Path="src/Api/MowTrackr.Api.csproj" />

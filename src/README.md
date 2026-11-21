@@ -1,13 +1,13 @@
 # src
 
-The shipped projects. Each project folder holds one project (`MowTrackr.<Folder>.csproj`), and namespaces mirror the folders. `Abstractions/`, `Domains/`, `Infrastructure/` and `UseCases/` only group projects; they hold no code themselves, and the projects inside them use their full `MowTrackr.<Name>` as the folder name. Each project's unit tests sit next to it in a sibling `<Project>.UnitTests` folder (for example `Client/` and `Client.UnitTests/`).
+The shipped projects. Each project folder holds one project (`MowTrackr.<Folder>.csproj`), and namespaces mirror the folders. `Abstractions/`, `Blazor/`, `Domains/`, `Infrastructure/` and `UseCases/` only group projects; they hold no code themselves, and the projects inside them use their full `MowTrackr.<Name>` as the folder name. Each project's unit tests sit next to it in a sibling `<Project>.UnitTests` folder (for example `Api/` and `Api.UnitTests/`).
 
 | Folder | What it is |
 | --- | --- |
 | `AppHost/` | .NET Aspire host. Starts the local SQL Server container, the API and the client together. |
 | `ServiceDefaults/` | Shared Aspire defaults: telemetry, health checks and resilience. |
 | `Api/` | The HTTP API: controllers only, JWT bearer authentication and external sign-in providers. |
-| `Client/` | The Blazor WebAssembly UI (Radzen components): pages, components and layout. |
+| `Blazor/MowTrackr.Client/` | The Blazor WebAssembly UI (Radzen components): pages, components and layout. |
 | `UseCases/MowTrackr.Application/` | The client's non-visual services: typed API clients, session and preferences, the token store, the bearer handler and the authentication state provider. |
 | `Abstractions/MowTrackr.Core/` | Contracts (request and response models), service and repository interfaces, constants, options and `Result<T>`. |
 | `Domains/MowTrackr.Assets/` | Domain: mowers, manufacturers and their models. |
@@ -27,7 +27,7 @@ folders mirror that project, so a test for `src/UseCases/MowTrackr.Application/S
 | --- | --- |
 | `UseCases/MowTrackr.Application.UnitTests/` | The client's handlers, providers and services, such as the label text parser. Uses fakes from `Fakes/`. |
 | `Domains/MowTrackr.Assets.UnitTests/` | Asset type rules: renaming, and refusing to delete a type that is in use. Uses NSubstitute. |
-| `Client.UnitTests/` | The Blazor client's page base class. |
+| `Blazor/MowTrackr.Client.UnitTests/` | The Blazor client's page base class. |
 | `Domains/MowTrackr.Maintenance.UnitTests/` | Maintenance rules, such as which inspection templates apply to a piece of equipment. |
 | `Abstractions/MowTrackr.Core.UnitTests/` | The shared constants (roles, routes, password policy). |
 | `Infrastructure/MowTrackr.Communications.UnitTests/` | Email templates. |

@@ -25,7 +25,8 @@ src/
   AppHost/          Aspire host - runs SQL, API and client locally
   ServiceDefaults/  Shared Aspire defaults (telemetry, health checks, resilience)
   Api/              HTTP API (controllers, JWT, external providers)
-  Client/           Blazor WebAssembly UI (pages, components, layout)
+  Blazor/
+    MowTrackr.Client/          Blazor WebAssembly UI (pages, components, layout)
   UseCases/
     MowTrackr.Application/     Client-side services: typed API clients, session, token store, handlers
   Abstractions/
