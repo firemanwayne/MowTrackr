@@ -65,43 +65,46 @@
                     {
                         var entry = DetailsOf(task);
 
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.75rem" Wrap="FlexWrap.Wrap" class="rz-ms-6 rz-mb-2">
+                        <div class="rz-ms-6 rz-mb-3">
                             @if (task.Product is not null)
                             {
-                                <div>
-                                    <RadzenLabel Text="@L["Use"]" />
-                                    <div>@task.Product</div>
-                                </div>
+                                <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-2">
+                                    @L["Use"]: <strong>@task.Product</strong>
+                                </RadzenText>
                             }
-                            @if (task.QuantityRequirement != DetailRequirement.None)
-                            {
-                                <div>
-                                    <RadzenLabel Text="@Mark(L["Quantity"], task.QuantityRequirement)" />
-                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
-                                        <RadzenNumeric TValue="decimal?" @bind-Value="entry.Quantity" Min="0" Step="0.25" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 110px" />
-                                        <span>@task.QuantityUnit</span>
-                                    </RadzenStack>
-                                </div>
-                            }
-                            @if (task.PartNumberRequirement != DetailRequirement.None)
-                            {
-                                <div>
-                                    <RadzenLabel Text="@Mark(L["Part number"], task.PartNumberRequirement)" />
-                                    <RadzenTextBox @bind-Value="entry.PartNumber" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 160px" />
-                                </div>
-                            }
-                            @if (task.NotesRequirement != DetailRequirement.None)
-                            {
-                                <div>
-                                    <RadzenLabel Text="@Mark(L["Notes"], task.NotesRequirement)" />
-                                    <RadzenTextBox @bind-Value="entry.Notes" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 260px" />
-                                </div>
-                            }
-                            @if (task.IsComplete && _isOpen)
-                            {
-                                <RadzenButton Text="@L["Save details"]" Icon="save" Size="ButtonSize.Small" Variant="Variant.Outlined" Disabled="@IsRunning($"details-{task.Id}")" Click="@(() => RunOnceAsync($"details-{task.Id}", () => SetTaskAsync(task, true)))" />
-                            }
-                        </RadzenStack>
+                            <RadzenRow Gap="0.75rem" AlignItems="AlignItems.End">
+                                @if (task.QuantityRequirement != DetailRequirement.None)
+                                {
+                                    <RadzenColumn Size="12" SizeMD="4">
+                                        <RadzenLabel Text="@Mark(L["Quantity"], task.QuantityRequirement)" Style="display: block" />
+                                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                            <RadzenNumeric TValue="decimal?" @bind-Value="entry.Quantity" Min="0" Step="0.25" Disabled="@(!_isOpen || ServiceLocked)" Style="flex: 1; min-width: 0" />
+                                            <span>@task.QuantityUnit</span>
+                                        </RadzenStack>
+                                    </RadzenColumn>
+                                }
+                                @if (task.PartNumberRequirement != DetailRequirement.None)
+                                {
+                                    <RadzenColumn Size="12" SizeMD="4">
+                                        <RadzenLabel Text="@Mark(L["Part number"], task.PartNumberRequirement)" Style="display: block" />
+                                        <RadzenTextBox @bind-Value="entry.PartNumber" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 100%" />
+                                    </RadzenColumn>
+                                }
+                                @if (task.NotesRequirement != DetailRequirement.None)
+                                {
+                                    <RadzenColumn Size="12" SizeMD="4">
+                                        <RadzenLabel Text="@Mark(L["Notes"], task.NotesRequirement)" Style="display: block" />
+                                        <RadzenTextBox @bind-Value="entry.Notes" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 100%" />
+                                    </RadzenColumn>
+                                }
+                                @if (task.IsComplete && _isOpen)
+                                {
+                                    <RadzenColumn Size="12" SizeMD="12">
+                                        <RadzenButton Text="@L["Save details"]" Icon="save" Size="ButtonSize.Small" Variant="Variant.Outlined" Disabled="@IsRunning($"details-{task.Id}")" Click="@(() => RunOnceAsync($"details-{task.Id}", () => SetTaskAsync(task, true)))" />
+                                    </RadzenColumn>
+                                }
+                            </RadzenRow>
+                        </div>
                     }
                 }
             </RadzenStack>
