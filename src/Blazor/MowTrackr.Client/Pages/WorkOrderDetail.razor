@@ -1,0 +1,179 @@
+@page "/work-orders/{Id:guid}"
+@attribute [Authorize]
+@inherits PageBase
+@inject IMaintenanceApiService MaintenanceApi
+
+<div class="page">
+    <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+        @_error
+    </RadzenAlert>
+    @if (_order is null)
+    {
+        <p>@L["Loading..."]</p>
+    }
+    else
+    {
+        <h1>@_order.TemplateName &mdash; @_order.MowerName</h1>
+        <RadzenText TextStyle="TextStyle.Body2">
+            @L["Status"]: <RadzenBadge Text="@StatusText(_order.Status)" BadgeStyle="@StatusStyle(_order.Status)" />
+            @if (_order.ScheduledFor is { } scheduled)
+            {
+                <span>&middot; @L["Scheduled"] @scheduled.ToString("d")</span>
+            }
+        </RadzenText>
+        <div class="rz-my-4" style="max-width: 20rem">
+            <RadzenLabel Text="@L["Engine hours at start"]" Component="HoursStart" />
+            <RadzenNumeric TValue="decimal?" Value="_order.EngineHoursAtStart" ReadOnly="true" Name="HoursStart" Style="width: 100%" />
+        </div>
+        <RadzenStack Gap="0.5rem" class="rz-my-4">
+            @{
+                string? previousSource = null;
+            }
+            @foreach (var task in _order.Tasks)
+            {
+                @if (task.Source is not null && task.Source != previousSource)
+                {
+                    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-3 rz-mb-0">
+                        @task.Source
+                    </RadzenText>
+                }
+
+                previousSource = task.Source;
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
+                    <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
+                    <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
+                </RadzenStack>
+            }
+        </RadzenStack>
+        @if (_isOpen)
+        {
+            <EditForm Model="_completion" OnValidSubmit="@(() => RunOnceAsync("complete", CompleteAsync))">
+                <DataAnnotationsValidator />
+                <RadzenCard>
+                    <RadzenStack Gap="0.75rem">
+                        <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
+                            @L["Complete this work order"]
+                        </RadzenText>
+                        <div>
+                            <RadzenLabel Text="@L["Engine hours when done"]" Component="Hours" />
+                            <RadzenNumeric TValue="decimal" @bind-Value="_completion.EngineHoursAtService" Name="Hours" Min="@MinimumHours" Step="0.1" Style="width: 100%" />
+                            <ValidationMessage For="@(() => _completion.EngineHoursAtService)" />
+                            @if (_hoursError is not null)
+                            {
+                                <div class="validation-message">
+                                    @_hoursError
+                                </div>
+                            }
+                        </div>
+                        <div>
+                            <RadzenLabel Text="@L["Notes"]" Component="Notes" />
+                            <RadzenTextArea @bind-Value="_completion.Notes" Name="Notes" Rows="3" Style="width: 100%" />
+                        </div>
+                        <div>
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="@IsRunning("complete")" Disabled="@(IsRunning("complete") || _order.Tasks.Any(t => t.IsRequired && !t.IsComplete) || _completion.EngineHoursAtService < MinimumHours)" />
+                        </div>
+                    </RadzenStack>
+                </RadzenCard>
+            </EditForm>
+        }
+        else if (_order.CompletedAt is { } completedAt)
+        {
+            <RadzenText TextStyle="TextStyle.Body2">
+                @L["Completed {0} at {1} engine hours.", completedAt.LocalDateTime.ToString("g"), _order.EngineHoursAtService?.ToString("0.#") ?? "-"]
+            </RadzenText>
+        }
+    }
+</div>
+
+@code {
+    private readonly CompleteWorkOrderRequest _completion = new();
+
+    private WorkOrderResponse? _order;
+
+    private string? _error;
+
+    private string? _hoursError;
+    private decimal MinimumHours => _order?.EngineHoursAtStart ?? 0m;
+
+    /// <summary>Gets or sets the work order key from the route.</summary>
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _isOpen => _order is { Status: WorkOrderStatus.Scheduled or WorkOrderStatus.InProgress };
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        var result = await MaintenanceApi.GetWorkOrderAsync(Id, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            _order = result.Value;
+
+            PrefillHours();
+        }
+        else
+        {
+            _error = result.Error;
+        }
+    }
+
+    /// <summary>Starts the "hours when done" field at the starting hours so it can never begin below them.</summary>
+    private void PrefillHours()
+    {
+        if (_completion.EngineHoursAtService < MinimumHours)
+        {
+            _completion.EngineHoursAtService = MinimumHours;
+        }
+    }
+
+    /// <summary>Checks or unchecks a task.</summary>
+    /// <param name="task">The task.</param>
+    /// <param name="isChecked">The new state.</param>
+    /// <returns>A task.</returns>
+    private async Task SetTaskAsync(WorkOrderTaskResponse task, bool isChecked)
+    {
+        var result = await MaintenanceApi.SetTaskAsync(Id, task.Id, isChecked, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            _order = result.Value;
+
+            _error = null;
+
+            PrefillHours();
+
+            return;
+        }
+
+        NotifyError(result.Error ?? L["Could not update the task."]);
+    }
+
+    /// <summary>Completes the work order.</summary>
+    /// <returns>A task.</returns>
+    private async Task CompleteAsync()
+    {
+        _hoursError = null;
+
+        if (_completion.EngineHoursAtService < MinimumHours)
+        {
+            _hoursError = L["Engine hours when done cannot be less than {0}.", MinimumHours.ToString("0.##")];
+
+            return;
+        }
+
+        var result = await MaintenanceApi.CompleteAsync(Id, _completion, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            _order = result.Value;
+
+            NotifySuccess(L["Work order completed."]);
+        }
+        else
+        {
+            NotifyError(result.Error ?? L["Could not complete the work order."]);
+        }
+    }
+}

@@ -3,28 +3,35 @@
     <Project Path="src/AppHost/MowTrackr.AppHost.csproj" />
     <Project Path="src/ServiceDefaults/MowTrackr.ServiceDefaults.csproj" />
   </Folder>
-  <Folder Name="/Client/">
-    <Project Path="src/Client/MowTrackr.Client.csproj" />
+  <Folder Name="/UseCases/">
+    <Project Path="src/UseCases/MowTrackr.Application/MowTrackr.Application.csproj" />
+    <Project Path="src/UseCases/MowTrackr.Application.UnitTests/MowTrackr.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Blazor/">
+    <Project Path="src/Blazor/MowTrackr.Client/MowTrackr.Client.csproj" />
+    <Project Path="src/Blazor/MowTrackr.Client.UnitTests/MowTrackr.Client.UnitTests.csproj" />
   </Folder>
   <Folder Name="/Api/">
     <Project Path="src/Api/MowTrackr.Api.csproj" />
   </Folder>
+  <Folder Name="/Abstractions/">
+    <Project Path="src/Abstractions/MowTrackr.Core/MowTrackr.Core.csproj" />
+    <Project Path="src/Abstractions/MowTrackr.Core.UnitTests/MowTrackr.Core.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/Domains/">
-    <Project Path="src/Assets/MowTrackr.Assets.csproj" />
-    <Project Path="src/Communications/MowTrackr.Communications.csproj" />
-    <Project Path="src/Identity/MowTrackr.Identity.csproj" />
-    <Project Path="src/Maintenance/MowTrackr.Maintenance.csproj" />
+    <Project Path="src/Domains/MowTrackr.Assets/MowTrackr.Assets.csproj" />
+    <Project Path="src/Domains/MowTrackr.Assets.UnitTests/MowTrackr.Assets.UnitTests.csproj" />
+    <Project Path="src/Domains/MowTrackr.Maintenance/MowTrackr.Maintenance.csproj" />
+    <Project Path="src/Domains/MowTrackr.Maintenance.UnitTests/MowTrackr.Maintenance.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/Foundation/">
-    <Project Path="src/Core/MowTrackr.Core.csproj" />
-    <Project Path="src/Data/MowTrackr.Data.csproj" />
-    <Project Path="src/Localization/MowTrackr.Localization.csproj" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="tests/Client/MowTrackr.Client.UnitTests.csproj" />
-    <Project Path="tests/Communications/MowTrackr.Communications.UnitTests.csproj" />
-    <Project Path="tests/Core/MowTrackr.Core.UnitTests.csproj" />
-    <Project Path="tests/Identity/MowTrackr.Identity.UnitTests.csproj" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Infrastructure/MowTrackr.Communications/MowTrackr.Communications.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Communications.UnitTests/MowTrackr.Communications.UnitTests.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Data/MowTrackr.Data.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Data.UnitTests/MowTrackr.Data.UnitTests.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Identity/MowTrackr.Identity.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Identity.UnitTests/MowTrackr.Identity.UnitTests.csproj" />
+    <Project Path="src/Infrastructure/MowTrackr.Localization/MowTrackr.Localization.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />

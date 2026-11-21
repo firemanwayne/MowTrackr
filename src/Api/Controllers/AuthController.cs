@@ -1,11 +1,12 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+
 using MowTrackr.Api.Extensions;
 using MowTrackr.Core.Contracts.Identity;
 using MowTrackr.Core.Options;
+
+using System.Security.Claims;
 
 namespace MowTrackr.Api.Controllers;
 
@@ -20,7 +21,11 @@ namespace MowTrackr.Api.Controllers;
 [AllowAnonymous]
 [EnableRateLimiting(RateLimitPolicies.Auth)]
 [Route(ApiRoutes.Auth)]
-public sealed class AuthController(IAuthService auth, IInvitationService invitations, IAuthenticationSchemeProvider schemes, IOptions<ClientOptions> client) : ControllerBase
+public sealed class AuthController(
+    IAuthService auth,
+    IInvitationService invitations,
+    IAuthenticationSchemeProvider schemes,
+    IOptions<ClientOptions> client) : ControllerBase
 {
     private const string LoginProviderKey = "LoginProvider";
 
@@ -30,7 +35,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpGet("registration")]
     public async Task<IActionResult> GetRegistrationAsync(CancellationToken cancellationToken)
     {
-        var result = await auth.GetRegistrationStatusAsync(cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .GetRegistrationStatusAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -42,7 +49,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpGet("invitation")]
     public async Task<IActionResult> GetInvitationAsync([FromQuery] string token, CancellationToken cancellationToken)
     {
-        var result = await invitations.PreviewAsync(token, cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .PreviewAsync(token, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -54,7 +63,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpPost("accept-invitation")]
     public async Task<IActionResult> AcceptInvitationAsync([FromBody] AcceptInvitationRequest request, CancellationToken cancellationToken)
     {
-        var result = await invitations.AcceptAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await invitations
+            .AcceptAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -66,7 +77,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpPost("confirm-email")]
     public async Task<IActionResult> ConfirmEmailAsync([FromBody] ConfirmEmailRequest request, CancellationToken cancellationToken)
     {
-        var result = await auth.ConfirmEmailAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .ConfirmEmailAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -78,7 +91,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpPost("resend-confirmation")]
     public async Task<IActionResult> ResendConfirmationAsync([FromBody] ResendConfirmationRequest request, CancellationToken cancellationToken)
     {
-        var result = await auth.ResendConfirmationAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .ResendConfirmationAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -90,7 +105,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var result = await auth.RegisterAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .RegisterAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -102,7 +119,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpPost("login")]
     public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        var result = await auth.LoginAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .LoginAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -112,9 +131,14 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpGet("providers")]
     public async Task<IActionResult> GetProvidersAsync()
     {
-        var all = await schemes.GetAllSchemesAsync().ConfigureAwait(false);
+        var all = await schemes
+            .GetAllSchemesAsync()
+            .ConfigureAwait(false);
 
-        var enabled = all.Select(s => s.Name).Where(n => AuthProviders.All.Contains(n)).ToList();
+        var enabled = all
+            .Select(s => s.Name)
+            .Where(n => AuthProviders.All.Contains(n))
+            .ToList();
 
         return Ok(enabled);
     }
@@ -125,7 +149,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     [HttpGet("external/{provider}")]
     public async Task<IActionResult> ExternalAsync(string provider)
     {
-        var scheme = await schemes.GetSchemeAsync(provider).ConfigureAwait(false);
+        var scheme = await schemes
+            .GetSchemeAsync(provider)
+            .ConfigureAwait(false);
 
         if (scheme is null || !AuthProviders.All.Contains(scheme.Name))
         {
@@ -147,7 +173,9 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
     {
         var baseUrl = client.Value.BaseUrl.TrimEnd('/');
 
-        var external = await HttpContext.AuthenticateAsync(ExternalAuthenticationExtensions.ExternalScheme).ConfigureAwait(false);
+        var external = await HttpContext
+            .AuthenticateAsync(ExternalAuthenticationExtensions.ExternalScheme)
+            .ConfigureAwait(false);
 
         if (!external.Succeeded || external.Principal is null)
         {
@@ -169,9 +197,13 @@ public sealed class AuthController(IAuthService auth, IInvitationService invitat
             principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
             principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty);
 
-        await HttpContext.SignOutAsync(ExternalAuthenticationExtensions.ExternalScheme).ConfigureAwait(false);
+        await HttpContext
+            .SignOutAsync(ExternalAuthenticationExtensions.ExternalScheme)
+            .ConfigureAwait(false);
 
-        var result = await auth.ExternalLoginAsync(command, cancellationToken).ConfigureAwait(false);
+        var result = await auth
+            .ExternalLoginAsync(command, cancellationToken)
+            .ConfigureAwait(false);
 
         if (!result.IsSuccess || result.Value is null)
         {

@@ -20,7 +20,9 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> GetDueAsync([FromQuery] MaintenanceDueQuery query, CancellationToken cancellationToken)
     {
-        var result = await maintenance.GetDueAsync(query, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .GetDueAsync(query, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -33,7 +35,9 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     [Authorize(Roles = AppRoles.ManagerOrAdmin)]
     public async Task<IActionResult> CreateWorkOrderAsync([FromBody] WorkOrderCreateRequest request, CancellationToken cancellationToken)
     {
-        var result = await maintenance.CreateWorkOrderAsync(request, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .CreateWorkOrderAsync(request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -50,7 +54,9 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
             query.AssignedToUserId = User.GetUserId();
         }
 
-        var result = await maintenance.ListWorkOrdersAsync(query, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .ListWorkOrdersAsync(query, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -62,7 +68,9 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     [HttpGet("work-orders/{id:guid}")]
     public async Task<IActionResult> GetWorkOrderAsync(Guid id, CancellationToken cancellationToken)
     {
-        var result = await maintenance.GetWorkOrderAsync(id, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .GetWorkOrderAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         if (result.IsSuccess && !CanAccess(result.Value!))
         {
@@ -83,7 +91,9 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     {
         var command = new TaskCompletionCommand(id, taskId, request.IsComplete, User.GetUserId(), User.IsManagerOrAdmin());
 
-        var result = await maintenance.SetTaskCompletionAsync(command, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .SetTaskCompletionAsync(command, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }
@@ -96,14 +106,18 @@ public sealed class MaintenanceController(IMaintenanceService maintenance) : Con
     [HttpPost("work-orders/{id:guid}/complete")]
     public async Task<IActionResult> CompleteAsync(Guid id, [FromBody] CompleteWorkOrderRequest request, CancellationToken cancellationToken)
     {
-        var existing = await maintenance.GetWorkOrderAsync(id, cancellationToken).ConfigureAwait(false);
+        var existing = await maintenance
+            .GetWorkOrderAsync(id, cancellationToken)
+            .ConfigureAwait(false);
 
         if (existing.IsSuccess && !CanAccess(existing.Value!))
         {
             return Forbid();
         }
 
-        var result = await maintenance.CompleteWorkOrderAsync(id, request, cancellationToken).ConfigureAwait(false);
+        var result = await maintenance
+            .CompleteWorkOrderAsync(id, request, cancellationToken)
+            .ConfigureAwait(false);
 
         return result.ToActionResult();
     }

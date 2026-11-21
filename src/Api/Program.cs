@@ -1,5 +1,6 @@
-using MowTrackr.Api.Extensions;
 using Microsoft.AspNetCore.HttpOverrides;
+
+using MowTrackr.Api.Extensions;
 using MowTrackr.Assets;
 using MowTrackr.Communications;
 using MowTrackr.Core.Options;
@@ -23,7 +24,10 @@ builder.Services
     .AddIdentityServices()
     .AddExternalProviders(builder.Configuration);
 
-builder.Services.AddOptions<ClientOptions>().BindConfiguration(ClientOptions.SectionName);
+builder
+    .Services
+    .AddOptions<ClientOptions>()
+    .BindConfiguration(ClientOptions.SectionName);
 
 var clientUrl = builder.Configuration[$"{ClientOptions.SectionName}:{nameof(ClientOptions.BaseUrl)}"] ?? new ClientOptions().BaseUrl;
 
@@ -47,9 +51,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-builder.Services.AddProblemDetails();
-
-builder.Services.AddControllers();
+builder
+    .Services
+    .AddProblemDetails()
+    .AddControllers();
 
 builder.Services.AddOpenApi();
 

@@ -1,0 +1,188 @@
+@inherits PageBase
+@inject IServiceTemplateApiService TemplateApi
+@inject IAssetTypeApiService AssetTypeApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Type"]" Component="AssetType" />
+            <RadzenDropDown TValue="Guid?" Value="_model.AssetTypeId" ValueChanged="OnAssetTypeChangedAsync" Data="_assetTypes" TextProperty="Name" ValueProperty="Id" Name="AssetType" AllowFiltering="true" Placeholder="@L["Select a type"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.AssetTypeId)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Name"]" Component="Name" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="Name" Placeholder="@L["e.g. Quarterly Maintenance"]" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.Name)" />
+        </div>
+        <div>
+            <RadzenLabel Text="@L["Description"]" Component="Description" />
+            <RadzenTextArea @bind-Value="_model.Description" Name="Description" Rows="2" Style="width: 100%" />
+        </div>
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Due every (engine hours)"]" Component="IntervalHours" />
+                <RadzenNumeric TValue="decimal?" Value="_model.IntervalHours" ValueChanged="OnHoursChangedAsync" Name="IntervalHours" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenLabel Text="@L["Due every (days)"]" Component="IntervalDays" />
+                <RadzenNumeric TValue="int?" Value="_model.IntervalDays" ValueChanged="OnDaysChangedAsync" Name="IntervalDays" Min="0" Step="1" Placeholder="@L["optional"]" Style="width: 100%" />
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenText TextStyle="TextStyle.Caption">
+            @L["Set hours, days, or both. Whichever comes first makes the service due."]
+        </RadzenText>
+        @foreach (var issue in _issues)
+        {
+            <RadzenAlert AlertStyle="@(issue.Severity == IssueSeverity.Error ? AlertStyle.Danger : AlertStyle.Warning)" AllowClose="false" Variant="Variant.Flat" Size="AlertSize.Small">
+                @issue.Message
+            </RadzenAlert>
+        }
+        <div>
+            <RadzenCheckBox TValue="bool" @bind-Value="_model.IsActive" Name="IsActive" />
+            <RadzenLabel Text="@L["Active (used for due checks)"]" Component="IsActive" class="rz-ms-2" />
+        </div>
+        <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
+            @L["Checklist"]
+        </RadzenText>
+        @for (var i = 0; i < _model.Tasks.Count; i++)
+        {
+            var index = i;
+
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenTextBox @bind-Value="_model.Tasks[index].Description" Placeholder="@L["Task description"]" Style="flex: 1" />
+                <RadzenCheckBox TValue="bool" @bind-Value="_model.Tasks[index].IsRequired" Name="@($"required-{index}")" />
+                <RadzenLabel Text="@L["Required"]" Component="@($"required-{index}")" />
+                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="@(() => _model.Tasks.RemoveAt(index))" />
+            </RadzenStack>
+        }
+        <div>
+            <RadzenButton Text="@L["Add task"]" Icon="add" Variant="Variant.Outlined" Size="ButtonSize.Small" Click="@(() => _model.Tasks.Add(new ServiceTaskRequest()))" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private ServiceTemplateRequest _model = new();
+
+    private IReadOnlyList<IntervalIssue> _issues = [];
+
+    private List<AssetTypeResponse> _assetTypes = [];
+
+    private string? _error;
+    /// <summary>Gets or sets the template being edited; <see langword="null"/> creates a new one.</summary>
+    [Parameter]
+    public ServiceTemplateResponse? Existing { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var types = await AssetTypeApi.ListAsync(Cancellation);
+
+        _assetTypes = types.Value ?? [];
+
+        _error = types.IsSuccess ? null : types.Error;
+
+        if (Existing is null)
+        {
+            _model.Tasks.Add(new ServiceTaskRequest());
+
+            return;
+        }
+
+        _model = new ServiceTemplateRequest
+        {
+            Name = Existing.Name,
+            AssetTypeId = Existing.AssetTypeId,
+            Description = Existing.Description,
+            IntervalHours = Existing.IntervalHours,
+            IntervalDays = Existing.IntervalDays,
+            IsActive = Existing.IsActive,
+            Tasks = Existing.Tasks.Select(t => new ServiceTaskRequest { Description = t.Description, IsRequired = t.IsRequired }).ToList(),
+        };
+    }
+
+    /// <summary>Handles a change to the asset type and re-validates, since intervals are compared within one type.</summary>
+    /// <param name="value">The new type key.</param>
+    /// <returns>A task.</returns>
+    private Task OnAssetTypeChangedAsync(Guid? value)
+    {
+        _model.AssetTypeId = value;
+
+        return CheckAsync();
+    }
+
+    /// <summary>Handles a change to the hours interval and re-validates.</summary>
+    /// <param name="value">The new value.</param>
+    /// <returns>A task.</returns>
+    private Task OnHoursChangedAsync(decimal? value)
+    {
+        _model.IntervalHours = value is > 0 ? value : null;
+
+        return CheckAsync();
+    }
+
+    /// <summary>Handles a change to the days interval and re-validates.</summary>
+    /// <param name="value">The new value.</param>
+    /// <returns>A task.</returns>
+    private Task OnDaysChangedAsync(int? value)
+    {
+        _model.IntervalDays = value is > 0 ? value : null;
+
+        return CheckAsync();
+    }
+
+    /// <summary>Asks the API whether the current interval duplicates or overlaps another template.</summary>
+    /// <returns>A task.</returns>
+    private async Task CheckAsync()
+    {
+        var request = new IntervalCheckRequest
+        {
+            IntervalHours = _model.IntervalHours,
+            IntervalDays = _model.IntervalDays,
+            AssetTypeId = _model.AssetTypeId,
+            ExcludeTemplateId = Existing?.Id,
+        };
+
+        var result = await TemplateApi.CheckIntervalsAsync(request, Cancellation);
+
+        _issues = result.Value ?? [];
+    }
+
+    /// <summary>Saves the template; blocking conflicts are shown inline.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        var result = Existing is null
+            ? await TemplateApi.CreateAsync(_model, Cancellation)
+            : await TemplateApi.UpdateAsync(Existing.Id, _model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            NotifySuccess(L["Template saved."]);
+
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        if (result.Value?.Issues is { Count: > 0 } issues)
+        {
+            _issues = issues;
+        }
+        else
+        {
+            _error = result.Error;
+        }
+    }
+}
