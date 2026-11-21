@@ -122,6 +122,19 @@ foreach ($environment in $Environments) {
     }
 }
 
+# The prod deploy waits for approval on this environment (a deploy run pauses at its approve job). Create it with the
+# signed-in GitHub user as the required reviewer, limited to main. Add more reviewers under Settings > Environments.
+Write-Host '[prod-approval] GitHub environment with a required reviewer...'
+$reviewerId = gh api user --jq .id
+$approval = @{
+    wait_timer                = 0
+    prevent_self_review       = $false
+    reviewers                 = @(@{ type = 'User'; id = [int]$reviewerId })
+    deployment_branch_policy  = @{ protected_branches = $false; custom_branch_policies = $true }
+} | ConvertTo-Json -Depth 5
+$approval | gh api --method PUT "repos/$Repository/environments/prod-approval" --input - --silent
+'{"name":"main","type":"branch"}' | gh api --method POST "repos/$Repository/environments/prod-approval/deployment-branch-policies" --input - --silent
+
 # Shared resources (the DNS zone). Environments add their custom-domain records here (a nested deployment into this group), so the deploy app gets Contributor on it.
 Write-Host '[shared] Resource group and DNS access...'
 az group create --name mowtrackr-rg-shared --location $Location `
@@ -131,6 +144,6 @@ az role assignment create --assignee $appId --role Contributor `
 
 Write-Host ''
 Write-Host 'Done. Next:'
-Write-Host '  1. Optional: add required reviewers to the prod environment (Settings > Environments).'
+Write-Host '  1. Optional: add more required reviewers to the prod-approval environment (Settings > Environments).'
 Write-Host '  2. Optional: add GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET (and FACEBOOK_*, LINKEDIN_*) as environment secrets to enable those sign-ins.'
-Write-Host '  3. Push to dev (deploys dev), or run the Deploy workflow from the Actions tab and pick an environment.'
+Write-Host '  3. Merge to main (deploys dev, then waits for approval to deploy prod), or run the Deploy workflow from the Actions tab.'

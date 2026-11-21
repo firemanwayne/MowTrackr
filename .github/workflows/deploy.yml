@@ -1,20 +1,16 @@
 name: Deploy
 
-# Provisions an environment from infra/ (Bicep), then publishes the API and the client.
-#   push to dev       -> dev   (feature branches merge into dev by pull request; dev holds what is deployed to the dev site)
-#   manual run        -> dev or prod, optionally as a what-if only. prod can only be run from main,
-#                        which receives dev through a pull request once the dev site has been checked.
+# Trunk-based: main is the only long-lived branch. Feature, fix and chore branches merge into main by pull request.
+#   merge to main    -> deploys dev (dev.mowtrackr.com), then waits for approval to deploy prod
+#   approval         -> the "prod-approval" environment lists who may approve; approve (or reject) the run in the Actions tab
+#   manual run       -> dev, or prod (also behind the approval, and only from main), optionally as a what-if only
+# Each environment is provisioned and published by deploy-environment.yml.
 # Sign-in to Azure uses OpenID Connect (no stored Azure credentials). Run infra/bootstrap.ps1 once to set it up;
 # until the AZURE_* variables exist the deploy jobs are skipped, and CI still runs on every push.
-#
-#   Repository variables  : AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
-#   Environment variables : AZURE_RESOURCE_GROUP                       (dev, prod)
-#   Environment secrets   : JWT_SIGNING_KEY                            (dev, prod)
-#   Optional secrets      : GOOGLE_CLIENT_ID/SECRET, FACEBOOK_CLIENT_ID/SECRET, LINKEDIN_CLIENT_ID/SECRET
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
     paths-ignore:
       - 'README.md'
       - 'docs/**'
@@ -34,218 +30,53 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: deploy-${{ github.event.inputs.environment || 'dev' }}
-  cancel-in-progress: false
-
 permissions:
   id-token: write
   contents: read
 
-env:
-  DOTNET_VERSION: 10.0.x
-  TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
-
 jobs:
-  validate:
-    name: Build and validate
+  dev:
+    name: Dev
+    if: ${{ github.event_name == 'push' || inputs.environment == 'dev' }}
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: dev
+      what_if: ${{ inputs.what_if == true }}
+    secrets: inherit
+
+  approve-prod:
+    name: Approve prod
+    needs: dev
+    if: ${{ !cancelled() && (needs.dev.result == 'success' || needs.dev.result == 'skipped') && github.ref == 'refs/heads/main' && (github.event_name == 'push' || (inputs.environment == 'prod' && inputs.what_if != true)) }}
     runs-on: ubuntu-latest
+    # Required reviewers are configured on this environment, so the job waits here until someone approves.
+    environment: prod-approval
     steps:
-      - name: Require main for prod
-        if: ${{ github.event.inputs.environment == 'prod' && github.ref != 'refs/heads/main' }}
-        run: |
-          echo "::error::prod can only be deployed from main (this run is on ${{ github.ref_name }})."
-          exit 1
-
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Build
-        run: dotnet build MowTrackr.slnx --configuration Release
-
-      - name: Test
-        run: dotnet test MowTrackr.slnx --configuration Release --no-build
-
-      - name: Validate Bicep
-        run: |
-          az bicep build --file infra/main.bicep --stdout > /dev/null
-          for env in dev prod; do
-            az bicep build-params --file "infra/parameters/$env.bicepparam" --stdout > /dev/null
-          done
-
-  infra:
-    name: Provision ${{ github.event.inputs.environment || 'dev' }}
-    needs: validate
-    if: ${{ vars.AZURE_CLIENT_ID != '' }}
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
-    env:
-      # Mail is sent from invitations@<EMAIL_DOMAIN>; the domain's DNS records live in the shared mowtrackr.com zone.
-      # (dev uses a mail. subdomain because dev.mowtrackr.com is a CNAME to the client, and a CNAME cannot share a name with TXT records.)
-      EMAIL_DOMAIN: ${{ (github.event.inputs.environment || 'dev') == 'prod' && 'mowtrackr.com' || 'mail.dev.mowtrackr.com' }}
-      EMAIL_SERVICE: mowtrackr-email-${{ github.event.inputs.environment || 'dev' }}-001
-    outputs:
-      apiName: ${{ steps.deploy.outputs.apiName }}
-      apiUrl: ${{ steps.deploy.outputs.apiUrl }}
-      clientName: ${{ steps.deploy.outputs.clientName }}
-      clientUrl: ${{ steps.deploy.outputs.clientUrl }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      # A custom email domain can only be linked once Azure has verified its DNS records. If it already has been
-      # (every deploy after the first), link it in the same pass; otherwise the first pass creates the domain and
-      # records, and the steps below verify it and link it.
-      - name: Check email domain
-        id: emailstate
-        run: |
-          echo "linked=$(bash infra/scripts/email-domain.sh state "${{ vars.AZURE_RESOURCE_GROUP }}" "$EMAIL_SERVICE" "$EMAIL_DOMAIN")" >> "$GITHUB_OUTPUT"
-
-      - name: What-if
-        if: ${{ github.event.inputs.what_if == 'true' }}
+      # An approval can arrive long after the run started. Never deploy an older commit than what is on main now.
+      - name: Require the latest commit on main
         env:
-          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
-          LINK_EMAIL_DOMAIN: ${{ steps.emailstate.outputs.linked }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          az deployment group what-if \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --template-file infra/main.bicep \
-            --parameters "infra/parameters/${TARGET_ENV}.bicepparam"
+          latest=$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)
+          if [ "$latest" != "${{ github.sha }}" ]; then
+            echo "::error::A newer commit is on main ($latest). Approve the run for that commit instead of this one."
+            exit 1
+          fi
 
-      - name: Deploy Bicep
-        id: deploy
-        if: ${{ github.event.inputs.what_if != 'true' }}
-        env:
-          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
-          SMS_SENDER_NUMBER: ${{ vars.SMS_SENDER_NUMBER }}
-          LINK_EMAIL_DOMAIN: ${{ steps.emailstate.outputs.linked }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
-          FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
-          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
-          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
-        run: |
-          outputs=$(az deployment group create \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "mowtrackr-${TARGET_ENV}-${{ github.run_number }}" \
-            --template-file infra/main.bicep \
-            --parameters "infra/parameters/${TARGET_ENV}.bicepparam" \
-            --query properties.outputs --output json)
+  prod:
+    name: Prod
+    needs: approve-prod
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: prod
+      what_if: false
+    secrets: inherit
 
-          for key in apiName apiUrl clientName clientUrl; do
-            echo "$key=$(echo "$outputs" | jq -r ".$key.value")" >> "$GITHUB_OUTPUT"
-          done
-
-          {
-            echo "### ${TARGET_ENV} deployed"
-            echo "- API: $(echo "$outputs" | jq -r .apiUrl.value)"
-            echo "- Client: $(echo "$outputs" | jq -r .clientUrl.value)"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Verify email domain
-        id: emailverify
-        if: ${{ github.event.inputs.what_if != 'true' && steps.emailstate.outputs.linked != 'true' }}
-        run: |
-          echo "verified=$(bash infra/scripts/email-domain.sh verify "${{ vars.AZURE_RESOURCE_GROUP }}" "$EMAIL_SERVICE" "$EMAIL_DOMAIN" 600)" >> "$GITHUB_OUTPUT"
-
-      - name: Link email domain
-        if: ${{ steps.emailverify.outputs.verified == 'true' }}
-        env:
-          JWT_SIGNING_KEY: ${{ secrets.JWT_SIGNING_KEY }}
-          LINK_EMAIL_DOMAIN: 'true'
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          FACEBOOK_CLIENT_ID: ${{ secrets.FACEBOOK_CLIENT_ID }}
-          FACEBOOK_CLIENT_SECRET: ${{ secrets.FACEBOOK_CLIENT_SECRET }}
-          LINKEDIN_CLIENT_ID: ${{ secrets.LINKEDIN_CLIENT_ID }}
-          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
-        run: |
-          az deployment group create \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "mowtrackr-${TARGET_ENV}-${{ github.run_number }}-email" \
-            --template-file infra/main.bicep \
-            --parameters "infra/parameters/${TARGET_ENV}.bicepparam" \
-            --output none
-          echo "Email now sends from invitations@${EMAIL_DOMAIN}" >> "$GITHUB_STEP_SUMMARY"
-
-  deploy-api:
-    name: Deploy API
-    needs: infra
-    if: ${{ github.event.inputs.what_if != 'true' }}
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Publish
-        run: dotnet publish src/Api/MowTrackr.Api.csproj --configuration Release --output ./publish/api
-
-      - uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Deploy to App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ needs.infra.outputs.apiName }}
-          package: ./publish/api
-
-  deploy-client:
-    name: Deploy client
-    needs: infra
-    if: ${{ github.event.inputs.what_if != 'true' }}
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Point the client at the deployed API
-        run: |
-          echo '{ "ApiBaseUrl": "${{ needs.infra.outputs.apiUrl }}" }' > src/Blazor/MowTrackr.Client/wwwroot/appsettings.json
-
-      - name: Publish
-        run: dotnet publish src/Blazor/MowTrackr.Client/MowTrackr.Client.csproj --configuration Release --output ./publish/client
-
-      - uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Get the Static Web App deployment token
-        id: token
-        run: |
-          token=$(az staticwebapp secrets list --name "${{ needs.infra.outputs.clientName }}" --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" --query properties.apiKey --output tsv)
-          echo "::add-mask::$token"
-          echo "value=$token" >> "$GITHUB_OUTPUT"
-
-      - name: Apply Content-Security-Policy
-        run: python3 infra/scripts/apply-csp.py ./publish/client/wwwroot "${{ needs.infra.outputs.apiUrl }}"
-
-      - name: Deploy to Static Web Apps
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ steps.token.outputs.value }}
-          action: upload
-          app_location: ./publish/client/wwwroot
-          skip_app_build: true
-          skip_api_build: true
+  prod-what-if:
+    name: Prod what-if
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.environment == 'prod' && inputs.what_if == true && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/deploy-environment.yml
+    with:
+      environment: prod
+      what_if: true
+    secrets: inherit

@@ -84,14 +84,16 @@ Register each provider's OAuth redirect URI as `https://<your-api>.azurewebsites
 
 ## Deploying
 
-Branches: work happens on feature branches, which merge into `dev` by pull request. `dev` holds what is deployed to
-the dev site. When dev looks right, open a pull request from `dev` into `main`. Both branches are protected: changes
-arrive by pull request only, and the `build` check must pass.
+There is one long-lived branch, `main`. Work happens on feature, fix or chore branches that merge into `main` by
+pull request. `main` is protected: changes arrive by pull request only, and the `build` check must pass.
 
-- **Push (merge) to `dev`** deploys **dev**.
-- **Run Deploy from the Actions tab** to pick `dev` or `prod`. `prod` can only be run from `main`. Tick *what-if* to
-  preview the infrastructure changes without deploying anything.
-- Merging to `main` does not deploy anything by itself.
+- **Merging a pull request into `main`** deploys **dev**, then the run waits for approval before it deploys **prod**.
+- **Approving prod:** open the run in the Actions tab, choose *Review deployments*, tick `prod-approval` and approve.
+  Rejecting it (or never approving) leaves prod as it is. The approvers are the required reviewers of the
+  `prod-approval` environment (Settings > Environments). Only the latest commit on `main` can be approved; the run for
+  an older commit fails the check rather than deploying older code.
+- **Run Deploy from the Actions tab** to pick `dev` or `prod`. `prod` can only be run from `main` and also needs the
+  approval. Tick *what-if* to preview the infrastructure changes without deploying anything.
 
 Each run: builds and validates, deploys `infra/main.bicep` with that environment's parameter file (idempotent), then
 publishes the API to App Service and the client to the Static Web App with the client pointed at the API URL. The API

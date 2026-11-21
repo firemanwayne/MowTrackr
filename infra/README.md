@@ -20,9 +20,10 @@ The full walkthrough (one-time setup, DNS, email, secrets) is in [docs/azure-set
 
 ## How it is deployed
 
-The `Deploy` workflow (`.github/workflows/deploy.yml`) runs these templates. Merging to `dev` deploys the dev
-environment. `prod` is deployed only by running the workflow by hand from `main`. Tick *what-if* on a manual run to
-preview changes without applying them.
+The `Deploy` workflow (`.github/workflows/deploy.yml`, which calls `deploy-environment.yml` once per environment) runs
+these templates. Merging to `main` deploys the dev environment, then waits for approval (the `prod-approval`
+environment) before deploying prod. A manual run can pick `dev` or `prod`; prod runs only from `main` and also needs
+the approval. Tick *what-if* on a manual run to preview changes without applying them.
 
 ## Working on it
 

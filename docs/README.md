@@ -12,9 +12,8 @@ Related: the [infra README](../infra/README.md) lists the Bicep templates and sc
 
 ## Branches and deploys
 
-Work goes on a feature branch and merges into `dev` by pull request, which deploys the dev site. When dev looks
-right, a pull request from `dev` into `main` promotes it. Prod is deployed by hand from `main`. The `build` check must
-pass on every pull request. Details are in [azure-setup.md](azure-setup.md#deploying).
+Work goes on a feature, fix or chore branch and merges into `main` by pull request, which deploys the dev site. The
+same run then waits for an approval before it deploys prod. The `build` check must pass on every pull request. Details are in [azure-setup.md](azure-setup.md#deploying).
 
 ## Adding a document
 
