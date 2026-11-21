@@ -438,15 +438,15 @@
                         {
                             <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" Variant="Variant.Flat" Size="AlertSize.Small" class="rz-mt-1">
                                 @L["This needs a repair."]
-                                @if (item.RepairWorkOrderId is { } repairId)
-                                {
-                                    <a href="work-orders/@repairId">@L["Repair work order created"]</a>
-                                }
-                                else if (_isOpen)
-                                {
-                                    <RadzenButton Text="@L["Create repair work order"]" Icon="build" Size="ButtonSize.Small" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Warning" Disabled="@IsRunning($"repair-{item.Id}")" Click="@(() => RunOnceAsync($"repair-{item.Id}", () => CreateRepairAsync(item)))" />
-                                }
                             </RadzenAlert>
+                            @if (item.RepairWorkOrderId is { } repairId)
+                            {
+                                <a href="work-orders/@repairId">@L["Repair work order created"]</a>
+                            }
+                            else if (_isOpen)
+                            {
+                                <RadzenButton Text="@L["Create repair work order"]" Icon="build" Size="ButtonSize.Small" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Warning" class="rz-mt-1" Disabled="@IsRunning($"repair-{item.Id}")" Click="@(() => RunOnceAsync($"repair-{item.Id}", () => CreateRepairAsync(item)))" />
+                            }
                         }
                     </div>
                 }
