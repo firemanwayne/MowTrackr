@@ -294,4 +294,17 @@
   <data name="Set hours, age, or both. Reaching either one adds these steps to the work order. Age is counted from the purchase date." xml:space="preserve"><value>Indica horas, edad o ambas. Al alcanzar cualquiera de las dos se agregan estos pasos a la orden de trabajo. La edad se cuenta desde la fecha de compra.</value></data>
   <data name="Active (added to work orders)" xml:space="preserve"><value>Activa (se agrega a las órdenes de trabajo)</value></data>
   <data name="Add model" xml:space="preserve"><value>Agregar modelo</value></data>
+  <data name="Action" xml:space="preserve"><value>Acción</value></data>
+  <data name="Changes" xml:space="preserve"><value>Cambios</value></data>
+  <data name="Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Created" xml:space="preserve"><value>Creado</value></data>
+  <data name="Deleted" xml:space="preserve"><value>Eliminado</value></data>
+  <data name="History" xml:space="preserve"><value>Historial</value></data>
+  <data name="History: {0}" xml:space="preserve"><value>Historial: {0}</value></data>
+  <data name="No changes have been recorded for this item yet." xml:space="preserve"><value>Aún no se han registrado cambios para este elemento.</value></data>
+  <data name="System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Updated" xml:space="preserve"><value>Actualizado</value></data>
+  <data name="When" xml:space="preserve"><value>Cuándo</value></data>
+  <data name="Who" xml:space="preserve"><value>Quién</value></data>
+  <data name="(empty)" xml:space="preserve"><value>(vacío)</value></data>
 </root>
