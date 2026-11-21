@@ -14,11 +14,14 @@ namespace MowTrackr.Core.Contracts.Assets;
 /// <param name="SerialNumber">The serial number.</param>
 /// <param name="PurchaseDate">The purchase date.</param>
 /// <param name="EngineHours">The engine hours.</param>
-/// <param name="OilType">The oil type.</param>
+/// <param name="OilType">The name of the oil type the engine requires.</param>
 /// <param name="LastOilChange">The last oil change date.</param>
-/// <param name="OilQuantityQuarts">The oil quantity in quarts.</param>
+/// <param name="OilQuantity">The oil capacity, measured in the oil unit.</param>
 /// <param name="IsActive">Whether the unit is in service.</param>
 /// <param name="Status">Available, Needs Repair (an open repair work order) or Retired.</param>
+/// <param name="OilTypeId">The key of the oil type the engine requires.</param>
+/// <param name="OilUnitId">The key of the unit the oil quantity is measured in.</param>
+/// <param name="OilUnit">The short label of that unit, such as "qt".</param>
 public sealed record MowerResponse(
     Guid Id,
     string Name,
@@ -33,6 +36,9 @@ public sealed record MowerResponse(
     decimal EngineHours,
     string OilType,
     DateOnly? LastOilChange,
-    decimal OilQuantityQuarts,
+    decimal OilQuantity,
     bool IsActive,
-    AssetStatus Status = AssetStatus.Available);
+    AssetStatus Status = AssetStatus.Available,
+    Guid? OilUnitId = null,
+    string OilUnit = "",
+    Guid? OilTypeId = null);

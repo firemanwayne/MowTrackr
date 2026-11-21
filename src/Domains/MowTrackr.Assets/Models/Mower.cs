@@ -35,14 +35,23 @@ public sealed class Mower : EntityBase
     /// <summary>Gets or sets the current engine hours.</summary>
     public decimal EngineHours { get; set; }
 
-    /// <summary>Gets or sets the oil type.</summary>
-    public string OilType { get; set; } = string.Empty;
+    /// <summary>Gets or sets the key of the oil type this engine requires.</summary>
+    public Guid OilTypeId { get; set; }
+
+    /// <summary>Gets or sets the oil type this engine requires.</summary>
+    public OilType? OilType { get; set; }
 
     /// <summary>Gets or sets the last oil change date.</summary>
     public DateOnly? LastOilChange { get; set; }
 
-    /// <summary>Gets or sets the oil capacity in quarts.</summary>
-    public decimal OilQuantityQuarts { get; set; }
+    /// <summary>Gets or sets the oil capacity, measured in <see cref="OilUnit"/>.</summary>
+    public decimal OilQuantity { get; set; }
+
+    /// <summary>Gets or sets the key of the unit the oil quantity is measured in.</summary>
+    public Guid OilUnitId { get; set; }
+
+    /// <summary>Gets or sets the unit the oil quantity is measured in (quarts for one engine, ounces for another).</summary>
+    public UnitOfMeasure? OilUnit { get; set; }
 
     /// <summary>Gets or sets a value indicating whether the mower is in service.</summary>
     public bool IsActive { get; set; } = true;

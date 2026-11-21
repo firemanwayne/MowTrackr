@@ -46,4 +46,28 @@ public sealed class WorkOrderTask : EntityBase
 
     /// <summary>Gets or sets who did the task.</summary>
     public Guid? CompletedByUserId { get; set; }
+
+    /// <summary>Gets or sets whether the step asks for a quantity.</summary>
+    public DetailRequirement QuantityRequirement { get; set; } = DetailRequirement.None;
+
+    /// <summary>Gets or sets whether the step asks for a part number.</summary>
+    public DetailRequirement PartNumberRequirement { get; set; } = DetailRequirement.None;
+
+    /// <summary>Gets or sets whether the step asks for notes.</summary>
+    public DetailRequirement NotesRequirement { get; set; } = DetailRequirement.None;
+
+    /// <summary>Gets or sets the quantity recorded. For an oil step it starts as the equipment's oil capacity.</summary>
+    public decimal? Quantity { get; set; }
+
+    /// <summary>Gets or sets the label of the quantity's unit, copied from the step or the equipment when the work order is made.</summary>
+    public string? QuantityUnit { get; set; }
+
+    /// <summary>Gets or sets the part number recorded.</summary>
+    public string? PartNumber { get; set; }
+
+    /// <summary>Gets or sets what to use for the step, copied when the work order is made (the oil type the equipment requires, for an oil step).</summary>
+    public string? Product { get; set; }
+
+    /// <summary>Gets or sets the notes recorded on the step.</summary>
+    public string? StepNotes { get; set; }
 }

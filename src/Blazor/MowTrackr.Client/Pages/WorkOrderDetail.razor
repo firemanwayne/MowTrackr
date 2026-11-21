@@ -61,6 +61,48 @@
                         <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || ServiceLocked || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
                         <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
                     </RadzenStack>
+                    @if (HasDetails(task))
+                    {
+                        var entry = DetailsOf(task);
+
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="0.75rem" Wrap="FlexWrap.Wrap" class="rz-ms-6 rz-mb-2">
+                            @if (task.Product is not null)
+                            {
+                                <div>
+                                    <RadzenLabel Text="@L["Use"]" />
+                                    <div>@task.Product</div>
+                                </div>
+                            }
+                            @if (task.QuantityRequirement != DetailRequirement.None)
+                            {
+                                <div>
+                                    <RadzenLabel Text="@Mark(L["Quantity"], task.QuantityRequirement)" />
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                                        <RadzenNumeric TValue="decimal?" @bind-Value="entry.Quantity" Min="0" Step="0.25" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 110px" />
+                                        <span>@task.QuantityUnit</span>
+                                    </RadzenStack>
+                                </div>
+                            }
+                            @if (task.PartNumberRequirement != DetailRequirement.None)
+                            {
+                                <div>
+                                    <RadzenLabel Text="@Mark(L["Part number"], task.PartNumberRequirement)" />
+                                    <RadzenTextBox @bind-Value="entry.PartNumber" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 160px" />
+                                </div>
+                            }
+                            @if (task.NotesRequirement != DetailRequirement.None)
+                            {
+                                <div>
+                                    <RadzenLabel Text="@Mark(L["Notes"], task.NotesRequirement)" />
+                                    <RadzenTextBox @bind-Value="entry.Notes" Disabled="@(!_isOpen || ServiceLocked)" Style="width: 260px" />
+                                </div>
+                            }
+                            @if (task.IsComplete && _isOpen)
+                            {
+                                <RadzenButton Text="@L["Save details"]" Icon="save" Size="ButtonSize.Small" Variant="Variant.Outlined" Disabled="@IsRunning($"details-{task.Id}")" Click="@(() => RunOnceAsync($"details-{task.Id}", () => SetTaskAsync(task, true)))" />
+                            }
+                        </RadzenStack>
+                    }
                 }
             </RadzenStack>
         </RadzenCard>
@@ -111,7 +153,18 @@
 @code {
     private readonly CompleteWorkOrderRequest _completion = new();
 
+    private sealed class StepDetails
+    {
+        public decimal? Quantity { get; set; }
+
+        public string? PartNumber { get; set; }
+
+        public string? Notes { get; set; }
+    }
+
     private readonly Dictionary<Guid, string?> _answers = [];
+
+    private readonly Dictionary<Guid, StepDetails> _details = [];
 
     private WorkOrderResponse? _order;
 
@@ -161,6 +214,13 @@
 
         _answers.Clear();
 
+        _details.Clear();
+
+        foreach (var step in order?.Tasks.Where(t => t.Phase == TaskPhase.Service) ?? [])
+        {
+            _details[step.Id] = new StepDetails { Quantity = step.Quantity, PartNumber = step.PartNumber, Notes = step.StepNotes };
+        }
+
         foreach (var task in order?.Tasks.Where(t => t.Phase != TaskPhase.Service && t.Answer is not null) ?? [])
         {
             _answers[task.Id] = task.Answer;
@@ -185,6 +245,41 @@
         }
     }
 
+    /// <summary>Gets the details being entered for a step.</summary>
+    /// <param name="task">The step.</param>
+    /// <returns>The details.</returns>
+    private StepDetails DetailsOf(WorkOrderTaskResponse task)
+    {
+        if (!_details.TryGetValue(task.Id, out var entry))
+        {
+            entry = new StepDetails { Quantity = task.Quantity, PartNumber = task.PartNumber, Notes = task.StepNotes };
+
+            _details[task.Id] = entry;
+        }
+
+        return entry;
+    }
+
+    /// <summary>Checks whether a step asks for any details.</summary>
+    /// <param name="task">The step.</param>
+    /// <returns><see langword="true"/> when it asks for a quantity, part number or notes.</returns>
+    private static bool HasDetails(WorkOrderTaskResponse task)
+    {
+        return task.QuantityRequirement != DetailRequirement.None
+            || task.Product is not null
+            || task.PartNumberRequirement != DetailRequirement.None
+            || task.NotesRequirement != DetailRequirement.None;
+    }
+
+    /// <summary>Adds a star to a detail's label when it is required.</summary>
+    /// <param name="label">The label.</param>
+    /// <param name="requirement">Whether the detail is required.</param>
+    /// <returns>The label, with a star when required.</returns>
+    private static string Mark(string label, DetailRequirement requirement)
+    {
+        return requirement == DetailRequirement.Required ? $"{label} *" : label;
+    }
+
     /// <summary>Checks whether the work order has items in a check.</summary>
     /// <param name="phase">Pre-check or post-check.</param>
     /// <returns><see langword="true"/> when there is at least one item.</returns>
@@ -199,7 +294,15 @@
     /// <returns>A task.</returns>
     private async Task SetTaskAsync(WorkOrderTaskResponse task, bool isChecked)
     {
-        var result = await MaintenanceApi.SetTaskAsync(Id, task.Id, isChecked, Cancellation);
+        var entry = DetailsOf(task);
+
+        var request = new WorkOrderTaskUpdateRequest
+        {
+            IsComplete = isChecked,
+            Details = HasDetails(task) ? new TaskDetailsRequest { Quantity = entry.Quantity, PartNumber = entry.PartNumber, Notes = entry.Notes } : null,
+        };
+
+        var result = await MaintenanceApi.SetTaskAsync(Id, task.Id, request, Cancellation);
 
         if (result.IsSuccess)
         {

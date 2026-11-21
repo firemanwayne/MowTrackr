@@ -21,6 +21,14 @@ public static class ServiceRegistryExtensions
 
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, MowerAssetTypeUsage>());
 
+        services.TryAddScoped<IOilTypeService, OilTypeService>();
+
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IOilTypeUsage, MowerOilTypeUsage>());
+
+        services.TryAddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IUnitOfMeasureUsage, MowerUnitUsage>());
+
         return services;
     }
 }

@@ -24,11 +24,13 @@ internal sealed class MowerConfiguration : IEntityTypeConfiguration<Mower>
 
         builder.Property(m => m.SerialNumber).HasMaxLength(100).IsRequired();
 
-        builder.Property(m => m.OilType).HasMaxLength(50).IsRequired();
+        builder.HasOne(m => m.OilType).WithMany().HasForeignKey(m => m.OilTypeId).OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(m => m.EngineHours).HasPrecision(10, 2);
 
-        builder.Property(m => m.OilQuantityQuarts).HasPrecision(6, 2);
+        builder.Property(m => m.OilQuantity).HasPrecision(8, 2);
+
+        builder.HasOne(m => m.OilUnit).WithMany().HasForeignKey(m => m.OilUnitId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(m => m.SerialNumber).IsUnique();
     }

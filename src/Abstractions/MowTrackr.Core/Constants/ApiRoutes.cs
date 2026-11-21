@@ -14,6 +14,12 @@ public static class ApiRoutes
     /// <summary>Asset type lookup endpoints.</summary>
     public const string AssetTypes = "api/asset-types";
 
+    /// <summary>Oil type lookup endpoints.</summary>
+    public const string OilTypes = "api/oil-types";
+
+    /// <summary>Unit of measure lookup endpoints.</summary>
+    public const string Units = "api/units";
+
     /// <summary>Manufacturer and model lookup endpoints.</summary>
     public const string Manufacturers = "api/manufacturers";
 

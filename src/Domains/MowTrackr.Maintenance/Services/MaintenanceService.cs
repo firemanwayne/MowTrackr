@@ -84,7 +84,7 @@ internal sealed class MaintenanceService(
     public async Task<Result<WorkOrderResponse>> CreateWorkOrderAsync(WorkOrderCreateRequest request, CancellationToken cancellationToken)
     {
         var mower = await mowers
-            .GetByIdAsync(request.MowerId, new QuerySpec<Mower> { Includes = [nameof(Mower.AssetType)] }, cancellationToken)
+            .GetByIdAsync(request.MowerId, new QuerySpec<Mower> { Includes = [nameof(Mower.AssetType), nameof(Mower.OilUnit), nameof(Mower.OilType)] }, cancellationToken)
             .ConfigureAwait(false);
 
         if (mower is null)
@@ -94,7 +94,7 @@ internal sealed class MaintenanceService(
 
         var templateSpec = new QuerySpec<ServiceTemplate>
         {
-            Includes = [nameof(ServiceTemplate.Tasks), nameof(ServiceTemplate.AssetTypes), $"{nameof(ServiceTemplate.Inspections)}.{nameof(InspectionTemplate.Tasks)}"],
+            Includes = [nameof(ServiceTemplate.Tasks), $"{nameof(ServiceTemplate.Tasks)}.{nameof(ServiceTask.Unit)}", nameof(ServiceTemplate.AssetTypes), $"{nameof(ServiceTemplate.Inspections)}.{nameof(InspectionTemplate.Tasks)}"],
         };
 
         var template = await templates
@@ -142,7 +142,7 @@ internal sealed class MaintenanceService(
 
         foreach (var task in template.Tasks.Where(t => t.AppliesTo(type)).OrderBy(t => t.SortOrder))
         {
-            order.Tasks.Add(new WorkOrderTask { WorkOrderId = order.Id, Description = task.Description, SortOrder = number++, IsRequired = task.IsRequired });
+            order.Tasks.Add(NewServiceStep(order, task, mower, number++));
         }
 
         AddCheckItems(order, checks.Where(i => i.Timing == InspectionTiming.After), TaskPhase.After, ref number);
@@ -232,6 +232,15 @@ internal sealed class MaintenanceService(
         {
             return Result<WorkOrderResponse>.Conflict("Submit the pre-check before starting the work.");
         }
+
+        var detailsError = TaskDetailValidator.Validate(task, command.Details, command.IsComplete);
+
+        if (detailsError is not null)
+        {
+            return Result<WorkOrderResponse>.Invalid(detailsError);
+        }
+
+        TaskDetailValidator.Apply(task, command.Details);
 
         task.IsComplete = command.IsComplete;
 
@@ -622,6 +631,46 @@ internal sealed class MaintenanceService(
             .Select(g => g.First())
             .OrderBy(i => i.Name)
             .ToList();
+    }
+
+    /// <summary>Builds a work order step from a template step, copying what it asks for and starting the quantity from the equipment or step.</summary>
+    /// <param name="order">The work order being built.</param>
+    /// <param name="step">The template step.</param>
+    /// <param name="mower">The equipment the order is for (oil unit loaded).</param>
+    /// <param name="sortOrder">The step's position.</param>
+    /// <returns>The work order step.</returns>
+    private static WorkOrderTask NewServiceStep(WorkOrder order, ServiceTask step, Mower mower, int sortOrder)
+    {
+        var task = new WorkOrderTask
+        {
+            WorkOrderId = order.Id,
+            Description = step.Description,
+            SortOrder = sortOrder,
+            IsRequired = step.IsRequired,
+            QuantityRequirement = step.QuantityRequirement,
+            PartNumberRequirement = step.PartNumberRequirement,
+            NotesRequirement = step.NotesRequirement,
+        };
+
+        if (step.QuantityRequirement == DetailRequirement.None)
+        {
+            return task;
+        }
+
+        if (step.QuantityUnitSource == QuantityUnitSource.AssetOil)
+        {
+            task.QuantityUnit = mower.OilUnit?.Abbreviation;
+
+            task.Product = mower.OilType?.Name;
+
+            task.Quantity = mower.OilQuantity > 0 ? mower.OilQuantity : null;
+        }
+        else
+        {
+            task.QuantityUnit = step.Unit?.Abbreviation;
+        }
+
+        return task;
     }
 
     /// <summary>Adds the items of some inspections to a work order as check items.</summary>

@@ -10,6 +10,7 @@ namespace MowTrackr.Maintenance.Services;
 /// <param name="templates">The template repository.</param>
 /// <param name="assetTypes">The asset type repository.</param>
 /// <param name="inspections">The inspection template repository.</param>
+/// <param name="units">The unit repository, used to validate step units.</param>
 /// <param name="workOrders">The work order repository.</param>
 /// <param name="validator">The interval validator.</param>
 /// <param name="logger">The logger.</param>
@@ -17,11 +18,12 @@ internal sealed class ServiceTemplateService(
     IRepository<ServiceTemplate> templates,
     IRepository<AssetType> assetTypes,
     IRepository<InspectionTemplate> inspections,
+    IRepository<UnitOfMeasure> units,
     IRepository<WorkOrder> workOrders,
     IIntervalValidator validator,
     ILogger<ServiceTemplateService> logger) : IServiceTemplateService
 {
-    private static readonly string[] TaskIncludes = [nameof(ServiceTemplate.Tasks), nameof(ServiceTemplate.AssetTypes), nameof(ServiceTemplate.Inspections)];
+    private static readonly string[] TaskIncludes = [nameof(ServiceTemplate.Tasks), $"{nameof(ServiceTemplate.Tasks)}.{nameof(ServiceTask.Unit)}", nameof(ServiceTemplate.AssetTypes), nameof(ServiceTemplate.Inspections)];
 
     /// <summary>The asset types and inspections a request refers to, once checked.</summary>
     /// <param name="Issues">Problems and warnings found.</param>
@@ -213,6 +215,29 @@ internal sealed class ServiceTemplateService(
         foreach (var inspection in assigned.Where(i => i.AssetTypeId is { } limit && !typeIds.Contains(limit)))
         {
             issues.Add(new IntervalIssue(IssueSeverity.Error, $"'{inspection.Name}' is for a different type of equipment than this service."));
+        }
+
+        var stepUnits = request.Tasks
+            .Where(t => t.QuantityRequirement != DetailRequirement.None && t.QuantityUnitSource == QuantityUnitSource.StepUnit)
+            .Select(t => t.UnitId)
+            .ToList();
+
+        if (stepUnits.Any(u => u is null))
+        {
+            issues.Add(new IntervalIssue(IssueSeverity.Error, "Choose a unit for each step that asks for a quantity."));
+        }
+        else
+        {
+            var unitIds = stepUnits.Select(u => u!.Value).Distinct().ToList();
+
+            var foundUnits = await units
+                .ListAsync(new QuerySpec<UnitOfMeasure> { Filter = u => unitIds.Contains(u.Id) }, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (foundUnits.Count != unitIds.Count)
+            {
+                issues.Add(new IntervalIssue(IssueSeverity.Error, "One of the chosen units no longer exists."));
+            }
         }
 
         if (request.Tasks.All(t => string.IsNullOrWhiteSpace(t.Description)))

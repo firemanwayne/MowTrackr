@@ -9,12 +9,14 @@ namespace MowTrackr.Assets.Services;
 /// <param name="mowers">The mower repository.</param>
 /// <param name="models">The model repository, used to validate the manufacturer/model pairing.</param>
 /// <param name="assetTypes">The asset type repository, used to validate the chosen type.</param>
+/// <param name="units">The unit repository, used to validate the oil unit.</param>
+/// <param name="oilTypes">The oil type repository, used to validate the required oil.</param>
 /// <param name="openRepairs">Tells which units have an open repair, for the status.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, IRepository<AssetType> assetTypes, IOpenRepairLookup openRepairs, ILogger<MowerService> logger) : IMowerService
+internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, IRepository<AssetType> assetTypes, IRepository<UnitOfMeasure> units, IRepository<OilType> oilTypes, IOpenRepairLookup openRepairs, ILogger<MowerService> logger) : IMowerService
 {
     /// <summary>Navigation paths loaded so responses can carry the manufacturer and model names.</summary>
-    private static readonly string[] _lookupIncludes = [nameof(Mower.AssetType), nameof(Mower.Manufacturer), nameof(Mower.Model)];
+    private static readonly string[] _lookupIncludes = [nameof(Mower.AssetType), nameof(Mower.Manufacturer), nameof(Mower.Model), nameof(Mower.OilUnit), nameof(Mower.OilType)];
 
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<MowerResponse>>> ListAsync(CancellationToken cancellationToken)
@@ -154,6 +156,24 @@ internal sealed class MowerService(IRepository<Mower> mowers, IRepository<Manufa
         if (types.Count == 0)
         {
             return "Choose an asset type.";
+        }
+
+        var oilTypeId = request.OilTypeId;
+
+        var oils = await oilTypes.ListAsync(new QuerySpec<OilType> { Filter = o => o.Id == oilTypeId }, cancellationToken).ConfigureAwait(false);
+
+        if (oils.Count == 0)
+        {
+            return "Choose the oil type this engine requires.";
+        }
+
+        var unitId = request.OilUnitId;
+
+        var oilUnits = await units.ListAsync(new QuerySpec<UnitOfMeasure> { Filter = u => u.Id == unitId }, cancellationToken).ConfigureAwait(false);
+
+        if (oilUnits.Count == 0)
+        {
+            return "Choose the unit the oil quantity is measured in.";
         }
 
         var modelId = request.ManufacturerModelId;

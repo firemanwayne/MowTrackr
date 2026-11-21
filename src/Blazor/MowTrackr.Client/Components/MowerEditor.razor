@@ -2,6 +2,8 @@
 @inject IMowerApiService MowerApi
 @inject IManufacturerApiService ManufacturerApi
 @inject IAssetTypeApiService AssetTypeApi
+@inject IUnitApiService UnitApi
+@inject IOilTypeApiService OilTypeApi
 @inject DialogService Dialogs
 
 <EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
@@ -63,13 +65,17 @@
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Oil type"]" Component="OilType" />
-                <RadzenTextBox @bind-Value="_model.OilType" Name="OilType" Placeholder="@L["e.g. SAE 10W-30"]" Style="width: 100%" />
-                <ValidationMessage For="@(() => _model.OilType)" />
+                <RadzenDropDown TValue="Guid?" @bind-Value="_model.OilTypeId" Data="_oilTypes" TextProperty="Name" ValueProperty="Id" Name="OilType" AllowFiltering="true" Placeholder="@L["Select an oil type"]" Style="width: 100%" />
+                <ValidationMessage For="@(() => _model.OilTypeId)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
-                <RadzenLabel Text="@L["Oil quantity (quarts)"]" Component="OilQuantity" />
-                <RadzenNumeric TValue="decimal" @bind-Value="_model.OilQuantityQuarts" Name="OilQuantity" Min="0" Step="0.25" Style="width: 100%" />
-                <ValidationMessage For="@(() => _model.OilQuantityQuarts)" />
+                <RadzenLabel Text="@L["Oil quantity"]" Component="OilQuantity" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenNumeric TValue="decimal" @bind-Value="_model.OilQuantity" Name="OilQuantity" Min="0" Step="0.25" Style="flex: 1" />
+                    <RadzenDropDown TValue="Guid?" @bind-Value="_model.OilUnitId" Data="_units" TextProperty="Name" ValueProperty="Id" Name="OilUnit" Placeholder="@L["Unit"]" Style="width: 140px" />
+                </RadzenStack>
+                <ValidationMessage For="@(() => _model.OilQuantity)" />
+                <ValidationMessage For="@(() => _model.OilUnitId)" />
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="6">
                 <RadzenLabel Text="@L["Last oil change"]" Component="LastOilChange" />
@@ -95,6 +101,10 @@
     private List<ManufacturerResponse> _manufacturers = [];
 
     private List<AssetTypeResponse> _assetTypes = [];
+
+    private List<UnitOfMeasureResponse> _units = [];
+
+    private List<OilTypeResponse> _oilTypes = [];
 
     /// <summary>Gets or sets the mower being edited; <see langword="null"/> adds a new one.</summary>
     [Parameter]
@@ -122,8 +132,23 @@
 
         _error ??= types.IsSuccess ? null : types.Error;
 
+        var units = await UnitApi.ListAsync(Cancellation);
+
+        _units = units.Value ?? [];
+
+        _error ??= units.IsSuccess ? null : units.Error;
+
+        var oils = await OilTypeApi.ListAsync(Cancellation);
+
+        _oilTypes = oils.Value ?? [];
+
+        _error ??= oils.IsSuccess ? null : oils.Error;
+
         if (Existing is null)
         {
+            // A new unit of equipment starts with oil measured in quarts; change it for an engine that uses ounces.
+            _model.OilUnitId = _units.FirstOrDefault(u => u.Abbreviation == "qt")?.Id;
+
             return;
         }
 
@@ -136,9 +161,10 @@
             SerialNumber = Existing.SerialNumber,
             PurchaseDate = Existing.PurchaseDate,
             EngineHours = Existing.EngineHours,
-            OilType = Existing.OilType,
+            OilTypeId = Existing.OilTypeId,
             LastOilChange = Existing.LastOilChange,
-            OilQuantityQuarts = Existing.OilQuantityQuarts,
+            OilQuantity = Existing.OilQuantity,
+            OilUnitId = Existing.OilUnitId,
             IsActive = Existing.IsActive,
         };
     }

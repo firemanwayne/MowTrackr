@@ -26,11 +26,14 @@ internal static class MowerExtensions
             mower.SerialNumber,
             mower.PurchaseDate,
             mower.EngineHours,
-            mower.OilType,
+            mower.OilType?.Name ?? string.Empty,
             mower.LastOilChange,
-            mower.OilQuantityQuarts,
+            mower.OilQuantity,
             mower.IsActive,
-            mower.StatusFor(needsRepair));
+            mower.StatusFor(needsRepair),
+            mower.OilUnitId,
+            mower.OilUnit?.Abbreviation ?? string.Empty,
+            mower.OilTypeId);
     }
 
     /// <summary>Works out whether the unit is available: retired when out of service, needing repair when a repair work order is open.</summary>
@@ -66,11 +69,12 @@ internal static class MowerExtensions
 
         mower.EngineHours = request.EngineHours;
 
-        mower.OilType = request.OilType.Trim();
+        mower.OilTypeId = request.OilTypeId ?? Guid.Empty;
 
         mower.LastOilChange = request.LastOilChange;
 
-        mower.OilQuantityQuarts = request.OilQuantityQuarts;
+        mower.OilQuantity = request.OilQuantity;
+        mower.OilUnitId = request.OilUnitId ?? Guid.Empty;
 
         mower.IsActive = request.IsActive;
 
