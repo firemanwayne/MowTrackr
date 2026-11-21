@@ -16,36 +16,51 @@
         <h1>@_order.TemplateName &mdash; @_order.MowerName</h1>
         <RadzenText TextStyle="TextStyle.Body2">
             @L["Status"]: <RadzenBadge Text="@StatusText(_order.Status)" BadgeStyle="@StatusStyle(_order.Status)" />
+            @if (_order.Kind == WorkOrderKind.Repair)
+            {
+                <RadzenBadge Text="@L["Repair"]" BadgeStyle="BadgeStyle.Warning" class="rz-ms-2" />
+            }
             @if (_order.ScheduledFor is { } scheduled)
             {
                 <span>&middot; @L["Scheduled"] @scheduled.ToString("d")</span>
+            }
+            @if (_order.ParentWorkOrderId is { } parent)
+            {
+                <span>&middot; <a href="work-orders/@parent">@L["Found during another work order"]</a></span>
             }
         </RadzenText>
         <div class="rz-my-4" style="max-width: 20rem">
             <RadzenLabel Text="@L["Engine hours at start"]" Component="HoursStart" />
             <RadzenNumeric TValue="decimal?" Value="_order.EngineHoursAtStart" ReadOnly="true" Name="HoursStart" Style="width: 100%" />
         </div>
-        <RadzenStack Gap="0.5rem" class="rz-my-4">
-            @{
-                string? previousSource = null;
-            }
-            @foreach (var task in _order.Tasks)
+        @if (HasCheck(TaskPhase.Before))
+        {
+            @CheckCard(TaskPhase.Before, L["Pre-check"], L["Before the work starts."])
+        }
+        <RadzenCard class="rz-my-4">
+            <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-0">
+                @L["Service steps"]
+            </RadzenText>
+            @if (ServiceLocked)
             {
-                @if (task.Source is not null && task.Source != previousSource)
-                {
-                    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-3 rz-mb-0">
-                        @task.Source
-                    </RadzenText>
-                }
-
-                previousSource = task.Source;
-
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
-                    <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
-                    <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
-                </RadzenStack>
+                <RadzenAlert AlertStyle="AlertStyle.Info" AllowClose="false" Variant="Variant.Flat" Size="AlertSize.Small">
+                    @L["Submit the pre-check to unlock the service steps."]
+                </RadzenAlert>
             }
-        </RadzenStack>
+            <RadzenStack Gap="0.5rem">
+                @foreach (var task in ServiceTasks)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" class="task-row">
+                        <RadzenCheckBox TValue="bool" Value="task.IsComplete" Disabled="@(!_isOpen || ServiceLocked || IsRunning($"task-{task.Id}"))" Change="@(isChecked => RunOnceAsync($"task-{task.Id}", () => SetTaskAsync(task, isChecked)))" Name="@($"task-{task.Id}")" />
+                        <RadzenLabel Text="@(task.IsRequired ? $"{task.Description} *" : task.Description)" Component="@($"task-{task.Id}")" />
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenCard>
+        @if (HasCheck(TaskPhase.After))
+        {
+            @CheckCard(TaskPhase.After, L["Post-check"], L["After the work is done."])
+        }
         @if (_isOpen)
         {
             <EditForm Model="_completion" OnValidSubmit="@(() => RunOnceAsync("complete", CompleteAsync))">
@@ -71,7 +86,7 @@
                             <RadzenTextArea @bind-Value="_completion.Notes" Name="Notes" Rows="3" Style="width: 100%" />
                         </div>
                         <div>
-                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="@IsRunning("complete")" Disabled="@(IsRunning("complete") || _order.Tasks.Any(t => t.IsRequired && !t.IsComplete) || _completion.EngineHoursAtService < MinimumHours)" />
+                            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Mark complete"]" IsBusy="@IsRunning("complete")" Disabled="@(IsRunning("complete") || !CanComplete || _completion.EngineHoursAtService < MinimumHours)" />
                         </div>
                     </RadzenStack>
                 </RadzenCard>
@@ -89,11 +104,14 @@
 @code {
     private readonly CompleteWorkOrderRequest _completion = new();
 
+    private readonly Dictionary<Guid, string?> _answers = [];
+
     private WorkOrderResponse? _order;
 
     private string? _error;
 
     private string? _hoursError;
+
     private decimal MinimumHours => _order?.EngineHoursAtStart ?? 0m;
 
     /// <summary>Gets or sets the work order key from the route.</summary>
@@ -102,6 +120,17 @@
 
     private bool _isOpen => _order is { Status: WorkOrderStatus.Scheduled or WorkOrderStatus.InProgress };
 
+    private IEnumerable<WorkOrderTaskResponse> ServiceTasks => _order?.Tasks.Where(t => t.Phase == TaskPhase.Service) ?? [];
+
+    private bool ServiceLocked => _order is not null && HasCheck(TaskPhase.Before) && _order.PreCheckSubmittedAt is null;
+
+    private bool ServiceDone => ServiceTasks.All(t => !t.IsRequired || t.IsComplete);
+
+    private bool CanComplete => _order is not null
+        && _order.Tasks.All(t => !t.IsRequired || t.IsComplete)
+        && (!HasCheck(TaskPhase.Before) || _order.PreCheckSubmittedAt is not null)
+        && (!HasCheck(TaskPhase.After) || _order.PostCheckSubmittedAt is not null);
+
     /// <inheritdoc />
     protected override async Task OnParametersSetAsync()
     {
@@ -109,9 +138,7 @@
 
         if (result.IsSuccess)
         {
-            _order = result.Value;
-
-            PrefillHours();
+            Show(result.Value);
         }
         else
         {
@@ -119,13 +146,44 @@
         }
     }
 
-    /// <summary>Starts the "hours when done" field at the starting hours so it can never begin below them.</summary>
+    /// <summary>Shows a work order, resetting the check answers and the hours field from it.</summary>
+    /// <param name="order">The work order as the API returned it.</param>
+    private void Show(WorkOrderResponse? order)
+    {
+        _order = order;
+
+        _answers.Clear();
+
+        foreach (var task in order?.Tasks.Where(t => t.Phase != TaskPhase.Service && t.Answer is not null) ?? [])
+        {
+            _answers[task.Id] = task.Answer;
+        }
+
+        PrefillHours();
+    }
+
+    /// <summary>Starts the "hours when done" field at the starting hours, or the hours recorded in the post-check, so it never begins below them.</summary>
     private void PrefillHours()
     {
-        if (_completion.EngineHoursAtService < MinimumHours)
+        var recorded = _order?.Tasks
+            .Where(t => t.Phase == TaskPhase.After && t.ItemType == CheckItemType.EngineHours && t.Answer is not null)
+            .Select(t => ParseHours(t.Answer))
+            .FirstOrDefault(h => h is not null) ?? 0m;
+
+        var floor = Math.Max(MinimumHours, recorded);
+
+        if (_completion.EngineHoursAtService < floor)
         {
-            _completion.EngineHoursAtService = MinimumHours;
+            _completion.EngineHoursAtService = floor;
         }
+    }
+
+    /// <summary>Checks whether the work order has items in a check.</summary>
+    /// <param name="phase">Pre-check or post-check.</param>
+    /// <returns><see langword="true"/> when there is at least one item.</returns>
+    private bool HasCheck(TaskPhase phase)
+    {
+        return _order is not null && _order.Tasks.Any(t => t.Phase == phase);
     }
 
     /// <summary>Checks or unchecks a task.</summary>
@@ -138,16 +196,67 @@
 
         if (result.IsSuccess)
         {
-            _order = result.Value;
+            Show(result.Value);
 
             _error = null;
-
-            PrefillHours();
 
             return;
         }
 
         NotifyError(result.Error ?? L["Could not update the task."]);
+    }
+
+    /// <summary>Submits a check with the answers entered so far.</summary>
+    /// <param name="phase">Pre-check or post-check.</param>
+    /// <returns>A task.</returns>
+    private async Task SubmitCheckAsync(TaskPhase phase)
+    {
+        var request = new SubmitCheckRequest
+        {
+            Answers = _order!.Tasks
+                .Where(t => t.Phase == phase)
+                .Select(t => new CheckAnswerRequest { TaskId = t.Id, Answer = _answers.GetValueOrDefault(t.Id) })
+                .ToList(),
+        };
+
+        var timing = phase == TaskPhase.Before ? InspectionTiming.Before : InspectionTiming.After;
+
+        var result = await MaintenanceApi.SubmitCheckAsync(Id, timing, request, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            Show(result.Value);
+
+            NotifySuccess(phase == TaskPhase.Before ? L["Pre-check submitted."] : L["Post-check submitted."]);
+
+            return;
+        }
+
+        NotifyError(result.Error ?? L["Could not submit the check."]);
+    }
+
+    /// <summary>Creates a repair work order for a finding, after the technician confirms it.</summary>
+    /// <param name="task">The check item with the finding.</param>
+    /// <returns>A task.</returns>
+    private async Task CreateRepairAsync(WorkOrderTaskResponse task)
+    {
+        var result = await MaintenanceApi.CreateRepairAsync(Id, task.Id, Cancellation);
+
+        if (!result.IsSuccess)
+        {
+            NotifyError(result.Error ?? L["Could not create the repair work order."]);
+
+            return;
+        }
+
+        NotifySuccess(L["Repair work order created."]);
+
+        var refreshed = await MaintenanceApi.GetWorkOrderAsync(Id, Cancellation);
+
+        if (refreshed.IsSuccess)
+        {
+            Show(refreshed.Value);
+        }
     }
 
     /// <summary>Completes the work order.</summary>
@@ -167,7 +276,7 @@
 
         if (result.IsSuccess)
         {
-            _order = result.Value;
+            Show(result.Value);
 
             NotifySuccess(L["Work order completed."]);
         }
@@ -176,4 +285,141 @@
             NotifyError(result.Error ?? L["Could not complete the work order."]);
         }
     }
+
+    /// <summary>Gets the answer being entered for an item.</summary>
+    /// <param name="task">The item.</param>
+    /// <returns>The answer text, if any.</returns>
+    private string? Answer(WorkOrderTaskResponse task)
+    {
+        return _answers.GetValueOrDefault(task.Id);
+    }
+
+    /// <summary>Records the answer being entered for an item.</summary>
+    /// <param name="task">The item.</param>
+    /// <param name="value">The answer text.</param>
+    private void SetAnswer(WorkOrderTaskResponse task, string? value)
+    {
+        _answers[task.Id] = value;
+    }
+
+    /// <summary>Gets the answer to an engine-hours item as a number.</summary>
+    /// <param name="task">The item.</param>
+    /// <returns>The hours, if entered.</returns>
+    private decimal? Hours(WorkOrderTaskResponse task)
+    {
+        return ParseHours(Answer(task));
+    }
+
+    /// <summary>Records the answer to an engine-hours item.</summary>
+    /// <param name="task">The item.</param>
+    /// <param name="value">The hours.</param>
+    private void SetHours(WorkOrderTaskResponse task, decimal? value)
+    {
+        _answers[task.Id] = value?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Reads an hours answer.</summary>
+    /// <param name="text">The stored text.</param>
+    /// <returns>The hours, or <see langword="null"/> when blank or not a number.</returns>
+    private static decimal? ParseHours(string? text)
+    {
+        return decimal.TryParse(text, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var hours) ? hours : null;
+    }
+
+    /// <summary>Lists the answers to pick from for a yes/no or choice item.</summary>
+    /// <param name="task">The item.</param>
+    /// <returns>The options.</returns>
+    private static string[] Options(WorkOrderTaskResponse task)
+    {
+        return task.ItemType == CheckItemType.Choice
+            ? (task.Choices ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            : ["Yes", "No"];
+    }
+
+    /// <summary>Renders a pre-check or post-check as a card with a form.</summary>
+    /// <param name="phase">Pre-check or post-check.</param>
+    /// <param name="title">The card title.</param>
+    /// <param name="hint">A line saying when the check is done.</param>
+    /// <returns>The card.</returns>
+    private RenderFragment CheckCard(TaskPhase phase, string title, string hint) => __builder =>
+    {
+        var items = _order!.Tasks.Where(t => t.Phase == phase).ToList();
+
+        var submitted = phase == TaskPhase.Before ? _order.PreCheckSubmittedAt : _order.PostCheckSubmittedAt;
+
+        var waiting = phase == TaskPhase.After && !ServiceDone;
+
+        var key = phase == TaskPhase.Before ? "pre" : "post";
+
+        <RadzenCard class="rz-my-4">
+            <RadzenStack Gap="0.75rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-m-0">
+                    @title
+                    @if (submitted is not null)
+                    {
+                        <RadzenBadge Text="@L["Submitted"]" BadgeStyle="BadgeStyle.Success" class="rz-ms-2" />
+                    }
+                </RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                    @hint
+                </RadzenText>
+                @if (waiting && _isOpen)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Info" AllowClose="false" Variant="Variant.Flat" Size="AlertSize.Small">
+                        @L["Finish the service steps to unlock the post-check."]
+                    </RadzenAlert>
+                }
+                @foreach (var item in items)
+                {
+                    <div>
+                        @if (item.Source is not null)
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                                @item.Source
+                            </RadzenText>
+                        }
+                        <RadzenLabel Text="@(item.IsRequired ? $"{item.Description} *" : item.Description)" />
+                        @if (item.ItemType == CheckItemType.ServiceStepsComplete)
+                        {
+                            <div>
+                                @(ServiceDone ? L["Yes, every required service step is done."] : L["Not yet. The service steps are not all done."])
+                            </div>
+                        }
+                        else if (item.ItemType == CheckItemType.EngineHours)
+                        {
+                            <RadzenNumeric TValue="decimal?" Value="Hours(item)" ValueChanged="@(value => SetHours(item, value))" Min="0" Step="0.1" Disabled="@(!_isOpen || waiting)" Placeholder="@L["optional"]" Style="width: 100%" />
+                        }
+                        else if (item.ItemType == CheckItemType.Text)
+                        {
+                            <RadzenTextArea Value="@Answer(item)" ValueChanged="@(value => SetAnswer(item, value))" Rows="2" Disabled="@(!_isOpen || waiting)" Style="width: 100%" />
+                        }
+                        else
+                        {
+                            <RadzenDropDown TValue="string" Value="@Answer(item)" ValueChanged="@(value => SetAnswer(item, value))" Data="@Options(item)" Disabled="@(!_isOpen || waiting)" AllowClear="@(!item.IsRequired)" Placeholder="@L["Select"]" Style="width: 100%" />
+                        }
+                        @if (item.IsFinding)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Warning" AllowClose="false" Variant="Variant.Flat" Size="AlertSize.Small" class="rz-mt-1">
+                                @L["This needs a repair."]
+                                @if (item.RepairWorkOrderId is { } repairId)
+                                {
+                                    <a href="work-orders/@repairId">@L["Repair work order created"]</a>
+                                }
+                                else if (_isOpen)
+                                {
+                                    <RadzenButton Text="@L["Create repair work order"]" Icon="build" Size="ButtonSize.Small" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Warning" Disabled="@IsRunning($"repair-{item.Id}")" Click="@(() => RunOnceAsync($"repair-{item.Id}", () => CreateRepairAsync(item)))" />
+                                }
+                            </RadzenAlert>
+                        }
+                    </div>
+                }
+                @if (_isOpen)
+                {
+                    <div>
+                        <RadzenButton Text="@(submitted is null ? (phase == TaskPhase.Before ? L["Submit pre-check"] : L["Submit post-check"]) : L["Update check"])" Icon="fact_check" IsBusy="@IsRunning(key)" Disabled="@(IsRunning(key) || waiting)" Click="@(() => RunOnceAsync(key, () => SubmitCheckAsync(phase)))" />
+                    </div>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    };
 }

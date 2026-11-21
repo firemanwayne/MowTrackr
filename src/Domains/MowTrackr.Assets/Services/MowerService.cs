@@ -9,8 +9,9 @@ namespace MowTrackr.Assets.Services;
 /// <param name="mowers">The mower repository.</param>
 /// <param name="models">The model repository, used to validate the manufacturer/model pairing.</param>
 /// <param name="assetTypes">The asset type repository, used to validate the chosen type.</param>
+/// <param name="openRepairs">Tells which units have an open repair, for the status.</param>
 /// <param name="logger">The logger.</param>
-internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, IRepository<AssetType> assetTypes, ILogger<MowerService> logger) : IMowerService
+internal sealed class MowerService(IRepository<Mower> mowers, IRepository<ManufacturerModel> models, IRepository<AssetType> assetTypes, IOpenRepairLookup openRepairs, ILogger<MowerService> logger) : IMowerService
 {
     /// <summary>Navigation paths loaded so responses can carry the manufacturer and model names.</summary>
     private static readonly string[] _lookupIncludes = [nameof(Mower.AssetType), nameof(Mower.Manufacturer), nameof(Mower.Model)];
@@ -22,7 +23,9 @@ internal sealed class MowerService(IRepository<Mower> mowers, IRepository<Manufa
 
         var items = await mowers.ListAsync(spec, cancellationToken).ConfigureAwait(false);
 
-        return Result<IReadOnlyList<MowerResponse>>.Ok(items.Select(m => m.ToResponse()).ToList());
+        var repairs = await openRepairs.GetMowerIdsNeedingRepairAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result<IReadOnlyList<MowerResponse>>.Ok(items.Select(m => m.ToResponse(repairs.Contains(m.Id))).ToList());
     }
 
     /// <inheritdoc />
@@ -35,7 +38,9 @@ internal sealed class MowerService(IRepository<Mower> mowers, IRepository<Manufa
             return Result<MowerResponse>.NotFound("Mower not found.");
         }
 
-        return Result<MowerResponse>.Ok(mower.ToResponse());
+        var repairs = await openRepairs.GetMowerIdsNeedingRepairAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result<MowerResponse>.Ok(mower.ToResponse(repairs.Contains(mower.Id)));
     }
 
     /// <inheritdoc />

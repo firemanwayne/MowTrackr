@@ -17,5 +17,7 @@ internal sealed class ServiceTaskConfiguration : IEntityTypeConfiguration<Servic
         builder.Property(t => t.Description).HasMaxLength(300).IsRequired();
 
         builder.Property(t => t.IsRequired).HasDefaultValue(true);
+
+        builder.Property(t => t.Condition).HasConversion<string>().HasMaxLength(20).HasDefaultValue(ServiceTaskCondition.Always);
     }
 }

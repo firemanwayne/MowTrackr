@@ -1,3 +1,4 @@
+using MowTrackr.Core.Enums;
 using MowTrackr.Assets.Models;
 
 namespace MowTrackr.Assets.Extensions;
@@ -9,8 +10,9 @@ internal static class MowerExtensions
 {
     /// <summary>Maps an entity to its API response.</summary>
     /// <param name="mower">The entity.</param>
+    /// <param name="needsRepair">Whether the unit has an open repair work order.</param>
     /// <returns>The response.</returns>
-    public static MowerResponse ToResponse(this Mower mower)
+    public static MowerResponse ToResponse(this Mower mower, bool needsRepair = false)
     {
         return new MowerResponse(
             mower.Id,
@@ -27,7 +29,22 @@ internal static class MowerExtensions
             mower.OilType,
             mower.LastOilChange,
             mower.OilQuantityQuarts,
-            mower.IsActive);
+            mower.IsActive,
+            mower.StatusFor(needsRepair));
+    }
+
+    /// <summary>Works out whether the unit is available: retired when out of service, needing repair when a repair work order is open.</summary>
+    /// <param name="mower">The mower.</param>
+    /// <param name="needsRepair">Whether it has an open repair work order.</param>
+    /// <returns>The status.</returns>
+    public static AssetStatus StatusFor(this Mower mower, bool needsRepair)
+    {
+        if (!mower.IsActive)
+        {
+            return AssetStatus.Retired;
+        }
+
+        return needsRepair ? AssetStatus.NeedsRepair : AssetStatus.Available;
     }
 
     /// <summary>Copies request values onto an entity.</summary>

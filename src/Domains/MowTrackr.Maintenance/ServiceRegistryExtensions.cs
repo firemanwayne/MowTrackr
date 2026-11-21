@@ -1,3 +1,4 @@
+using MowTrackr.Maintenance.Lookups;
 using MowTrackr.Maintenance.Options;
 using MowTrackr.Maintenance.Services;
 using MowTrackr.Maintenance.Usages;
@@ -28,6 +29,8 @@ public static class ServiceRegistryExtensions
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IAssetTypeUsage, InspectionTemplateAssetTypeUsage>());
 
         services.TryAddScoped<IMaintenanceService, MaintenanceService>();
+
+        services.TryAddScoped<IOpenRepairLookup, OpenRepairLookup>();
 
         return services;
     }

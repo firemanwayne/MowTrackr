@@ -15,7 +15,7 @@ internal sealed class AssetTypeService(IRepository<AssetType> assetTypes, IEnume
     {
         var items = await assetTypes.ListAsync(new QuerySpec<AssetType> { OrderBy = t => t.Name }, cancellationToken).ConfigureAwait(false);
 
-        return Result<IReadOnlyList<AssetTypeResponse>>.Ok(items.Select(t => new AssetTypeResponse(t.Id, t.Name)).ToList());
+        return Result<IReadOnlyList<AssetTypeResponse>>.Ok(items.Select(t => new AssetTypeResponse(t.Id, t.Name, t.HasTires)).ToList());
     }
 
     /// <inheritdoc />
@@ -30,7 +30,7 @@ internal sealed class AssetTypeService(IRepository<AssetType> assetTypes, IEnume
             return Result<AssetTypeResponse>.Conflict("An asset type with that name already exists.");
         }
 
-        var assetType = new AssetType { Name = name };
+        var assetType = new AssetType { Name = name, HasTires = request.HasTires };
 
         await assetTypes.AddAsync(assetType, cancellationToken).ConfigureAwait(false);
 
@@ -38,7 +38,7 @@ internal sealed class AssetTypeService(IRepository<AssetType> assetTypes, IEnume
 
         logger.LogInformation("Created asset type {AssetTypeId} ({AssetTypeName})", assetType.Id, assetType.Name);
 
-        return Result<AssetTypeResponse>.Ok(new AssetTypeResponse(assetType.Id, assetType.Name));
+        return Result<AssetTypeResponse>.Ok(new AssetTypeResponse(assetType.Id, assetType.Name, assetType.HasTires));
     }
 
     /// <inheritdoc />
@@ -62,11 +62,13 @@ internal sealed class AssetTypeService(IRepository<AssetType> assetTypes, IEnume
 
         assetType.Name = name;
 
+        assetType.HasTires = request.HasTires;
+
         await assetTypes.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated asset type {AssetTypeId}", id);
 
-        return Result<AssetTypeResponse>.Ok(new AssetTypeResponse(assetType.Id, assetType.Name));
+        return Result<AssetTypeResponse>.Ok(new AssetTypeResponse(assetType.Id, assetType.Name, assetType.HasTires));
     }
 
     /// <inheritdoc />

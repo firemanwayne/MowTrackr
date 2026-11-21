@@ -307,4 +307,55 @@
   <data name="When" xml:space="preserve"><value>Cuándo</value></data>
   <data name="Who" xml:space="preserve"><value>Quién</value></data>
   <data name="(empty)" xml:space="preserve"><value>(vacío)</value></data>
+  <data name="Applies to" xml:space="preserve"><value>Se aplica a</value></data>
+  <data name="Select one or more types" xml:space="preserve"><value>Seleccione uno o más tipos</value></data>
+  <data name="e.g. Annual Inspection" xml:space="preserve"><value>p. ej., Inspección anual</value></data>
+  <data name="Pre-check (before the work starts)" xml:space="preserve"><value>Revisión previa (antes de empezar el trabajo)</value></data>
+  <data name="Post-check (after the work is done)" xml:space="preserve"><value>Revisión posterior (después del trabajo)</value></data>
+  <data name="None" xml:space="preserve"><value>Ninguna</value></data>
+  <data name="Service steps" xml:space="preserve"><value>Pasos del servicio</value></data>
+  <data name="Only if the type has tires" xml:space="preserve"><value>Solo si el tipo tiene llantas</value></data>
+  <data name="e.g. Annual Pre-Check" xml:space="preserve"><value>p. ej., Revisión previa anual</value></data>
+  <data name="Any type" xml:space="preserve"><value>Cualquier tipo</value></data>
+  <data name="Added automatically from (engine hours)" xml:space="preserve"><value>Se agrega automáticamente desde (horas de motor)</value></data>
+  <data name="Added automatically from (age in months)" xml:space="preserve"><value>Se agrega automáticamente desde (edad en meses)</value></data>
+  <data name="Leave both empty to use this check only where a service template includes it. Set hours, age, or both to also add it automatically once the equipment reaches either one. Age is counted from the purchase date." xml:space="preserve"><value>Deje ambos vacíos para usar esta revisión solo donde la incluya una plantilla de servicio. Indique horas, edad o ambos para agregarla también automáticamente cuando el equipo alcance cualquiera. La edad se cuenta desde la fecha de compra.</value></data>
+  <data name="Items" xml:space="preserve"><value>Elementos</value></data>
+  <data name="Item, e.g. Oil level" xml:space="preserve"><value>Elemento, p. ej., Nivel de aceite</value></data>
+  <data name="Choices, separated by commas (Full, Half, None)" xml:space="preserve"><value>Opciones, separadas por comas (Lleno, Medio, Nada)</value></data>
+  <data name="Needs repair if (e.g. None)" xml:space="preserve"><value>Necesita reparación si (p. ej., Nada)</value></data>
+  <data name="Offer a repair work order if the answer is No" xml:space="preserve"><value>Ofrecer una orden de reparación si la respuesta es No</value></data>
+  <data name="Add item" xml:space="preserve"><value>Agregar elemento</value></data>
+  <data name="Yes / No" xml:space="preserve"><value>Sí / No</value></data>
+  <data name="Choice" xml:space="preserve"><value>Opción</value></data>
+  <data name="All service steps done (automatic)" xml:space="preserve"><value>Todos los pasos del servicio hechos (automático)</value></data>
+  <data name="Has tires (tire service steps apply)" xml:space="preserve"><value>Tiene llantas (aplican los pasos de llantas)</value></data>
+  <data name="Tires" xml:space="preserve"><value>Llantas</value></data>
+  <data name="Yes" xml:space="preserve"><value>Sí</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="Pre-check" xml:space="preserve"><value>Revisión previa</value></data>
+  <data name="Post-check" xml:space="preserve"><value>Revisión posterior</value></data>
+  <data name="Repair" xml:space="preserve"><value>Reparación</value></data>
+  <data name="Found during another work order" xml:space="preserve"><value>Encontrado durante otra orden de trabajo</value></data>
+  <data name="Submit the pre-check to unlock the service steps." xml:space="preserve"><value>Envíe la revisión previa para desbloquear los pasos del servicio.</value></data>
+  <data name="Submitted" xml:space="preserve"><value>Enviada</value></data>
+  <data name="Finish the service steps to unlock the post-check." xml:space="preserve"><value>Termine los pasos del servicio para desbloquear la revisión posterior.</value></data>
+  <data name="Yes, every required service step is done." xml:space="preserve"><value>Sí, todos los pasos requeridos del servicio están hechos.</value></data>
+  <data name="Not yet. The service steps are not all done." xml:space="preserve"><value>Todavía no. No se han hecho todos los pasos del servicio.</value></data>
+  <data name="This needs a repair." xml:space="preserve"><value>Esto necesita una reparación.</value></data>
+  <data name="Repair work order created" xml:space="preserve"><value>Orden de reparación creada</value></data>
+  <data name="Create repair work order" xml:space="preserve"><value>Crear orden de reparación</value></data>
+  <data name="Submit pre-check" xml:space="preserve"><value>Enviar revisión previa</value></data>
+  <data name="Submit post-check" xml:space="preserve"><value>Enviar revisión posterior</value></data>
+  <data name="Update check" xml:space="preserve"><value>Actualizar revisión</value></data>
+  <data name="Select" xml:space="preserve"><value>Seleccionar</value></data>
+  <data name="Pre-check submitted." xml:space="preserve"><value>Revisión previa enviada.</value></data>
+  <data name="Post-check submitted." xml:space="preserve"><value>Revisión posterior enviada.</value></data>
+  <data name="Could not submit the check." xml:space="preserve"><value>No se pudo enviar la revisión.</value></data>
+  <data name="Could not create the repair work order." xml:space="preserve"><value>No se pudo crear la orden de reparación.</value></data>
+  <data name="Repair work order created." xml:space="preserve"><value>Orden de reparación creada.</value></data>
+  <data name="Needs Repair" xml:space="preserve"><value>Necesita reparación</value></data>
+  <data name="Available" xml:space="preserve"><value>Disponible</value></data>
+  <data name="Before the work starts." xml:space="preserve"><value>Antes de empezar el trabajo.</value></data>
+  <data name="After the work is done." xml:space="preserve"><value>Después de terminar el trabajo.</value></data>
 </root>

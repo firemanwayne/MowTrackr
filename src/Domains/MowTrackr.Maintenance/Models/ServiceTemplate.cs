@@ -3,18 +3,19 @@ using MowTrackr.Assets.Models;
 namespace MowTrackr.Maintenance.Models;
 
 /// <summary>
-/// A reusable service definition (e.g. "Quarterly Maintenance"): a checklist plus a due interval.
+/// A reusable service definition (e.g. "Annual Inspection"): a checklist, a due interval, the asset types it applies to, and
+/// the pre-check and post-check inspections assigned to it.
 /// </summary>
 public sealed class ServiceTemplate : EntityBase
 {
     /// <summary>Gets or sets the template name.</summary>
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the asset type key this template applies to.</summary>
-    public Guid AssetTypeId { get; set; }
+    /// <summary>Gets or sets the asset types this template applies to.</summary>
+    public List<AssetType> AssetTypes { get; set; } = [];
 
-    /// <summary>Gets or sets the asset type this template applies to.</summary>
-    public AssetType? AssetType { get; set; }
+    /// <summary>Gets or sets the inspection templates (pre-check and post-check) assigned to this service.</summary>
+    public List<InspectionTemplate> Inspections { get; set; } = [];
 
     /// <summary>Gets or sets an optional description.</summary>
     public string? Description { get; set; }

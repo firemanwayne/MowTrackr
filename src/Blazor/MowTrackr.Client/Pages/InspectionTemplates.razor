@@ -18,6 +18,11 @@
     <RadzenDataGrid class="app-grid" Responsive="true" AllowColumnResize="true" ColumnWidth="150px" Data="_templates" TItem="InspectionTemplateResponse" IsLoading="_loading" AllowSorting="true">
         <Columns>
             <RadzenDataGridColumn TItem="InspectionTemplateResponse" Property="DisplayName" Title="@L["Name"]" MinWidth="220px" />
+            <RadzenDataGridColumn TItem="InspectionTemplateResponse" Title="@L["When"]" Width="120px">
+                <Template Context="template">
+                    @(template.Timing == InspectionTiming.Before ? L["Pre-check"] : L["Post-check"])
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="InspectionTemplateResponse" Title="@L["Applies at"]">
                 <Template Context="template">
                     @DescribeTrigger(template)

@@ -1,0 +1,63 @@
+@inherits PageBase
+@inject IAssetTypeApiService AssetTypeApi
+@inject DialogService Dialogs
+
+<EditForm Model="_model" OnValidSubmit="@(() => RunOnceAsync("save", SaveAsync))">
+    <DataAnnotationsValidator />
+    <RadzenStack Gap="0.75rem">
+        <RadzenAlert Visible="@(_error is not null)" AlertStyle="AlertStyle.Danger" AllowClose="false">
+            @_error
+        </RadzenAlert>
+        <div>
+            <RadzenLabel Text="@L["Name"]" Component="TypeName" />
+            <RadzenTextBox @bind-Value="_model.Name" Name="TypeName" Style="width: 100%" />
+            <ValidationMessage For="@(() => _model.Name)" />
+        </div>
+        <div>
+            <RadzenCheckBox TValue="bool" @bind-Value="_model.HasTires" Name="HasTires" />
+            <RadzenLabel Text="@L["Has tires (tire service steps apply)"]" Component="HasTires" class="rz-ms-2" />
+        </div>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End">
+            <RadzenButton Text="@L["Cancel"]" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(false))" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" IsBusy="@IsRunning("save")" Disabled="@IsRunning("save")" />
+        </RadzenStack>
+    </RadzenStack>
+</EditForm>
+
+@code {
+    private readonly AssetTypeRequest _model = new();
+
+    private string? _error;
+
+    /// <summary>Gets or sets the type being edited; <see langword="null"/> adds a new one.</summary>
+    [Parameter]
+    public AssetTypeResponse? Existing { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _model.Name = Existing?.Name ?? string.Empty;
+
+        _model.HasTires = Existing?.HasTires ?? false;
+    }
+
+    /// <summary>Saves the type and closes the dialog.</summary>
+    /// <returns>A task.</returns>
+    private async Task SaveAsync()
+    {
+        _error = null;
+
+        var result = Existing is null
+            ? await AssetTypeApi.CreateAsync(_model, Cancellation)
+            : await AssetTypeApi.UpdateAsync(Existing.Id, _model, Cancellation);
+
+        if (result.IsSuccess)
+        {
+            Dialogs.Close(true);
+
+            return;
+        }
+
+        _error = result.Error;
+    }
+}

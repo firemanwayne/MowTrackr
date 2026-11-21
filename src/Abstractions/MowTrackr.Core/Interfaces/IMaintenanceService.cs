@@ -43,4 +43,16 @@ public interface IMaintenanceService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The completed work order.</returns>
     Task<Result<WorkOrderResponse>> CompleteWorkOrderAsync(Guid id, CompleteWorkOrderRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Submits the pre-check or post-check of a work order, saving the answers.</summary>
+    /// <param name="command">The work order, which check, the answers and who is submitting.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated work order.</returns>
+    Task<Result<WorkOrderResponse>> SubmitCheckAsync(CheckSubmissionCommand command, CancellationToken cancellationToken);
+
+    /// <summary>Creates a repair work order for a problem found by a check item. The technician confirms each one.</summary>
+    /// <param name="command">The work order, the check item and who is asking.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new repair work order.</returns>
+    Task<Result<WorkOrderResponse>> CreateRepairAsync(RepairCommand command, CancellationToken cancellationToken);
 }

@@ -26,9 +26,9 @@
             <RadzenDataGridColumn TItem="MowerResponse" Property="OilType" CssClass="hide-sm" Title="@L["Oil"]" Width="110px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="OilQuantityQuarts" CssClass="hide-sm" Title="@L["Qts"]" Width="70px" />
             <RadzenDataGridColumn TItem="MowerResponse" Property="LastOilChange" CssClass="hide-sm" Title="@L["Last oil change"]" FormatString="{0:d}" MinWidth="150px" />
-            <RadzenDataGridColumn TItem="MowerResponse" Title="@L["Active"]" Sortable="false" Filterable="false" Width="90px">
+            <RadzenDataGridColumn TItem="MowerResponse" Property="Status" Title="@L["Status"]" Filterable="false" Width="130px">
                 <Template Context="mower">
-                    <RadzenBadge Text="@(mower.IsActive ? L["Active"] : L["Retired"])" BadgeStyle="@(mower.IsActive ? BadgeStyle.Success : BadgeStyle.Light)" />
+                    <RadzenBadge Text="@StatusText(mower.Status)" BadgeStyle="@StatusStyle(mower.Status)" />
                 </Template>
             </RadzenDataGridColumn>
             <AuthorizeView Roles="@AppRoles.ManagerOrAdmin">
@@ -72,6 +72,32 @@
         _error = result.IsSuccess ? null : result.Error;
 
         _loading = false;
+    }
+
+    /// <summary>Gets the text shown for an equipment status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The localized text.</returns>
+    private string StatusText(AssetStatus status)
+    {
+        return status switch
+        {
+            AssetStatus.NeedsRepair => L["Needs Repair"],
+            AssetStatus.Retired => L["Retired"],
+            _ => L["Available"],
+        };
+    }
+
+    /// <summary>Gets the badge colour for an equipment status.</summary>
+    /// <param name="status">The status.</param>
+    /// <returns>The badge style.</returns>
+    private static BadgeStyle StatusStyle(AssetStatus status)
+    {
+        return status switch
+        {
+            AssetStatus.NeedsRepair => BadgeStyle.Danger,
+            AssetStatus.Retired => BadgeStyle.Light,
+            _ => BadgeStyle.Success,
+        };
     }
 
     /// <summary>Opens the change history of one mower (admins only).</summary>

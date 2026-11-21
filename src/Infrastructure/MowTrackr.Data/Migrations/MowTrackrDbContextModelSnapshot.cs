@@ -22,6 +22,36 @@ namespace MowTrackr.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AssetTypeServiceTemplate", b =>
+                {
+                    b.Property<Guid>("AssetTypesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ServiceTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AssetTypesId", "ServiceTemplateId");
+
+                    b.HasIndex("ServiceTemplateId");
+
+                    b.ToTable("ServiceTemplateAssetTypes", (string)null);
+                });
+
+            modelBuilder.Entity("InspectionTemplateServiceTemplate", b =>
+                {
+                    b.Property<Guid>("InspectionsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ServiceTemplatesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("InspectionsId", "ServiceTemplatesId");
+
+                    b.HasIndex("ServiceTemplatesId");
+
+                    b.ToTable("ServiceTemplateInspections", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
                 {
                     b.Property<int>("Id")
@@ -151,6 +181,11 @@ namespace MowTrackr.Data.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("HasTires")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -526,6 +561,10 @@ namespace MowTrackr.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Choices")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -541,6 +580,17 @@ namespace MowTrackr.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("YesNo");
+
+                    b.Property<string>("RepairOn")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
@@ -563,7 +613,7 @@ namespace MowTrackr.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AssetTypeId")
+                    b.Property<Guid?>("AssetTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -588,6 +638,13 @@ namespace MowTrackr.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("Timing")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("After");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -605,6 +662,13 @@ namespace MowTrackr.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Always");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -643,9 +707,6 @@ namespace MowTrackr.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AssetTypeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -676,8 +737,6 @@ namespace MowTrackr.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssetTypeId");
-
                     b.ToTable("ServiceTemplates", (string)null);
                 });
 
@@ -703,6 +762,13 @@ namespace MowTrackr.Data.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Service");
+
                     b.Property<Guid>("MowerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -715,10 +781,19 @@ namespace MowTrackr.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<Guid?>("ParentWorkOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("PostCheckSubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("PreCheckSubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateOnly?>("ScheduledFor")
                         .HasColumnType("date");
 
-                    b.Property<Guid>("ServiceTemplateId")
+                    b.Property<Guid?>("ServiceTemplateId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Status")
@@ -741,6 +816,8 @@ namespace MowTrackr.Data.Migrations
 
                     b.HasIndex("AssignedToUserId");
 
+                    b.HasIndex("ParentWorkOrderId");
+
                     b.HasIndex("MowerId", "ServiceTemplateId", "Status");
 
                     b.ToTable("WorkOrders", (string)null);
@@ -750,6 +827,14 @@ namespace MowTrackr.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Answer")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Choices")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
                         .HasColumnType("datetimeoffset");
@@ -773,6 +858,27 @@ namespace MowTrackr.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("YesNo");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Service");
+
+                    b.Property<string>("RepairOn")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("RepairWorkOrderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -794,6 +900,36 @@ namespace MowTrackr.Data.Migrations
                     b.HasIndex("WorkOrderId");
 
                     b.ToTable("WorkOrderTasks", (string)null);
+                });
+
+            modelBuilder.Entity("AssetTypeServiceTemplate", b =>
+                {
+                    b.HasOne("MowTrackr.Assets.Models.AssetType", null)
+                        .WithMany()
+                        .HasForeignKey("AssetTypesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MowTrackr.Maintenance.Models.ServiceTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("InspectionTemplateServiceTemplate", b =>
+                {
+                    b.HasOne("MowTrackr.Maintenance.Models.InspectionTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("InspectionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MowTrackr.Maintenance.Models.ServiceTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("ServiceTemplatesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -899,8 +1035,7 @@ namespace MowTrackr.Data.Migrations
                     b.HasOne("MowTrackr.Assets.Models.AssetType", "AssetType")
                         .WithMany()
                         .HasForeignKey("AssetTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssetType");
                 });
@@ -912,17 +1047,6 @@ namespace MowTrackr.Data.Migrations
                         .HasForeignKey("ServiceTemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MowTrackr.Maintenance.Models.ServiceTemplate", b =>
-                {
-                    b.HasOne("MowTrackr.Assets.Models.AssetType", "AssetType")
-                        .WithMany()
-                        .HasForeignKey("AssetTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AssetType");
                 });
 
             modelBuilder.Entity("MowTrackr.Maintenance.Models.WorkOrderTask", b =>

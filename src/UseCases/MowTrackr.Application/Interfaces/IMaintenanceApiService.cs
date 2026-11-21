@@ -41,4 +41,19 @@ internal interface IMaintenanceApiService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The completed work order.</returns>
     Task<ApiResult<WorkOrderResponse>> CompleteAsync(Guid id, CompleteWorkOrderRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Submits the pre-check or post-check of a work order.</summary>
+    /// <param name="workOrderId">The work order key.</param>
+    /// <param name="timing">Before (pre-check) or After (post-check).</param>
+    /// <param name="request">The answers.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated work order.</returns>
+    Task<ApiResult<WorkOrderResponse>> SubmitCheckAsync(Guid workOrderId, InspectionTiming timing, SubmitCheckRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Creates a repair work order for a finding on a check item.</summary>
+    /// <param name="workOrderId">The work order the finding is on.</param>
+    /// <param name="taskId">The check item.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The new repair work order.</returns>
+    Task<ApiResult<WorkOrderResponse>> CreateRepairAsync(Guid workOrderId, Guid taskId, CancellationToken cancellationToken);
 }
