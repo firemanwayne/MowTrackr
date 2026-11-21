@@ -25,4 +25,8 @@
     <ProjectReference Include="..\Identity\MowTrackr.Identity.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="MowTrackr.Data.UnitTests" />
+  </ItemGroup>
+
 </Project>

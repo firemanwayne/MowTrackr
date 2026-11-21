@@ -9,6 +9,7 @@ project it tests, so a test for `src/Client/Services/Foo.cs` lives in `tests/Cli
 | `Communications/` | Email templates. |
 | `Core/` | The shared constants (roles, routes, password policy). |
 | `Maintenance/` | Maintenance rules, such as which inspection templates apply to a piece of equipment. |
+| `Data/` | The audit interceptor that stamps who last changed a row (`UpdatedBy`). Uses the EF Core in-memory provider. |
 | `Identity/` | Identity services and models. Uses the EF Core in-memory provider, NSubstitute and a fake clock (`TimeProvider.Testing`). |
 
 ## Running them
