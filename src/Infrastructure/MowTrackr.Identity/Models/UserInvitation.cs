@@ -19,6 +19,7 @@ public sealed class UserInvitation : EntityBase
     public string Language { get; set; } = "en";
 
     /// <summary>Gets or sets the SHA-256 hash (hex) of the secret link token.</summary>
+    [NotAudited]
     public string TokenHash { get; set; } = string.Empty;
 
     /// <summary>Gets or sets the key of the administrator who sent the latest invitation email.</summary>

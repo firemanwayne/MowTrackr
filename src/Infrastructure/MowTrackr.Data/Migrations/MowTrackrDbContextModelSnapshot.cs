@@ -297,6 +297,42 @@ namespace MowTrackr.Data.Migrations
                     b.ToTable("Mowers", (string)null);
                 });
 
+            modelBuilder.Entity("MowTrackr.Data.Models.ChangeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ChangedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedBy");
+
+                    b.HasIndex("EntityType", "EntityId", "ChangedAt");
+
+                    b.ToTable("ChangeHistory", (string)null);
+                });
+
             modelBuilder.Entity("MowTrackr.Identity.Models.ApplicationRole", b =>
                 {
                     b.Property<Guid>("Id")

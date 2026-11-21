@@ -4,8 +4,9 @@ namespace MowTrackr.Data.Interceptors;
 
 /// <summary>
 /// Stamps <see cref="EntityBase.UpdatedAt"/> and <see cref="EntityBase.UpdatedBy"/> on every entity that is added or
-/// modified, so no service has to remember to. It is a single shared instance (the context is pooled), so the signed-in
-/// user is looked up on every save rather than captured.
+/// modified, and adds a <see cref="ChangeRecord"/> history row for every create, update and delete, so no service has to
+/// remember to. It is a single shared instance (the context is pooled), so the signed-in user is looked up on every save
+/// rather than captured.
 /// </summary>
 /// <param name="currentUser">Returns the signed-in user's key, or <see langword="null"/> when there is none.</param>
 internal sealed class AuditSaveChangesInterceptor(Func<Guid?> currentUser) : SaveChangesInterceptor
@@ -26,7 +27,7 @@ internal sealed class AuditSaveChangesInterceptor(Func<Guid?> currentUser) : Sav
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    /// <summary>Stamps the time and the user on every added or modified entity in the context.</summary>
+    /// <summary>Stamps the time and the user on every added or modified entity, and records the changes in the history.</summary>
     /// <param name="context">The context being saved, if any.</param>
     private void Stamp(DbContext? context)
     {
@@ -46,9 +47,9 @@ internal sealed class AuditSaveChangesInterceptor(Func<Guid?> currentUser) : Sav
                 continue;
             }
 
-            entry.Entity.UpdatedAt = now;
-
-            entry.Entity.UpdatedBy = user;
+            entry.Entity.MarkUpdated(now, user);
         }
+
+        ChangeRecorder.Record(context, now, user);
     }
 }
