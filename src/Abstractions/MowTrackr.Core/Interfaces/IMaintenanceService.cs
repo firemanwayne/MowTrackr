@@ -55,4 +55,13 @@ public interface IMaintenanceService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The new repair work order.</returns>
     Task<Result<WorkOrderResponse>> CreateRepairAsync(RepairCommand command, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Permanently deletes a work order (admins only). Repairs raised from it stay but no longer point at it, and if it was
+    /// a repair, the finding that raised it can offer a new one.
+    /// </summary>
+    /// <param name="id">The work order key.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><see langword="true"/> when deleted.</returns>
+    Task<Result<bool>> DeleteWorkOrderAsync(Guid id, CancellationToken cancellationToken);
 }

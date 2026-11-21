@@ -358,4 +358,7 @@
   <data name="Available" xml:space="preserve"><value>Disponible</value></data>
   <data name="Before the work starts." xml:space="preserve"><value>Antes de empezar el trabajo.</value></data>
   <data name="After the work is done." xml:space="preserve"><value>Después de terminar el trabajo.</value></data>
+  <data name="Delete work order" xml:space="preserve"><value>Eliminar orden de trabajo</value></data>
+  <data name="Work order deleted." xml:space="preserve"><value>Orden de trabajo eliminada.</value></data>
+  <data name="Could not delete the work order." xml:space="preserve"><value>No se pudo eliminar la orden de trabajo.</value></data>
 </root>

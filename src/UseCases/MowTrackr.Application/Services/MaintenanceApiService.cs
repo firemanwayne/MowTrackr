@@ -56,4 +56,10 @@ internal sealed class MaintenanceApiService(HttpClient http, IStringLocalizer<Sh
     {
         return SendAsync<WorkOrderResponse>(HttpMethod.Post, $"{ApiRoutes.Maintenance}/work-orders/{workOrderId}/tasks/{taskId}/repair", cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task<ApiResult<bool>> DeleteWorkOrderAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return SendAsync<bool>(HttpMethod.Delete, $"{ApiRoutes.Maintenance}/work-orders/{id}", cancellationToken);
+    }
 }
