@@ -5,6 +5,7 @@ project it tests, so a test for `src/Client/Services/Foo.cs` lives in `tests/Cli
 
 | Folder | Tests |
 | --- | --- |
+| `Assets/` | Asset type rules: renaming and refusing to delete a type that is in use. Uses NSubstitute. |
 | `Client/` | The Blazor client: handlers, providers and services, such as the label text parser. Uses fakes from `Fakes/`. |
 | `Communications/` | Email templates. |
 | `Core/` | The shared constants (roles, routes, password policy). |

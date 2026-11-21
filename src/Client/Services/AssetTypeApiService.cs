@@ -18,4 +18,16 @@ internal sealed class AssetTypeApiService(HttpClient http, IStringLocalizer<Shar
     {
         return SendAsync<AssetTypeRequest, AssetTypeResponse>(HttpMethod.Post, ApiRoutes.AssetTypes, request, cancellationToken);
     }
+
+    /// <inheritdoc />
+    public Task<ApiResult<AssetTypeResponse>> UpdateAsync(Guid id, AssetTypeRequest request, CancellationToken cancellationToken)
+    {
+        return SendAsync<AssetTypeRequest, AssetTypeResponse>(HttpMethod.Put, $"{ApiRoutes.AssetTypes}/{id}", request, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<ApiResult<bool>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return SendAsync<bool>(HttpMethod.Delete, $"{ApiRoutes.AssetTypes}/{id}", cancellationToken);
+    }
 }

@@ -1,0 +1,9 @@
+global using Microsoft.Extensions.Logging.Abstractions;
+global using MowTrackr.Assets.Models;
+global using MowTrackr.Assets.Services;
+global using MowTrackr.Core.Contracts.Assets;
+global using MowTrackr.Core.Enums;
+global using MowTrackr.Core.Interfaces;
+global using MowTrackr.Core.Models;
+global using NSubstitute;
+global using Xunit;
