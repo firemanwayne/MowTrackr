@@ -1,5 +1,11 @@
 # MowTrackr
 
+[![CI (main)](https://github.com/firemanwayne/MowTrackr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/firemanwayne/MowTrackr/actions/workflows/ci.yml?query=branch%3Amain)
+[![CI (dev)](https://github.com/firemanwayne/MowTrackr/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/firemanwayne/MowTrackr/actions/workflows/ci.yml?query=branch%3Adev)
+[![Deploy (dev)](https://github.com/firemanwayne/MowTrackr/actions/workflows/deploy.yml/badge.svg?branch=dev)](https://github.com/firemanwayne/MowTrackr/actions/workflows/deploy.yml?query=branch%3Adev)
+![.NET 10](https://img.shields.io/badge/.NET-10-512BD4)
+![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-512BD4)
+
 Asset management and maintenance tracking for lawn mowers. A manager registers mowers, defines service templates
 (checklists with an hours and/or days interval), sees what is due, and schedules work orders that technicians check off.
 
